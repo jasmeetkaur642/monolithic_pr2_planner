@@ -347,6 +347,31 @@ void HeuristicMgr::addBFS2DRotFootprint(std::string name, const int cost_multipl
     m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
 }
 
+void HeuristicMgr::addIslandHeur(std::string name, const int cost_multiplier,
+        sbpl_2Dpt_t island, double radius_m) {
+
+    // Initialize the new heuristic
+    AbstractHeuristicPtr new_2d_heur = make_shared<BFS2DHeuristic>();
+    // Set cost multiplier here.
+    new_2d_heur->setCostMultiplier(cost_multiplier);
+    new_2d_heur->setRadiusAroundGoal(radius_m);
+
+    // For 2D, only the x,y values are relevant. 
+    // XXX This needs to change in case other DOF's are used.
+    DiscObjectState island_state_ = m_goal.getObjectState();
+    island_state_.x(island.x);
+    island_state_.y(island.y);
+    GoalState island_state(m_goal);
+    island_state.setGoal(island_state_);
+    new_2d_heur->setGoal(island_state);
+
+    // Add to the list of heuristics
+    m_heuristics.push_back(new_2d_heur);
+    m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
+         
+}
+
+ 
 // void HeuristicMgr::addVoronoiOrientationHeur(std::string name, const int cost_multiplier){
 //     // Initialize the new heuristic
 //     VoronoiOrientationHeuristicPtr new_voronoi_heur = make_shared<VoronoiOrientationHeuristic>();
@@ -531,7 +556,6 @@ void HeuristicMgr::initNewMHABaseHeur(std::string name, int g_x, int g_y, const 
 
 // Called from configureRequest fn in Environment.
 void HeuristicMgr::initializeMHAHeuristics(const int cost_multiplier){
-    
     if(!m_num_mha_heuristics)
         return;
     // Get the radius around the goal from the base heuristic.
@@ -651,6 +675,17 @@ void HeuristicMgr::initializeMHAHeuristics(const int cost_multiplier){
       ROS_ERROR("init bfsRotFoot %d",i);
       double theta = DiscTheta2Cont(i, m_resolution_params.num_base_angles);
       addBFS2DRotFootprint("bfsRotFoot" + std::to_string(i), 1, theta, footprint, radius_around_goal+0.15);
+    }
+
+    // Island heuristic stuff
+    
+    ifstream island_file(m_island_file_name);
+    for(int i=0;i<m_num_islands;i++) {
+        ROS_ERROR("init bfsIslandBase %d", i);
+        double x=0, y=0;
+        island_file>>x>>y;
+        addIslandHeur("bfsIslandBase" + std::to_string(i), 1, sbpl_2Dpt_t(x,
+        y), radius_around_goal);
     }
 
     ROS_ERROR("init arm_angles_folded");

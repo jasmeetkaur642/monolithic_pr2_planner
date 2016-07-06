@@ -86,5 +86,8 @@ namespace monolithic_pr2_planner {
             void PrintState(int stateID, bool bVerbose, FILE* fOut=NULL){};
             void PrintEnv_Config(FILE* fOut){};
             std::map<Edge, MotionPrimitivePtr> m_edges;
+
+            int m_num_islands;
+            std::string m_island_file_name;
     };
 }

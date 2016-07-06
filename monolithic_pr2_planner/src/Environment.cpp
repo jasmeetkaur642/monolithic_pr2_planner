@@ -156,6 +156,17 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
           return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*inad_arm_heur);
       }
 
+      std::vector<int> island_heuristics;
+      for(int i=0;i<m_num_islands;i++){
+          std::string heuristic_name = "bfsIslandBase" + i;
+          island_heuristics.push_back(static_cast<int>(0.1*(*values).at(heuristic_name)));
+      }
+      
+      ROS_INFO("Heuristic id is %d", heuristic_id);
+      heuristic_id -= 20;
+      if(heuristic_id < m_num_islands)
+          return island_heuristics[heuristic_id];  
+
       // switch (heuristic_id) {
       //   case 0:  // Anchor
       //     return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
@@ -609,6 +620,8 @@ void Environment::configurePlanningDomain(){
 
     // Initialize the heuristics. The (optional) parameter defines the cost multiplier.
 
+    // For island search.
+    m_heur_mgr->m_island_file_name = m_island_file_name;
     m_heur_mgr->initializeHeuristics();
 
     // used for arm kinematics

@@ -60,6 +60,7 @@ namespace monolithic_pr2_planner {
             void addUniformCost2DHeur(std::string name, const double
                 radius_m = 0);
             void addUniformCost3DHeur(std::string name);
+            void addIslandHeur(std::string, const int, sbpl_2Dpt_t, double);
             // void addVoronoiOrientationHeur(std::string name, const int cost_multiplier
             //     = 1);
             void addEndEffOnlyRotationHeur(std::string name, KDL::Rotation desired_orientation, const int cost_multiplier
@@ -101,6 +102,10 @@ namespace monolithic_pr2_planner {
 
             // int numberOfMHAHeuristics(){ return m_num_mha_heuristics;};
         inline void setCollisionSpaceMgr(CSpaceMgrPtr cspace_mgr){ m_cspace_mgr = cspace_mgr;};
+
+        // Island search
+        int m_num_islands;
+        std::string m_island_file_name;
  
         private:
             bool isValidIKForGoalState(int g_x, int g_y);
@@ -123,6 +128,7 @@ namespace monolithic_pr2_planner {
             std::vector<int> m_mha_heur_ids;
             int m_arm_angles_heur_id;
             int m_planner_type;
+
             
             // Saving the goal and the grid for MHA heuristics
             unsigned char** m_grid;

@@ -328,10 +328,16 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
 
   //Need to figure out the number of islands here.
   if(use_island_heuristics) {
-      unsigned int num_islands = 0;
+      ROS_INFO("Using island heuristics");
+      int num_islands = 0;
       ph.param("num_islands", num_islands, 0);
+      m_env->m_num_islands = num_islands;
       planner_queues += num_islands;
       ROS_INFO("Number of heuristics including island ones is %d", planner_queues);
+
+      std::string island_file_name;
+      ph.param("planner/island_points_file", island_file_name, std::string(" "));
+      m_env->m_island_file_name = island_file_name;
   }
 
   printf("\n");
