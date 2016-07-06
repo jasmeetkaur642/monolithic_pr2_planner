@@ -20,8 +20,15 @@ void chatterCallback(const nav_msgs::OccupancyGridPtr &map)
 
  cv::Mat img(converted_map.binaryMap());
  //std::cout<<img.rows<<"\t"<<img.cols<<"\n";
- cv::Rect myROI(620, 624, MAX_KITCHEN_WIDTH , MAX_KITCHEN_LENGTH);
+ 
+ cv::imwrite(path + "/projected_map_uncropped.jpg", img);
+ cv::Rect myROI(620, 624, MAX_KITCHEN_WIDTH, MAX_KITCHEN_LENGTH);
  cv::Mat croppedImage = img(myROI);
+
+ // Rotate the image by 90 degrees.
+ cv::transpose(croppedImage, croppedImage);
+ cv::flip(croppedImage, croppedImage, 1);
+
  cv::imwrite(path + "/projected_map.jpg", croppedImage);
 
  ROS_INFO("Saved the map as image");
