@@ -11,8 +11,6 @@
 #include <vector>
 #include <utility>
 
-#include "ros/ros.h"
-
 namespace monolithic_pr2_planner {
     class BaseIslandHeuristic : public BFS2DHeuristic {
         public:

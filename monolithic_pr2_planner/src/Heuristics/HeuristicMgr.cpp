@@ -182,6 +182,7 @@ void HeuristicMgr::setPlannerType(int planner_type) {
     }
 }
 
+// Called in the constructor of Environment.
 void HeuristicMgr::initializeHeuristics() {
     // NOTE: It's 40 for now, until the actual cost for arm costs are computed.
     // 3DHeur is unit costs - multiply by whatever you want.
@@ -528,6 +529,7 @@ void HeuristicMgr::initNewMHABaseHeur(std::string name, int g_x, int g_y, const 
     ROS_DEBUG_NAMED(HEUR_LOG, "Initialized new MHA Base Heuristic with desired_orientation: %f", desired_orientation);
 }
 
+// Called from configureRequest fn in Environment.
 void HeuristicMgr::initializeMHAHeuristics(const int cost_multiplier){
     
     if(!m_num_mha_heuristics)

@@ -315,13 +315,23 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
 
   ros::NodeHandle ph("~");
   bool use_new_heuristics;
-  ph.param("use_new_heuristics", use_new_heuristics, false);
-  int planner_queues;
+  bool use_island_heuristics;
 
+  ph.param("use_new_heuristics", use_new_heuristics, false);
+  ph.param("use_island_heuristics", use_island_heuristics, false);
+  int planner_queues;
   if (!use_new_heuristics) {
     planner_queues = 4;
   } else {
     planner_queues = 20;
+  }
+
+  //Need to figure out the number of islands here.
+  if(use_island_heuristics) {
+      unsigned int num_islands = 0;
+      ph.param("num_islands", num_islands, 0);
+      planner_queues += num_islands;
+      ROS_INFO("Number of heuristics including island ones is %d", planner_queues);
   }
 
   printf("\n");
@@ -329,6 +339,7 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
   m_env->reset();
   m_env->setPlannerType(planner_type);
   m_env->setUseNewHeuristics(use_new_heuristics);
+  m_env->setUseIslandHeuristics(use_island_heuristics);
   m_mha_planner.reset(new MHAPlanner(m_env.get(), planner_queues,
                                      forward_search));
   total_planning_time = clock();
