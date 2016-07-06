@@ -16,6 +16,7 @@
 #include <cstdlib>
 #include <boost/shared_ptr.hpp>
 #include <cmath>
+#include <stdlib.h>
 
 using namespace monolithic_pr2_planner;
 using namespace boost;
@@ -363,12 +364,12 @@ void HeuristicMgr::addIslandHeur(std::string name, const int cost_multiplier,
     island_state_.y(island.y);
     GoalState island_state(m_goal);
     island_state.setGoal(island_state_);
-    new_2d_heur->setGoal(island_state);
 
+    new_2d_heur->setGoal(island_state);
     // Add to the list of heuristics
     m_heuristics.push_back(new_2d_heur);
     m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
-         
+    ROS_ERROR("Inside addIslandHeur %s %d", name.c_str(), m_heuristic_map[name]);
 }
 
  
@@ -554,7 +555,7 @@ void HeuristicMgr::initNewMHABaseHeur(std::string name, int g_x, int g_y, const 
     ROS_DEBUG_NAMED(HEUR_LOG, "Initialized new MHA Base Heuristic with desired_orientation: %f", desired_orientation);
 }
 
-// Called from configureRequest fn in Environment.
+// Called from setStartGoal fn in Environment.
 void HeuristicMgr::initializeMHAHeuristics(const int cost_multiplier){
     if(!m_num_mha_heuristics)
         return;
@@ -680,13 +681,25 @@ void HeuristicMgr::initializeMHAHeuristics(const int cost_multiplier){
     // Island heuristic stuff
     
     ifstream island_file(m_island_file_name);
+    ROS_ERROR("%s", m_island_file_name.c_str());
+    std::string line;
     for(int i=0;i<m_num_islands;i++) {
         ROS_ERROR("init bfsIslandBase %d", i);
+        std::getline(island_file, line);
+        ROS_ERROR("%s", line.c_str());
+        std::istringstream ss(line);
+        std::string x_str, y_str;
+
+        ss >> x_str >> y_str;
+
         double x=0, y=0;
-        island_file>>x>>y;
+        x = atof(x_str.c_str());
+        y = atof(y_str.c_str());
+        ROS_ERROR("Island points %f %f", x, y);
         addIslandHeur("bfsIslandBase" + std::to_string(i), 1, sbpl_2Dpt_t(x,
         y), radius_around_goal);
     }
+    island_file.close();
 
     ROS_ERROR("init arm_angles_folded");
     ContBaseState dummy_base;

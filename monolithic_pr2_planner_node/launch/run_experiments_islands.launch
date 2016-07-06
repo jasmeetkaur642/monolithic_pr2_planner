@@ -35,9 +35,8 @@
       <param name="use_new_heuristics" value="true" />
       <!-- Island heuristic related parameters -->
       <param name="use_island_heuristics" value="true" />
-      <param name="planner/island_points_file" value="$(find monolithic_pr2_planner)/config/island.points" />
-      <param nam="num_islands" value="$(wc -l < $(planner/island_points_file))" type="int" />
-
+      <param name="planner/island_points_file" value="$(find monolithic_pr2_planner_node)/experiments/islands.points" />
+      <param name="num_islands" value="3"  type="int" />
       <rosparam command="load" file="$(find monolithic_pr2_planner_node)/config/logging_levels.yaml" />
       <rosparam command="load" file="$(find monolithic_pr2_planner)/config/pr2_both_arms.yaml" />
       <rosparam command="load" file="$(find pr2_collision_checker)/config/pr2_body.yaml" />

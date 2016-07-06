@@ -23,8 +23,8 @@ Environment::Environment(ros::NodeHandle nh)
         m_using_lazy(false),
         m_planner_type(T_SMHA) {
         m_param_catalog.fetch(nh);
-        configurePlanningDomain();
-}
+        configurePlanningDomain(); 
+} 
 
 /**
  * @brief Resets the environment.
@@ -158,11 +158,10 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
 
       std::vector<int> island_heuristics;
       for(int i=0;i<m_num_islands;i++){
-          std::string heuristic_name = "bfsIslandBase" + i;
+          std::string heuristic_name = "bfsIslandBase" + std::to_string(i);
           island_heuristics.push_back(static_cast<int>(0.1*(*values).at(heuristic_name)));
       }
       
-      ROS_INFO("Heuristic id is %d", heuristic_id);
       heuristic_id -= 20;
       if(heuristic_id < m_num_islands)
           return island_heuristics[heuristic_id];  
@@ -621,7 +620,20 @@ void Environment::configurePlanningDomain(){
     // Initialize the heuristics. The (optional) parameter defines the cost multiplier.
 
     // For island search.
+
+    ROS_INFO("Calculating island heuristics");
+    int num_islands = 0;
+    m_nodehandle.param("num_islands", num_islands, 0);
+    m_num_islands = num_islands;
+    ROS_INFO("Number of island heuristics %d", num_islands);
+
+    std::string island_file_name;
+    m_nodehandle.param("planner/island_points_file", island_file_name, std::string(" "));
+    m_island_file_name = island_file_name;
+
     m_heur_mgr->m_island_file_name = m_island_file_name;
+    m_heur_mgr->m_num_islands = num_islands;
+    ROS_ERROR("%s", m_island_file_name.c_str());
     m_heur_mgr->initializeHeuristics();
 
     // used for arm kinematics
