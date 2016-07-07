@@ -631,16 +631,16 @@ void EnvInterfaces::packageMHAStats(vector<string> &stat_names,
                                     double total_planning_time) {
   stat_names.resize(10);
   stats.resize(10);
-  stat_names[0] = "total plan time";
-  stat_names[1] = "initial solution planning time";
-  stat_names[2] = "epsilon 1";
-  stat_names[3] = "initial solution expansions";
-  stat_names[4] = "final epsilon planning time";
-  stat_names[5] = "epsilon 2";
-  stat_names[6] = "solution epsilon";
+  stat_names[0] = "total-plan-time";
+  stat_names[1] = "initial-solution-planning-time";
+  stat_names[2] = "epsilon-1";
+  stat_names[3] = "initial-solution-expansions";
+  stat_names[4] = "final-epsilon-planning-time";
+  stat_names[5] = "epsilon-2";
+  stat_names[6] = "solution-epsilon";
   stat_names[7] = "expansions";
-  stat_names[8] = "solution cost";
-  stat_names[9] = "path length";
+  stat_names[8] = "solution-cost";
+  stat_names[9] = "path-length";
 
   vector<PlannerStats> planner_stats;
   m_mha_planner->get_search_stats(&planner_stats);
