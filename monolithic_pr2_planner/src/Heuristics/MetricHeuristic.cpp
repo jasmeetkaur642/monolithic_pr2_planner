@@ -42,7 +42,7 @@ int MetricHeuristic::getGoalHeuristic(GraphStatePtr state){
     for(int i=0;i < 7;i++) {
          cost += (goal_right_arm_angles[i] - current_right_arm_angles[i])*(goal_right_arm_angles[i] - current_right_arm_angles[i]);
     }
-    ROS_INFO("Island Heuristic cost = %d", cost);
+    //ROS_INFO("Island Heuristic cost = %d", cost);
     
     return cost;
 }
