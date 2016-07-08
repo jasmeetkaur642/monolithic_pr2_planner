@@ -58,11 +58,9 @@ int main(int argc, char** argv) {
             x = atof(x_str.c_str());
             y = atof(y_str.c_str());
             ROS_ERROR("Island points %f %f", x, y);
-            //addBaseIslandHeur("baseIslandBase" + std::to_string(i), 1, sbpl_2Dpt_t(x, y), radius_around_goal);
         }
     }
     else if(armIslandHeur) {
-    ROS_ERROR("HERE2");
         for(int i=0;i<num_islands;i++) {
             sleep(5);
             std::getline(island_file, line);

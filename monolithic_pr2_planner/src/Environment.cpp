@@ -106,11 +106,11 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
       int endeff_rot_goal = (*values).at("endeff_rot_goal");
 
       int inad_arm_heur = static_cast<int>(0.1*(*values).at("endeff_rot_goal") + 0.1*ad_endeff);
-      if (ad_base > 1000) //TODO: check multiplier
-      { 
-        inad_arm_heur = (*values).at("arm_angles_folded");
-      }
-
+      //if (ad_base > 1000) //TODO: check multiplier
+//      { 
+//        inad_arm_heur = (*values).at("arm_angles_folded");
+//      }
+//
       switch (heuristic_id) {
         case 0:  // Anchor
           return anchor_h;
@@ -119,9 +119,11 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
           //return anchor_h;
         case 2:  // Base1, Base2 heur
           return static_cast<int>(0.1*(*values).at("base_with_rot_0") + 0.1*(*values).at("endeff_rot_goal"));
+          // Shivam: I have disabled the tuck-arm heuristic to check the
+          // effectiveness of island heuristic.
         case 3:  // Base1, Base2 heur
-          //return static_cast<int>(1.0*(*values).at("base_with_rot_0") + 0.0*(*values).at("endeff_rot_goal"));
-          return static_cast<int>(0.1*(*values).at("base_with_rot_0") + 0.1*(*values).at("arm_angles_folded"));
+          return static_cast<int>(1.0*(*values).at("base_with_rot_0") + 0.0*(*values).at("endeff_rot_goal"));
+          //return static_cast<int>(0.1*(*values).at("base_with_rot_0") + 0.1*(*values).at("arm_angles_folded"));
         case 4:
           return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot0") + w_armFold*inad_arm_heur);
         case 5:

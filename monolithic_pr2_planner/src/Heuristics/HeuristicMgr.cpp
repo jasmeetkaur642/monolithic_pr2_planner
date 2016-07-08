@@ -619,7 +619,8 @@ void HeuristicMgr::initializeIslandHeur(double radius_around_goal) {
 }
 
 
-// Called from setStartGoal fn in Environment.
+// Called from setStartGoal fn in Environment. Also sets the tuck-in arm
+// heuristic.
 void HeuristicMgr::initializeMHAHeuristics(const int cost_multiplier){
     if(!m_num_mha_heuristics)
         return;
@@ -755,7 +756,8 @@ void HeuristicMgr::initializeMHAHeuristics(const int cost_multiplier){
     DiscObjectState localFoldedArmObject = rs.getObjectStateRelBody();
     GoalState localFoldedArmGoal;
     localFoldedArmGoal.setGoal(localFoldedArmObject);
-    addEndEffLocalHeur("arm_angles_folded", 500, localFoldedArmGoal);
+    // Disabled tuck-in arms heuristic.
+    //addEndEffLocalHeur("arm_angles_folded", 500, localFoldedArmGoal);
 
     clock_t new_heur_t1 = clock();
     ROS_ERROR("new heuristics took %f time to compute",double(new_heur_t1-new_heur_t0)/CLOCKS_PER_SEC);
