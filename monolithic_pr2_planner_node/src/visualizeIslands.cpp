@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
     else if(armIslandHeur) {
     ROS_ERROR("HERE2");
         for(int i=0;i<num_islands;i++) {
-            getchar();
+            sleep(5);
             std::getline(island_file, line);
             ROS_ERROR("%s", line.c_str());
             std::istringstream ss(line);

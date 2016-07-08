@@ -111,5 +111,7 @@ target_link_libraries(generateExperimentsNode monolithic_pr2_planner)
 add_executable(saveProjectedMap src/saveProjectedMap.cpp)
 target_link_libraries(saveProjectedMap monolithic_pr2_planner ${OpenCV_LIBS} ${catkin_LIBRARIES})
 
+add_executable(visualizeIslands src/visualizeIslands.cpp)
+target_link_libraries(visualizeIslands monolithic_pr2_planner pviz)
 
 
