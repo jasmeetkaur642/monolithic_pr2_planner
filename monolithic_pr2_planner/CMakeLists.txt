@@ -94,6 +94,7 @@ add_library(monolithic_pr2_planner src/StateReps/RobotState.cpp
                                             src/Heuristics/EndEffOnlyRotationHeuristic.cpp
                                             src/Heuristics/HeuristicMgr.cpp
                                             src/Heuristics/2Dgridsearch.cpp
+                                            src/Heuristics/MetricHeuristic.cpp
 
                                             src/SearchRequest.cpp
                                             src/Environment.cpp

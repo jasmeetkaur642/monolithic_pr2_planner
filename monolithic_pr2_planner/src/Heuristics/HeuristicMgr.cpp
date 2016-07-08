@@ -9,6 +9,7 @@
 #include <monolithic_pr2_planner/Heuristics/BFS2DHeuristic.h>
 #include <monolithic_pr2_planner/Heuristics/BaseWithRotationHeuristic.h>
 #include <monolithic_pr2_planner/Heuristics/BFS2DRotFootprintHeuristic.h>
+#include <monolithic_pr2_planner/Heuristics/MetricHeuristic.h>
 #include <costmap_2d/cost_values.h>
 #include <kdl/frames.hpp>
 #include <memory>
@@ -348,7 +349,7 @@ void HeuristicMgr::addBFS2DRotFootprint(std::string name, const int cost_multipl
     m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
 }
 
-void HeuristicMgr::addIslandHeur(std::string name, const int cost_multiplier,
+void HeuristicMgr::addBaseIslandHeur(std::string name, const int cost_multiplier,
         sbpl_2Dpt_t island, double radius_m) {
 
     // Initialize the new heuristic
@@ -369,9 +370,24 @@ void HeuristicMgr::addIslandHeur(std::string name, const int cost_multiplier,
     // Add to the list of heuristics
     m_heuristics.push_back(new_2d_heur);
     m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
-    ROS_ERROR("Inside addIslandHeur %s %d", name.c_str(), m_heuristic_map[name]);
+    ROS_ERROR("Inside addBaseIslandHeur %s %d", name.c_str(), m_heuristic_map[name]);
 }
 
+void HeuristicMgr::addArmIslandHeur(std::string name, std::vector<double> arm_angles) {
+    RightContArmState right_arm(arm_angles);
+    RobotState robot_state;
+    robot_state.right_arm(right_arm);
+    GraphStatePtr robot_graph_state = make_shared<GraphState>(robot_state);
+    
+    GoalState island_state(m_goal);
+    island_state.storeAsSolnState(robot_graph_state);
+
+    AbstractHeuristicPtr new_island_heur = make_shared<MetricHeuristic>(island_state);
+
+    m_heuristics.push_back(new_island_heur);
+    m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
+    ROS_ERROR("Inside addArmIslandHeur %s %d", name.c_str(), m_heuristic_map[name]);
+}
  
 // void HeuristicMgr::addVoronoiOrientationHeur(std::string name, const int cost_multiplier){
 //     // Initialize the new heuristic
@@ -555,6 +571,54 @@ void HeuristicMgr::initNewMHABaseHeur(std::string name, int g_x, int g_y, const 
     ROS_DEBUG_NAMED(HEUR_LOG, "Initialized new MHA Base Heuristic with desired_orientation: %f", desired_orientation);
 }
 
+void HeuristicMgr::initializeIslandHeur(double radius_around_goal) {
+    
+    //  Set which Island heuristic you want to use.
+    bool baseIslandHeur = false;
+    bool armIslandHeur = true;
+    ifstream island_file(m_island_file_name);
+    ROS_ERROR("%s", m_island_file_name.c_str());
+    std::string line;
+
+    if(baseIslandHeur) {
+        for(int i=0;i<m_num_islands;i++) {
+            ROS_ERROR("init baseIslandBase %d", i);
+            std::getline(island_file, line);
+            ROS_ERROR("%s", line.c_str());
+            std::istringstream ss(line);
+            std::string x_str, y_str;
+
+            ss >> x_str >> y_str;
+
+            double x=0, y=0;
+            x = atof(x_str.c_str());
+            y = atof(y_str.c_str());
+            ROS_ERROR("Island points %f %f", x, y);
+            addBaseIslandHeur("baseIslandBase" + std::to_string(i), 1, sbpl_2Dpt_t(x,
+            y), radius_around_goal);
+        }
+    }
+    else if(armIslandHeur) {
+        for(int i=0;i<m_num_islands;i++) {
+            ROS_ERROR("init ArmIslandHeuristic %d", i);
+            std::getline(island_file, line);
+            ROS_ERROR("%s", line.c_str());
+            std::istringstream ss(line);
+            std::string num;
+            std::vector<double> arm_angles;
+
+            while(ss >> num)
+                arm_angles.push_back(atof(num.c_str()));
+
+            addArmIslandHeur("armIslandBase" + std::to_string(i), arm_angles);
+        }
+    }
+        
+    else ROS_ERROR("Island heuristics disabled");
+    island_file.close();
+}
+
+
 // Called from setStartGoal fn in Environment.
 void HeuristicMgr::initializeMHAHeuristics(const int cost_multiplier){
     if(!m_num_mha_heuristics)
@@ -679,27 +743,7 @@ void HeuristicMgr::initializeMHAHeuristics(const int cost_multiplier){
     }
 
     // Island heuristic stuff
-    
-    ifstream island_file(m_island_file_name);
-    ROS_ERROR("%s", m_island_file_name.c_str());
-    std::string line;
-    for(int i=0;i<m_num_islands;i++) {
-        ROS_ERROR("init bfsIslandBase %d", i);
-        std::getline(island_file, line);
-        ROS_ERROR("%s", line.c_str());
-        std::istringstream ss(line);
-        std::string x_str, y_str;
-
-        ss >> x_str >> y_str;
-
-        double x=0, y=0;
-        x = atof(x_str.c_str());
-        y = atof(y_str.c_str());
-        ROS_ERROR("Island points %f %f", x, y);
-        addIslandHeur("bfsIslandBase" + std::to_string(i), 1, sbpl_2Dpt_t(x,
-        y), radius_around_goal);
-    }
-    island_file.close();
+    initializeIslandHeur(radius_around_goal);
 
     ROS_ERROR("init arm_angles_folded");
     ContBaseState dummy_base;

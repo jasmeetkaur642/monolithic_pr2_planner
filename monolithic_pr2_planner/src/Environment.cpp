@@ -158,7 +158,7 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
 
       std::vector<int> island_heuristics;
       for(int i=0;i<m_num_islands;i++){
-          std::string heuristic_name = "bfsIslandBase" + std::to_string(i);
+          std::string heuristic_name = "armIslandBase" + std::to_string(i);
           island_heuristics.push_back(static_cast<int>(0.1*(*values).at(heuristic_name)));
       }
       
