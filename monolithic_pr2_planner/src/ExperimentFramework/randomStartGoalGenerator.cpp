@@ -99,13 +99,18 @@ bool StartGoalGenerator::generateRandomValidState(RobotState& generated_state,
         if (counter % 1000 == 0)
             ROS_INFO("up to iteration %d while searching for valid state", counter);
 
-        if(region_id==-1)  //if -1, we sample uniformly
+        if(region_id==-1) {  //if -1, we sample uniformly
             generated_state = generateRandomState(NULL);
-        else if(is_start_state)  //If we're generating a start state within region bounds
+            generated_state.visualize();
+        }
+        else if(is_start_state) {  //If we're generating a start state within region bounds
             generated_state = generateRandomState(&m_start_region);
+            generated_state.visualize();
+        }
+            
         else{
             generated_state = generateRandomState(&m_goal_regions[region_id]);
-            generated_state.visualize();
+            //generated_state.visualize();
         }
 
         if (m_cspace->isValid(generated_state)){
@@ -161,6 +166,7 @@ bool StartGoalGenerator::generateUniformPairs(int num_pairs,
         ROS_DEBUG_NAMED(HEUR_LOG, "generated the following start goal");
         // Will set start region if setting a goal region
         generateRandomValidState(start_state, set_uniform_sampling, true);
+        //sleep(3);
         generateRandomValidState(goal_state, set_uniform_sampling);
         pairs.push_back(pair<RobotState, RobotState>(start_state, goal_state));
     }

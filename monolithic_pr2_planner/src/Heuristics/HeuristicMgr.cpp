@@ -613,7 +613,6 @@ void HeuristicMgr::initializeIslandHeur(double radius_around_goal) {
             addArmIslandHeur("armIslandHeur" + std::to_string(i), arm_angles);
         }
     }
-        
     else ROS_ERROR("Island heuristics disabled");
     island_file.close();
 }

@@ -110,15 +110,17 @@ bool EnvInterfaces::GenerateExperimentFile(std_srvs::Empty::Request &req,
   ROS_INFO("generating trials!");
   vector<pair<RobotState, RobotState>> start_goal_pairs;
   RobotState::setPlanningMode(PlanningModes::RIGHT_ARM_MOBILE);
-  int number_of_trials = 10;
+  int number_of_trials = 200;
   m_generator->initializeRegions();//reads from ros params set by stlToOctomap
   m_generator->generateUniformPairs(number_of_trials, start_goal_pairs);
 
   int test_num = 0;
   FILE *fout = fopen("fbp_tests.yaml", "w");
   fprintf(fout, "experiments:\n\n");
+  ROS_ERROR("Created file");
 
   for (auto &start_goal : start_goal_pairs) {
+    ROS_ERROR("Writing to file");
     geometry_msgs::Quaternion start_obj_q;
     leatherman::rpyToQuatMsg(start_goal.first.getObjectStateRelMap().roll(),
                              start_goal.first.getObjectStateRelMap().pitch(),
