@@ -158,15 +158,13 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
           return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*inad_arm_heur);
       }
 
-      std::vector<int> island_heuristics;
-      for(int i=0;i<m_num_islands;i++){
-          std::string heuristic_name = "armIslandHeur" + std::to_string(i);
-          island_heuristics.push_back(static_cast<int>((*values).at(heuristic_name)));
+      if(heuristic_id > 19) {
+          heuristic_id -= 20;
+          if(heuristic_id < m_num_islands) {
+              std::string heuristic_name = "armIslandHeur" + std::to_string(heuristic_id);
+          return (static_cast<int>((*values).at(heuristic_name)));
+          }
       }
-      
-      heuristic_id -= 20;
-      if(heuristic_id < m_num_islands)
-          return island_heuristics[heuristic_id];  
 
       // switch (heuristic_id) {
       //   case 0:  // Anchor
