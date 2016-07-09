@@ -582,7 +582,7 @@ void HeuristicMgr::initializeIslandHeur(double radius_around_goal) {
 
     if(baseIslandHeur) {
         for(int i=0;i<m_num_islands;i++) {
-            ROS_ERROR("init baseIslandBase %d", i);
+            ROS_ERROR("init baseIslandHeur %d", i);
             std::getline(island_file, line);
             ROS_ERROR("%s", line.c_str());
             std::istringstream ss(line);
@@ -610,7 +610,7 @@ void HeuristicMgr::initializeIslandHeur(double radius_around_goal) {
             while(ss >> num)
                 arm_angles.push_back(atof(num.c_str()));
 
-            addArmIslandHeur("armIslandBase" + std::to_string(i), arm_angles);
+            addArmIslandHeur("armIslandHeur" + std::to_string(i), arm_angles);
         }
     }
         
