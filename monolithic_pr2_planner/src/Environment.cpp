@@ -161,8 +161,10 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
       if(heuristic_id > 19) {
           heuristic_id -= 20;
           if(heuristic_id < m_num_islands) {
-              std::string heuristic_name = "armIslandHeur" + std::to_string(heuristic_id);
-          return (static_cast<int>((*values).at(heuristic_name)));
+              std::string base_heuristic_name = "baseIslandHeur" + std::to_string(heuristic_id);
+              std::string arm_heuristic_name = "armIslandHeur" + std::to_string(heuristic_id);
+              //return static_cast<int>(0.1*(*values).at(base_heuristic_name) + (*values).at(arm_heuristic_name));
+              return static_cast<int>((0.1*ad_base) + (0.1 * endeff_rot_goal)+ (*values).at(arm_heuristic_name));
           }
       }
 

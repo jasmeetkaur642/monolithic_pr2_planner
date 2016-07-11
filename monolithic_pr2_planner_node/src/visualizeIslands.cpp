@@ -25,7 +25,9 @@ int main(int argc, char** argv) {
     ROS_INFO("Loaded island parameters %s, %d",  island_file_name.c_str(), num_islands);
 
     bool baseIslandHeur = false;
-    bool armIslandHeur = true;
+    bool armIslandHeur = false;
+    bool baseArmIslandHeur = true;
+
     std::vector<double> base = {0, 0, 0};
     double torso_z = 0.3;
     std::vector<double> left_angles;
@@ -75,6 +77,27 @@ int main(int argc, char** argv) {
             pviz.visualizeRobot(arm_angles, left_angles, base, torso_z, 127, "huehuehue", 0, false);
         }
     }
+        else if(baseArmIslandHeur) {
+            for(int i=0;i<num_islands;i++) {
+                sleep(5);
+                std::getline(island_file, line);
+                ROS_ERROR("%s", line.c_str());
+                std::istringstream ss(line);
+                std::string num;
+                std::vector<double> base_arm_angles;
+                std::vector<double> arm_angles;
+
+                while(ss >> num)
+                    base_arm_angles.push_back(atof(num.c_str()));
+                for(int j=4;j<11;j++)
+                    arm_angles.push_back(base_arm_angles[j]);
+                base[0] = base_arm_angles[0];
+                base[1] = base_arm_angles[1];
+                base[2] = base_arm_angles[2];
+
+                pviz.visualizeRobot(arm_angles, left_angles, base, torso_z, 127, "huehuehue", 0, false);
+                }
+        }
 
     ROS_ERROR("Visualized all islands");
 

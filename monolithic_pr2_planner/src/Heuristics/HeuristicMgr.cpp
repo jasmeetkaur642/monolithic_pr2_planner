@@ -594,7 +594,7 @@ void HeuristicMgr::initializeIslandHeur(double radius_around_goal) {
             x = atof(x_str.c_str());
             y = atof(y_str.c_str());
             ROS_ERROR("Island points %f %f", x, y);
-            addBaseIslandHeur("baseIslandBase" + std::to_string(i), 1, sbpl_2Dpt_t(x,
+            addBaseIslandHeur("baseIslandHeur" + std::to_string(i), 1, sbpl_2Dpt_t(x,
             y), radius_around_goal);
         }
     }
