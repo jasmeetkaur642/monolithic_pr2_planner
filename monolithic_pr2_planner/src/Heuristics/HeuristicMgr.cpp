@@ -388,6 +388,23 @@ void HeuristicMgr::addArmIslandHeur(std::string name, std::vector<double> arm_an
     m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
     ROS_ERROR("Inside addArmIslandHeur %s %d", name.c_str(), m_heuristic_map[name]);
 }
+
+void HeuristicMgr::addYawIslandHeur(std::string name, double yaw) {
+    ContBaseState baseState(0, 0, 0, yaw);
+    RobotState robot_state;
+    robot_state.base_state(baseState);
+    GraphStatePtr robot_graph_state = make_shared<GraphState>(robot_state);
+    
+    GoalState island_state(m_goal);
+    island_state.storeAsSolnState(robot_graph_state);
+
+    AbstractHeuristicPtr new_island_heur = make_shared<MetricHeuristic>(island_state);
+
+    m_heuristics.push_back(new_island_heur);
+    m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
+    ROS_ERROR("Inside addYawIslandHeur %s %d", name.c_str(), m_heuristic_map[name]);
+
+}
  
 // void HeuristicMgr::addVoronoiOrientationHeur(std::string name, const int cost_multiplier){
 //     // Initialize the new heuristic
@@ -575,9 +592,21 @@ void HeuristicMgr::initializeIslandHeur(double radius_around_goal) {
     
     //  Set which Island heuristic you want to use.
     bool baseIslandHeur = false;
-    bool armIslandHeur = true;
-    ifstream island_file(m_island_file_name);
-    ROS_ERROR("%s", m_island_file_name.c_str());
+    bool armIslandHeur = false;
+    bool yawIslandHeur = false;
+
+    if(m_num_islands_arm) {
+        armIslandHeur = true;
+        ifstream island_file_arm(m_island_arm_file_name);
+        ROS_ERROR("%s", m_island_file_arm_name.c_str());
+    }
+
+    if(m_num_islands_yaw) { 
+        yawIslandHeur = true;
+        ifstream island_file_yaw(m_island_yaw_file_name);
+        ROS_ERROR("%s", m_island_file_yaw_name.c_str());
+    }
+
     std::string line;
 
     if(baseIslandHeur) {
@@ -599,9 +628,9 @@ void HeuristicMgr::initializeIslandHeur(double radius_around_goal) {
         }
     }
     else if(armIslandHeur) {
-        for(int i=0;i<m_num_islands;i++) {
+        for(int i=0;i<m_num_islands_arm;i++) {
             ROS_ERROR("init ArmIslandHeuristic %d", i);
-            std::getline(island_file, line);
+            std::getline(island_file_arm, line);
             ROS_ERROR("%s", line.c_str());
             std::istringstream ss(line);
             std::string num;
@@ -613,6 +642,21 @@ void HeuristicMgr::initializeIslandHeur(double radius_around_goal) {
             addArmIslandHeur("armIslandHeur" + std::to_string(i), arm_angles);
         }
     }
+    else if(yawIslandHeur) {
+        for(int i=0;i<m_num_islands_yaw;i++) {
+            ROS_ERROR("init yawIslandHeuristic %d", i);
+            std::getline(island_file_yaw, line);
+            ROS_ERROR("%s", line.c_str());
+            std::istringstream ss(line);
+            std::string num;
+            double yaw;
+
+            yaw = (atof(num.c_str()));
+
+            addYawIslandHeur("yawIslandHeur" + std::to_string(i), yaw);
+            }
+    }
+
         
     else ROS_ERROR("Island heuristics disabled");
     island_file.close();

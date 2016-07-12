@@ -23,6 +23,7 @@ namespace monolithic_pr2_planner {
             GoalState m_goal;
             std::vector<double> goal_right_arm_angles;
             std::vector<double> goal_left_arm_angles;
+            double m_yaw;
 
 
     };

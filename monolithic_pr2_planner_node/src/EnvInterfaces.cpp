@@ -323,7 +323,7 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
   if (!use_new_heuristics) {
     planner_queues = 4;
   } else {
-    planner_queues = 20;
+    planner_queues = 2;
   }
 
   if(use_island_heuristics) {
@@ -443,7 +443,15 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
       res.stats = stats;
       ROS_INFO("No plan found in %s!", planner_prefix.c_str());
     }
+    std::ofstream file;
+    file.open("heuristic_calls", std::ofstream::app);
+    file<<"Printing heurisitc calls\n";
+    for(int i=0;i<m_env->m_count_heuristic_calls.size();i++)
+        file<<i<<"\t"<<m_env->m_count_heuristic_calls[i]<<"\n";
+    file<<"==============================\n";
+    file.close();
 
+    sleep(5);
     if (m_params.run_trajectory) {
       ROS_INFO("Running trajectory!");
       //runTrajectory(states); Commented out to compile without driver.

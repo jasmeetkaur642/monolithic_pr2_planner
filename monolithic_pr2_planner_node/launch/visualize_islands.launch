@@ -3,7 +3,7 @@
   
   <node name="visualize_islands" pkg="monolithic_pr2_planner_node" type="visualizeIslands" output="screen">
       <param name="island_file_name" value="$(find monolithic_pr2_planner_node)/experiments/islands.points" />
-      <param name="num_islands" value="16"  type="int" />
+      <param name="num_islands" value="4"  type="int" />
   </node>
 
   <node pkg="tf" type="static_transform_publisher" name="map_to_base_broadcaster" args="0 0 0 0 0 0 map base_link 100"/>

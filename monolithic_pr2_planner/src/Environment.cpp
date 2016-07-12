@@ -21,7 +21,9 @@ Environment::Environment(ros::NodeHandle nh)
         m_nodehandle(nh), m_mprims(m_goal),
         m_heur_mgr(new HeuristicMgr()),
         m_using_lazy(false),
-        m_planner_type(T_SMHA) {
+        m_planner_type(T_SMHA),
+        //Just a high enough number for size
+        m_count_heuristic_calls(50, 0) {
         m_param_catalog.fetch(nh);
         configurePlanningDomain(); 
 } 
@@ -36,6 +38,7 @@ void Environment::reset() {
     // m_heur_mgr->setCollisionSpaceMgr(m_cspace_mgr);
     m_hash_mgr.reset(new HashManager(&StateID2IndexMapping));
     m_edges.clear();
+    std::fill(m_count_heuristic_calls.begin(), m_count_heuristic_calls.end(), 0);
 
     // Fetch params again, in case they're being modified between calls.
     // m_param_catalog.fetch(m_nodehandle);
@@ -117,55 +120,61 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
         case 1:  // Anchor
           return int(0.1*ad_base) + int(0.1*ad_endeff) + int(0.2*endeff_rot_goal);
           //return anchor_h;
-        case 2:  // Base1, Base2 heur
-          return static_cast<int>(0.1*(*values).at("base_with_rot_0") + 0.1*(*values).at("endeff_rot_goal"));
-          // Shivam: I have disabled the tuck-arm heuristic to check the
-          // effectiveness of island heuristic.
-        case 3:  // Base1, Base2 heur
-          return static_cast<int>(1.0*(*values).at("base_with_rot_0") + 0.0*(*values).at("endeff_rot_goal"));
+        //case 2:  // Base1, Base2 heur
+        //  return static_cast<int>(0.1*(*values).at("base_with_rot_0") + 0.1*(*values).at("endeff_rot_goal"));
+        //  // Shivam: I have disabled the tuck-arm heuristic to check the
+        //  // effectiveness of island heuristic.
+        //case 3:  // Base1, Base2 heur
+        //  return static_cast<int>(0.1*(*values).at("base_with_rot_0") + 0.1*(*values).at("endeff_rot_goal"));
           //return static_cast<int>(0.1*(*values).at("base_with_rot_0") + 0.1*(*values).at("arm_angles_folded"));
-        case 4:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot0") + w_armFold*inad_arm_heur);
-        case 5:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot1") + w_armFold*inad_arm_heur);
-        case 6:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot2") + w_armFold*inad_arm_heur);
-        case 7:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot3") + w_armFold*inad_arm_heur);
-        case 8:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot4") + w_armFold*inad_arm_heur);
-        case 9:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot5") + w_armFold*inad_arm_heur);
-        case 10:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot6") + w_armFold*inad_arm_heur);
-        case 11:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot7") + w_armFold*inad_arm_heur);
-        case 12:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot8") + w_armFold*inad_arm_heur);
-        case 13:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot9") + w_armFold*inad_arm_heur);
-        case 14:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot10") + w_armFold*inad_arm_heur);
-        case 15:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot11") + w_armFold*inad_arm_heur);
-        case 16:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot12") + w_armFold*inad_arm_heur);
-        case 17:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot13") + w_armFold*inad_arm_heur);
-        case 18:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot14") + w_armFold*inad_arm_heur);
-        case 19:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*inad_arm_heur);
+        //case 4:
+        //  return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot0") + w_armFold*inad_arm_heur);
+        //case 5:
+        //  return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot1") + w_armFold*inad_arm_heur);
+        //case 6:
+        //  return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot2") + w_armFold*inad_arm_heur);
+        //case 7:
+        //  return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot3") + w_armFold*inad_arm_heur);
+        //case 8:
+        //  return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot4") + w_armFold*inad_arm_heur);
+       // case 9:
+       //   return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot5") + w_armFold*inad_arm_heur);
+       // case 10:
+       //   return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot6") + w_armFold*inad_arm_heur);
+       // case 11:
+       //   return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot7") + w_armFold*inad_arm_heur);
+       // case 12:
+       //   return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot8") + w_armFold*inad_arm_heur);
+       // case 13:
+       //   return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot9") + w_armFold*inad_arm_heur);
+       // case 14:
+       //   return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot10") + w_armFold*inad_arm_heur);
+       // case 15:
+       //   return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot11") + w_armFold*inad_arm_heur);
+       // case 16:
+       //   return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot12") + w_armFold*inad_arm_heur);
+       // case 17:
+       //   return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot13") + w_armFold*inad_arm_heur);
+       // case 18:
+       //   return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot14") + w_armFold*inad_arm_heur);
+       // case 19:
+       //   return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*inad_arm_heur);
       }
 
-      if(heuristic_id > 19) {
-          heuristic_id -= 20;
-          if(heuristic_id < m_num_islands) {
+      if(heuristic_id > 1) {
+          if(heuristic_id < m_num_islands_arm + 2) {
+            heuristic_id -= 2;
               std::string base_heuristic_name = "baseIslandHeur" + std::to_string(heuristic_id);
-              std::string arm_heuristic_name = "armIslandHeur" + std::to_string(heuristic_id);
-              //return static_cast<int>(0.1*(*values).at(base_heuristic_name) + (*values).at(arm_heuristic_name));
-              return static_cast<int>((0.1*ad_base) + (0.1 * endeff_rot_goal)+ (*values).at(arm_heuristic_name));
+              std::string yaw_heuristic_name = "yawIslandHeur" + std::to_string(heuristic_id);
+              //return static_cast<int>((0.01 * endeff_rot_goal)+ (*values).at(arm_heuristic_name));
+              return static_cast<int>(0.1*ad_base + (*values).at(yaw_heuristic_name));
           }
+
+          else if(heuristic_id < m_num_islands_yaw + m_num_islands_arm + 2) {
+              heuristic_id -= (m_num_islands_arm + 2);
+              std::string arm_heuristic_name = "armIslandHeur" + std::to_string(heuristic_id);
+              return static_cast<int>(0.1*ad_base + (*values).at(arm_heuristic_name));
+                
       }
 
       // switch (heuristic_id) {
@@ -340,6 +349,7 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
 
 void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs, 
                            vector<int>* costs){
+    m_count_heuristic_calls[q_id]++;
     assert(sourceStateID != GOAL_STATE);
 
     ROS_DEBUG_NAMED(SEARCH_LOG, 
@@ -624,14 +634,16 @@ void Environment::configurePlanningDomain(){
     // For island search.
 
     ROS_INFO("Calculating island heuristics");
-    int num_islands = 0;
-    m_nodehandle.param("num_islands", num_islands, 0);
-    m_num_islands = num_islands;
-    ROS_INFO("Number of island heuristics %d", num_islands);
+    m_nodehandle.param("num_islands_arm", m_num_islands_arm, 0);
+    m_nodehandle.param("num_islands_yaw", m_num_islands_yaw, 0);
+    m_num_islands = m_num_islands_arm + m_num_islands_yaw;
+    ROS_INFO("Number of island heuristics %d", m_num_islands);
 
     std::string island_file_name;
-    m_nodehandle.param("planner/island_points_file", island_file_name, std::string(" "));
-    m_island_file_name = island_file_name;
+    m_nodehandle.param("planner/island_points_yaw_file", island_file_name, std::string(" "));
+    m_island_yaw_file_name = island_file_name;
+    m_nodehandle.param("planner/island_points_arm_file", island_file_name, std::string(" "));
+    m_island_arm_file_name = island_file_name;
 
     m_heur_mgr->m_island_file_name = m_island_file_name;
     m_heur_mgr->m_num_islands = num_islands;

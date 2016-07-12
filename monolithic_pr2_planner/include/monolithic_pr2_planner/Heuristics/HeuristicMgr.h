@@ -63,6 +63,7 @@ namespace monolithic_pr2_planner {
             void addUniformCost3DHeur(std::string name);
             void addBaseIslandHeur(std::string, const int, sbpl_2Dpt_t, double);
             void addArmIslandHeur(std::string, std::vector<double>);
+            void addYawIslandHeur(std::string, double);
             // void addVoronoiOrientationHeur(std::string name, const int cost_multiplier
             //     = 1);
             void addEndEffOnlyRotationHeur(std::string name, KDL::Rotation desired_orientation, const int cost_multiplier
