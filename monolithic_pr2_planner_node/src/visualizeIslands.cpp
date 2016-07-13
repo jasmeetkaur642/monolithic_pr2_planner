@@ -25,9 +25,9 @@ int main(int argc, char** argv) {
     ROS_INFO("Loaded island parameters %s, %d",  island_file_name.c_str(), num_islands);
 
     bool baseIslandHeur = false;
-    bool armIslandHeur = false;
+    bool armIslandHeur = true;
     bool baseArmIslandHeur = false;
-    bool yawIslandHeur = true;
+    bool yawIslandHeur = false;
 
     std::vector<double> base = {0, 0, 0};
     double torso_z = 0.3;

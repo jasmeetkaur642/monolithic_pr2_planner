@@ -382,9 +382,10 @@ void HeuristicMgr::addArmIslandHeur(std::string name, std::vector<double> arm_an
     GoalState island_state(m_goal);
     island_state.storeAsSolnState(robot_graph_state);
 
-    AbstractHeuristicPtr new_island_heur = make_shared<MetricHeuristic>(island_state);
+    AbstractHeuristicPtr new_island_arm_heur =
+    make_shared<MetricHeuristic>(island_state, 1);
 
-    m_heuristics.push_back(new_island_heur);
+    m_heuristics.push_back(new_island_arm_heur);
     m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
     ROS_ERROR("Inside addArmIslandHeur %s %d", name.c_str(), m_heuristic_map[name]);
 }
@@ -398,9 +399,10 @@ void HeuristicMgr::addYawIslandHeur(std::string name, double yaw) {
     GoalState island_state(m_goal);
     island_state.storeAsSolnState(robot_graph_state);
 
-    AbstractHeuristicPtr new_island_heur = make_shared<MetricHeuristic>(island_state);
+    AbstractHeuristicPtr new_island_yaw_heur =
+    make_shared<MetricHeuristic>(island_state, 2);
 
-    m_heuristics.push_back(new_island_heur);
+    m_heuristics.push_back(new_island_yaw_heur);
     m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
     ROS_ERROR("Inside addYawIslandHeur %s %d", name.c_str(), m_heuristic_map[name]);
 
@@ -595,24 +597,30 @@ void HeuristicMgr::initializeIslandHeur(double radius_around_goal) {
     bool armIslandHeur = false;
     bool yawIslandHeur = false;
 
+    ifstream island_file_base(m_island_base_file_name);
+    ifstream island_file_arm(m_island_arm_file_name);
+    ifstream island_file_yaw(m_island_yaw_file_name);
+
+    if(m_num_islands_base) {
+        baseIslandHeur = true;
+        ROS_ERROR("%s", m_island_base_file_name.c_str());
+    }
     if(m_num_islands_arm) {
         armIslandHeur = true;
-        ifstream island_file_arm(m_island_arm_file_name);
-        ROS_ERROR("%s", m_island_file_arm_name.c_str());
+        ROS_ERROR("%s", m_island_arm_file_name.c_str());
     }
 
     if(m_num_islands_yaw) { 
         yawIslandHeur = true;
-        ifstream island_file_yaw(m_island_yaw_file_name);
-        ROS_ERROR("%s", m_island_file_yaw_name.c_str());
+        ROS_ERROR("%s", m_island_yaw_file_name.c_str());
     }
 
     std::string line;
-
-    if(baseIslandHeur) {
-        for(int i=0;i<m_num_islands;i++) {
+    
+    if(baseIslandHeur) { 
+        for(int i=0;i<m_num_islands_base;i++) {
             ROS_ERROR("init baseIslandHeur %d", i);
-            std::getline(island_file, line);
+            std::getline(island_file_base, line);
             ROS_ERROR("%s", line.c_str());
             std::istringstream ss(line);
             std::string x_str, y_str;
@@ -627,7 +635,8 @@ void HeuristicMgr::initializeIslandHeur(double radius_around_goal) {
             y), radius_around_goal);
         }
     }
-    else if(armIslandHeur) {
+
+    if(armIslandHeur) {
         for(int i=0;i<m_num_islands_arm;i++) {
             ROS_ERROR("init ArmIslandHeuristic %d", i);
             std::getline(island_file_arm, line);
@@ -636,13 +645,14 @@ void HeuristicMgr::initializeIslandHeur(double radius_around_goal) {
             std::string num;
             std::vector<double> arm_angles;
 
-            while(ss >> num)
+            while(ss >> num){}
                 arm_angles.push_back(atof(num.c_str()));
 
             addArmIslandHeur("armIslandHeur" + std::to_string(i), arm_angles);
         }
     }
-    else if(yawIslandHeur) {
+
+    if(yawIslandHeur) {
         for(int i=0;i<m_num_islands_yaw;i++) {
             ROS_ERROR("init yawIslandHeuristic %d", i);
             std::getline(island_file_yaw, line);
@@ -659,7 +669,8 @@ void HeuristicMgr::initializeIslandHeur(double radius_around_goal) {
 
         
     else ROS_ERROR("Island heuristics disabled");
-    island_file.close();
+    island_file_arm.close();
+    island_file_yaw.close();
 }
 
 
@@ -671,90 +682,93 @@ void HeuristicMgr::initializeMHAHeuristics(const int cost_multiplier){
     // Get the radius around the goal from the base heuristic.
     double radius_around_goal = m_heuristics[m_heuristic_map["admissible_base"]]->getRadiusAroundGoal();
 
-    // Get points on the circle around the base heuristic.
-    DiscObjectState state = m_goal.getObjectState(); 
-    std::vector<int> circle_x;
-    std::vector<int> circle_y;
-    double res = m_occupancy_grid->getResolution();
-    int discrete_radius = radius_around_goal/res;
-    BFS2DHeuristic::getBresenhamCirclePoints(state.x(), state.y(), discrete_radius, circle_x, circle_y);
+   // /*
+   // // Get points on the circle around the base heuristic.
+   // DiscObjectState state = m_goal.getObjectState(); 
+   // std::vector<int> circle_x;
+   // std::vector<int> circle_y;
+   // double res = m_occupancy_grid->getResolution();
+   // int discrete_radius = radius_around_goal/res;
+   // BFS2DHeuristic::getBresenhamCirclePoints(state.x(), state.y(), discrete_radius, circle_x, circle_y);
 
-    // No, we cannot have more number of heuristics than there are points on
-    // the cirlce. That's just redundant.
-    assert(circle_x.size() > m_num_mha_heuristics);
-    
-    // Sample along the circle.
-    /* Get the list of points that are not on an obstacle.
-     * Get the size of this list. Sample from a uniform distribution. 
-     * Make sure you don't repeat points. */
-    for (size_t i = 0; i < circle_x.size();) {
-        // Reject points on obstacles.
-        if(m_grid[circle_x[i]][circle_y[i]] >= costmap_2d::INSCRIBED_INFLATED_OBSTACLE){    //Obstacle!
-            circle_x.erase(circle_x.begin() + i);
-            circle_y.erase(circle_y.begin() + i);
-        }
-        else {
-            i++;
-        }
-    }
+   // // No, we cannot have more number of heuristics than there are points on
+   // // the cirlce. That's just redundant.
+   // assert(circle_x.size() > m_num_mha_heuristics);
+   // 
+   // // Sample along the circle.
+   // /* Get the list of points that are not on an obstacle.
+   //  * Get the size of this list. Sample from a uniform distribution. 
+   //  * Make sure you don't repeat points. */
+   // for (size_t i = 0; i < circle_x.size();) {
+   //     // Reject points on obstacles.
+   //     if(m_grid[circle_x[i]][circle_y[i]] >= costmap_2d::INSCRIBED_INFLATED_OBSTACLE){    //Obstacle!
+   //         circle_x.erase(circle_x.begin() + i);
+   //         circle_y.erase(circle_y.begin() + i);
+   //     }
+   //     else {
+   //         i++;
+   //     }
+   // }
 
-    int center_x = state.x();
-    int center_y = state.y();
+   // int center_x = state.x();
+   // int center_y = state.y();
 
-    std::vector<int> ik_circle_x;
-    std::vector<int> ik_circle_y;
+   // std::vector<int> ik_circle_x;
+   // std::vector<int> ik_circle_y;
 
-    for (size_t i = 0; i < circle_x.size(); ++i) {
-        if(isValidIKForGoalState(circle_x[i], circle_y[i])){
-            ik_circle_x.push_back(circle_x[i]);
-            ik_circle_y.push_back(circle_y[i]);
-        }
-    }
+   // for (size_t i = 0; i < circle_x.size(); ++i) {
+   //     if(isValidIKForGoalState(circle_x[i], circle_y[i])){
+   //         ik_circle_x.push_back(circle_x[i]);
+   //         ik_circle_y.push_back(circle_y[i]);
+   //     }
+   // }
 
-    // If there are enough points that are valid from the IK test, then select
-    // two points out of that. If not, just discard the whole IK thing and select
-    // from the original circle itself.
+   // // If there are enough points that are valid from the IK test, then select
+   // // two points out of that. If not, just discard the whole IK thing and select
+   // // from the original circle itself.
 
-    // std::vector<Point> selected_points;
-    // if (static_cast<int>(ik_circle_x.size()) < m_num_mha_heuristics) {
-    //     selected_points = sample_points(discrete_radius,
-    //             center_x, center_y, circle_x, circle_y, m_num_mha_heuristics);
-    // } else {
-    //     selected_points = sample_points(discrete_radius,
-    //             center_x, center_y, ik_circle_x, ik_circle_y, m_num_mha_heuristics);
-    // }
+   // // std::vector<Point> selected_points;
+   // // if (static_cast<int>(ik_circle_x.size()) < m_num_mha_heuristics) {
+   // //     selected_points = sample_points(discrete_radius,
+   // //             center_x, center_y, circle_x, circle_y, m_num_mha_heuristics);
+   // // } else {
+   // //     selected_points = sample_points(discrete_radius,
+   // //             center_x, center_y, ik_circle_x, ik_circle_y, m_num_mha_heuristics);
+   // // }
 
-    // Select only the point that is directly behind the goal. This is given by
-    // the get_approach_point function
-    std::vector<Point> selected_points;
-    Point selected_point = get_approach_point(center_x, center_y, circle_x,
-        circle_y, m_goal.getObjectState().getContObjectState().yaw());
-    selected_points.push_back(selected_point);
+   // // Select only the point that is directly behind the goal. This is given by
+   // // the get_approach_point function
+   // std::vector<Point> selected_points;
+   // Point selected_point = get_approach_point(center_x, center_y, circle_x,
+   //     circle_y, m_goal.getObjectState().getContObjectState().yaw());
+   // selected_points.push_back(selected_point);
 
-    for (size_t num_base_heur = 0; num_base_heur < selected_points.size(); ++num_base_heur) {
-        stringstream ss;
-        ss << "base_with_rot_" << num_base_heur;
+   // for (size_t num_base_heur = 0; num_base_heur < selected_points.size(); ++num_base_heur) {
+   //     stringstream ss;
+   //     ss << "base_with_rot_" << num_base_heur;
 
-        // Compute the desired orientation.
-        double orientation = normalize_angle_positive(std::atan2(
-            static_cast<double>(m_goal.getObjectState().y() -
-                selected_points[num_base_heur].second),
-            static_cast<double>(m_goal.getObjectState().x() -
-                selected_points[num_base_heur].first)));
-        
-        // Initialize with the desired orientation.
-        initNewMHABaseHeur(ss.str(), selected_points[num_base_heur].first,
-            selected_points[num_base_heur].second,
-            cost_multiplier, orientation);
+   //     // Compute the desired orientation.
+   //     double orientation = normalize_angle_positive(std::atan2(
+   //         static_cast<double>(m_goal.getObjectState().y() -
+   //             selected_points[num_base_heur].second),
+   //         static_cast<double>(m_goal.getObjectState().x() -
+   //             selected_points[num_base_heur].first)));
+   //     
+   //     // Initialize with the desired orientation.
+   //     initNewMHABaseHeur(ss.str(), selected_points[num_base_heur].first,
+   //         selected_points[num_base_heur].second,
+   //         cost_multiplier, orientation);
 
-        // Visualize the line from the sampled point to the original goal point.
-        // BaseWithRotationHeuristic::visualizeLineToOriginalGoal(m_goal.getObjectState().x(),
-        //     m_goal.getObjectState().y(), selected_points[num_base_heur].first,
-        //     selected_points[num_base_heur].second,
-        //     m_occupancy_grid->getResolution());
-    }
-    initNewMHABaseHeur("base_with_rot_door", selected_points[0].first,
-        selected_points[0].second, cost_multiplier, 0.0);
+   //     // Visualize the line from the sampled point to the original goal point.
+   //     // BaseWithRotationHeuristic::visualizeLineToOriginalGoal(m_goal.getObjectState().x(),
+   //     //     m_goal.getObjectState().y(), selected_points[num_base_heur].first,
+   //     //     selected_points[num_base_heur].second,
+   //     //     m_occupancy_grid->getResolution());
+   // }
+   // initNewMHABaseHeur("base_with_rot_door", selected_points[0].first,
+   //     selected_points[0].second, cost_multiplier, 0.0);
+   // 
+
     {
         int cost_multiplier = 20;
         ContObjectState goal_state = m_goal.getObjectState().getContObjectState();
@@ -765,6 +779,9 @@ void HeuristicMgr::initializeMHAHeuristics(const int cost_multiplier){
     }
 
     clock_t new_heur_t0 = clock();
+
+    // XXX Disabling rotation heuristics.
+    /*
     vector<sbpl_2Dpt_t> footprint;
     double halfwidth = 0.39;
     double halflength = 0.39;
@@ -786,6 +803,7 @@ void HeuristicMgr::initializeMHAHeuristics(const int cost_multiplier){
       double theta = DiscTheta2Cont(i, m_resolution_params.num_base_angles);
       addBFS2DRotFootprint("bfsRotFoot" + std::to_string(i), 1, theta, footprint, radius_around_goal+0.15);
     }
+      */
 
     // Island heuristic stuff
     initializeIslandHeur(radius_around_goal);
@@ -796,12 +814,14 @@ void HeuristicMgr::initializeMHAHeuristics(const int cost_multiplier){
     //RightContArmState folded_rarm({0.0, 1.1072800, -1.5566882, -2.124408, 0.0, 0.0, 0.0});
     RightContArmState folded_rarm({-0.2, 1.1072800, -1.5566882, -2.124408, 0.0, -1.57, 0.0});
 
+    //Disabled tuck-in arms heuristic.
+    /*
     RobotState rs(dummy_base, folded_rarm, dummy_larm);
     DiscObjectState localFoldedArmObject = rs.getObjectStateRelBody();
     GoalState localFoldedArmGoal;
     localFoldedArmGoal.setGoal(localFoldedArmObject);
-    // Disabled tuck-in arms heuristic.
-    //addEndEffLocalHeur("arm_angles_folded", 500, localFoldedArmGoal);
+    addEndEffLocalHeur("arm_angles_folded", 500, localFoldedArmGoal);
+    */
 
     clock_t new_heur_t1 = clock();
     ROS_ERROR("new heuristics took %f time to compute",double(new_heur_t1-new_heur_t0)/CLOCKS_PER_SEC);

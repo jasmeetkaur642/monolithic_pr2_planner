@@ -108,7 +108,12 @@ namespace monolithic_pr2_planner {
 
         // Island search
         int m_num_islands;
-        std::string m_island_file_name;
+        int m_num_islands_base;
+        int m_num_islands_arm;
+        int m_num_islands_yaw;
+        std::string m_island_base_file_name;
+        std::string m_island_arm_file_name;
+        std::string m_island_yaw_file_name;
  
         private:
             bool isValidIKForGoalState(int g_x, int g_y);

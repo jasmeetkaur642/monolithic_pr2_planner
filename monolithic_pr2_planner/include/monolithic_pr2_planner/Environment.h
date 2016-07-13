@@ -88,9 +88,12 @@ namespace monolithic_pr2_planner {
             std::map<Edge, MotionPrimitivePtr> m_edges;
 
             int m_num_islands;
+            int m_num_islands_base;
             int m_num_islands_arm;
             int m_num_islands_yaw;
-            std::string m_island_file_name;
+            std::string m_island_base_file_name;
+            std::string m_island_arm_file_name;
+            std::string m_island_yaw_file_name;
             //Just a large enough size for the vector.
             std::vector<int> m_count_heuristic_calls;
     };

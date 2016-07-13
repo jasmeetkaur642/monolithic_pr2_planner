@@ -323,7 +323,7 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
   if (!use_new_heuristics) {
     planner_queues = 4;
   } else {
-    planner_queues = 2;
+    planner_queues = 3;
   }
 
   if(use_island_heuristics) {

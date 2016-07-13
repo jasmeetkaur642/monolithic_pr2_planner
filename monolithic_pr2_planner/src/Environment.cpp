@@ -119,6 +119,8 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
           return anchor_h;
         case 1:  // Anchor
           return int(0.1*ad_base) + int(0.1*ad_endeff) + int(0.2*endeff_rot_goal);
+        case 2: 
+          return inad_arm_heur;
           //return anchor_h;
         //case 2:  // Base1, Base2 heur
         //  return static_cast<int>(0.1*(*values).at("base_with_rot_0") + 0.1*(*values).at("endeff_rot_goal"));
@@ -160,22 +162,29 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
        // case 19:
        //   return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*inad_arm_heur);
       }
-
+    int num_non_island = 3;
       if(heuristic_id > 1) {
-          if(heuristic_id < m_num_islands_arm + 2) {
-            heuristic_id -= 2;
+          if(heuristic_id < m_num_islands_yaw + num_non_island) {
+            heuristic_id -= num_non_island;
               std::string base_heuristic_name = "baseIslandHeur" + std::to_string(heuristic_id);
               std::string yaw_heuristic_name = "yawIslandHeur" + std::to_string(heuristic_id);
               //return static_cast<int>((0.01 * endeff_rot_goal)+ (*values).at(arm_heuristic_name));
               return static_cast<int>(0.1*ad_base + (*values).at(yaw_heuristic_name));
           }
 
-          else if(heuristic_id < m_num_islands_yaw + m_num_islands_arm + 2) {
-              heuristic_id -= (m_num_islands_arm + 2);
+          else if(heuristic_id < m_num_islands_arm + m_num_islands_yaw + num_non_island) {
+              heuristic_id -= (m_num_islands_yaw + num_non_island);
               std::string arm_heuristic_name = "armIslandHeur" + std::to_string(heuristic_id);
-              return static_cast<int>(0.1*ad_base + (*values).at(arm_heuristic_name));
+              return static_cast<int>( 0.1*ad_base + (*values).at(arm_heuristic_name));
                 
-      }
+         }
+          else if(heuristic_id < m_num_islands_base + m_num_islands_arm + m_num_islands_yaw + num_non_island) {
+              heuristic_id -= (m_num_islands_arm + m_num_islands_yaw + num_non_island);
+              std::string arm_heuristic_name = "baseIslandHeur" + std::to_string(heuristic_id);
+              return static_cast<int>( 0.1*ad_base + (*values).at(base_heuristic_name));
+                
+         }
+    }
 
       // switch (heuristic_id) {
       //   case 0:  // Anchor
@@ -342,8 +351,7 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
     return std::max((*values).at("admissible_base"), (*values).at("admissible_endeff"));
 }
 
-void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs, 
-                           vector<int>* costs){
+void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs, vector<int>* costs){
     GetSuccs(0, sourceStateID, succIDs, costs);
 }
 
@@ -634,20 +642,27 @@ void Environment::configurePlanningDomain(){
     // For island search.
 
     ROS_INFO("Calculating island heuristics");
+    m_nodehandle.param("num_islands_base", m_num_islands_base, 0);
     m_nodehandle.param("num_islands_arm", m_num_islands_arm, 0);
     m_nodehandle.param("num_islands_yaw", m_num_islands_yaw, 0);
-    m_num_islands = m_num_islands_arm + m_num_islands_yaw;
+    m_num_islands = m_num_islands_arm + m_num_islands_yaw + m_num_islands_base;
     ROS_INFO("Number of island heuristics %d", m_num_islands);
 
     std::string island_file_name;
+    m_nodehandle.param("planner/island_points_base_file", island_file_name, std::string(" "));
     m_nodehandle.param("planner/island_points_yaw_file", island_file_name, std::string(" "));
     m_island_yaw_file_name = island_file_name;
     m_nodehandle.param("planner/island_points_arm_file", island_file_name, std::string(" "));
     m_island_arm_file_name = island_file_name;
 
-    m_heur_mgr->m_island_file_name = m_island_file_name;
-    m_heur_mgr->m_num_islands = num_islands;
-    ROS_ERROR("%s", m_island_file_name.c_str());
+    m_heur_mgr->m_island_base_file_name = m_island_base_file_name;
+    m_heur_mgr->m_island_yaw_file_name = m_island_yaw_file_name;
+    m_heur_mgr->m_island_arm_file_name = m_island_arm_file_name;
+    m_heur_mgr->m_num_islands = m_num_islands;
+    m_heur_mgr->m_num_islands_base = m_num_islands_base;
+    m_heur_mgr->m_num_islands_arm = m_num_islands_arm;
+    m_heur_mgr->m_num_islands_yaw = m_num_islands_yaw;
+    m_heur_mgr->m_num_islands = m_num_islands;
     m_heur_mgr->initializeHeuristics();
 
     // used for arm kinematics
