@@ -13,7 +13,7 @@ namespace monolithic_pr2_planner {
     class MetricHeuristic : public virtual AbstractHeuristic, public OccupancyGridUser {
         public:
             MetricHeuristic() {}
-            MetricHeuristic(GoalState& goal_state, int);
+            MetricHeuristic(GoalState& goal_state, int, int cost_multiplier=1);
             ~MetricHeuristic();
             
             void setGoal(GoalState& state);
@@ -26,6 +26,8 @@ namespace monolithic_pr2_planner {
             double m_yaw;
             bool armMetric;
             bool yawMetric;
+
+            int m_cost_multiplier;
 
 
     };

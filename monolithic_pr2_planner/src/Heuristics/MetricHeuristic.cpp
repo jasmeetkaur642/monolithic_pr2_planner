@@ -9,7 +9,8 @@ using namespace monolithic_pr2_planner;
 
 // mode = 1 for arm
 // mode = 2 for yaw
-MetricHeuristic::MetricHeuristic(GoalState& goal_state, int mode){
+MetricHeuristic::MetricHeuristic(GoalState& goal_state, int mode, int cost_multiplier){
+    m_cost_multiplier = cost_multiplier;
     if(mode == 1) {
         armMetric = true;
         yawMetric = false;
@@ -55,6 +56,7 @@ void MetricHeuristic::setGoal(GoalState& goal_state){
 
 int MetricHeuristic::getGoalHeuristic(GraphStatePtr state){
     int cost = 0;
+    double cost_ = 0;
 
     if(armMetric) {
 
@@ -68,12 +70,14 @@ int MetricHeuristic::getGoalHeuristic(GraphStatePtr state){
         current_right_arm_angles.push_back(state->robot_pose().right_arm().getWristRollAngle());
 
         for(int i=0;i<7;i++) {
-            cost += ((current_right_arm_angles[i] - goal_right_arm_angles[i]) * (current_right_arm_angles[i] - goal_right_arm_angles[i]));
+            cost_ += m_cost_multiplier*((current_right_arm_angles[i] - goal_right_arm_angles[i]) * (current_right_arm_angles[i] - goal_right_arm_angles[i]));
         }
+        cost = int(cost_);
     }
 
     else if(yawMetric) {
-        cost = int((m_yaw - state->robot_pose().getContBaseState().theta()) *(m_yaw - state->robot_pose().getContBaseState().theta())); 
+        cost_ = m_cost_multiplier*((m_yaw - state->robot_pose().getContBaseState().theta()) *(m_yaw - state->robot_pose().getContBaseState().theta())); 
+        cost = int(cost_);
     }
 
     else ROS_ERROR("Metric Heuristic mode not recognised");

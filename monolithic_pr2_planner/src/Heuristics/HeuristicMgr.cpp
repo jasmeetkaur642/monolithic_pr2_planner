@@ -400,7 +400,7 @@ void HeuristicMgr::addYawIslandHeur(std::string name, double yaw) {
     island_state.storeAsSolnState(robot_graph_state);
 
     AbstractHeuristicPtr new_island_yaw_heur =
-    make_shared<MetricHeuristic>(island_state, 2);
+    make_shared<MetricHeuristic>(island_state, 2, 20);
 
     m_heuristics.push_back(new_island_yaw_heur);
     m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
@@ -645,7 +645,7 @@ void HeuristicMgr::initializeIslandHeur(double radius_around_goal) {
             std::string num;
             std::vector<double> arm_angles;
 
-            while(ss >> num){}
+            while(ss >> num)
                 arm_angles.push_back(atof(num.c_str()));
 
             addArmIslandHeur("armIslandHeur" + std::to_string(i), arm_angles);
@@ -682,92 +682,92 @@ void HeuristicMgr::initializeMHAHeuristics(const int cost_multiplier){
     // Get the radius around the goal from the base heuristic.
     double radius_around_goal = m_heuristics[m_heuristic_map["admissible_base"]]->getRadiusAroundGoal();
 
-   // /*
-   // // Get points on the circle around the base heuristic.
-   // DiscObjectState state = m_goal.getObjectState(); 
-   // std::vector<int> circle_x;
-   // std::vector<int> circle_y;
-   // double res = m_occupancy_grid->getResolution();
-   // int discrete_radius = radius_around_goal/res;
-   // BFS2DHeuristic::getBresenhamCirclePoints(state.x(), state.y(), discrete_radius, circle_x, circle_y);
+    
+    // Get points on the circle around the base heuristic.
+    DiscObjectState state = m_goal.getObjectState(); 
+    std::vector<int> circle_x;
+    std::vector<int> circle_y;
+    double res = m_occupancy_grid->getResolution();
+    int discrete_radius = radius_around_goal/res;
+    BFS2DHeuristic::getBresenhamCirclePoints(state.x(), state.y(), discrete_radius, circle_x, circle_y);
 
-   // // No, we cannot have more number of heuristics than there are points on
-   // // the cirlce. That's just redundant.
-   // assert(circle_x.size() > m_num_mha_heuristics);
-   // 
-   // // Sample along the circle.
-   // /* Get the list of points that are not on an obstacle.
-   //  * Get the size of this list. Sample from a uniform distribution. 
-   //  * Make sure you don't repeat points. */
-   // for (size_t i = 0; i < circle_x.size();) {
-   //     // Reject points on obstacles.
-   //     if(m_grid[circle_x[i]][circle_y[i]] >= costmap_2d::INSCRIBED_INFLATED_OBSTACLE){    //Obstacle!
-   //         circle_x.erase(circle_x.begin() + i);
-   //         circle_y.erase(circle_y.begin() + i);
-   //     }
-   //     else {
-   //         i++;
-   //     }
-   // }
+    // No, we cannot have more number of heuristics than there are points on
+    // the cirlce. That's just redundant.
+    assert(circle_x.size() > m_num_mha_heuristics);
+    
+    // Sample along the circle.
+    /* Get the list of points that are not on an obstacle.
+     * Get the size of this list. Sample from a uniform distribution. 
+     * Make sure you don't repeat points. */
+    for (size_t i = 0; i < circle_x.size();) {
+        // Reject points on obstacles.
+        if(m_grid[circle_x[i]][circle_y[i]] >= costmap_2d::INSCRIBED_INFLATED_OBSTACLE){    //Obstacle!
+            circle_x.erase(circle_x.begin() + i);
+            circle_y.erase(circle_y.begin() + i);
+        }
+        else {
+            i++;
+        }
+    }
 
-   // int center_x = state.x();
-   // int center_y = state.y();
+    int center_x = state.x();
+    int center_y = state.y();
 
-   // std::vector<int> ik_circle_x;
-   // std::vector<int> ik_circle_y;
+    std::vector<int> ik_circle_x;
+    std::vector<int> ik_circle_y;
 
-   // for (size_t i = 0; i < circle_x.size(); ++i) {
-   //     if(isValidIKForGoalState(circle_x[i], circle_y[i])){
-   //         ik_circle_x.push_back(circle_x[i]);
-   //         ik_circle_y.push_back(circle_y[i]);
-   //     }
-   // }
+    for (size_t i = 0; i < circle_x.size(); ++i) {
+        if(isValidIKForGoalState(circle_x[i], circle_y[i])){
+            ik_circle_x.push_back(circle_x[i]);
+            ik_circle_y.push_back(circle_y[i]);
+        }
+    }
 
-   // // If there are enough points that are valid from the IK test, then select
-   // // two points out of that. If not, just discard the whole IK thing and select
-   // // from the original circle itself.
+    // If there are enough points that are valid from the IK test, then select
+    // two points out of that. If not, just discard the whole IK thing and select
+    // from the original circle itself.
 
-   // // std::vector<Point> selected_points;
-   // // if (static_cast<int>(ik_circle_x.size()) < m_num_mha_heuristics) {
-   // //     selected_points = sample_points(discrete_radius,
-   // //             center_x, center_y, circle_x, circle_y, m_num_mha_heuristics);
-   // // } else {
-   // //     selected_points = sample_points(discrete_radius,
-   // //             center_x, center_y, ik_circle_x, ik_circle_y, m_num_mha_heuristics);
-   // // }
+    // std::vector<Point> selected_points;
+    // if (static_cast<int>(ik_circle_x.size()) < m_num_mha_heuristics) {
+    //     selected_points = sample_points(discrete_radius,
+    //             center_x, center_y, circle_x, circle_y, m_num_mha_heuristics);
+    // } else {
+    //     selected_points = sample_points(discrete_radius,
+    //             center_x, center_y, ik_circle_x, ik_circle_y, m_num_mha_heuristics);
+    // }
 
-   // // Select only the point that is directly behind the goal. This is given by
-   // // the get_approach_point function
-   // std::vector<Point> selected_points;
-   // Point selected_point = get_approach_point(center_x, center_y, circle_x,
-   //     circle_y, m_goal.getObjectState().getContObjectState().yaw());
-   // selected_points.push_back(selected_point);
+    // Select only the point that is directly behind the goal. This is given by
+    // the get_approach_point function
+    std::vector<Point> selected_points;
+    Point selected_point = get_approach_point(center_x, center_y, circle_x,
+        circle_y, m_goal.getObjectState().getContObjectState().yaw());
+    selected_points.push_back(selected_point);
 
-   // for (size_t num_base_heur = 0; num_base_heur < selected_points.size(); ++num_base_heur) {
-   //     stringstream ss;
-   //     ss << "base_with_rot_" << num_base_heur;
+    for (size_t num_base_heur = 0; num_base_heur < selected_points.size(); ++num_base_heur) {
+        stringstream ss;
+        ss << "base_with_rot_" << num_base_heur;
 
-   //     // Compute the desired orientation.
-   //     double orientation = normalize_angle_positive(std::atan2(
-   //         static_cast<double>(m_goal.getObjectState().y() -
-   //             selected_points[num_base_heur].second),
-   //         static_cast<double>(m_goal.getObjectState().x() -
-   //             selected_points[num_base_heur].first)));
-   //     
-   //     // Initialize with the desired orientation.
-   //     initNewMHABaseHeur(ss.str(), selected_points[num_base_heur].first,
-   //         selected_points[num_base_heur].second,
-   //         cost_multiplier, orientation);
+        // Compute the desired orientation.
+        double orientation = normalize_angle_positive(std::atan2(
+            static_cast<double>(m_goal.getObjectState().y() -
+                selected_points[num_base_heur].second),
+            static_cast<double>(m_goal.getObjectState().x() -
+                selected_points[num_base_heur].first)));
+        
+        // Initialize with the desired orientation.
+        initNewMHABaseHeur(ss.str(), selected_points[num_base_heur].first,
+            selected_points[num_base_heur].second,
+            cost_multiplier, orientation);
 
-   //     // Visualize the line from the sampled point to the original goal point.
-   //     // BaseWithRotationHeuristic::visualizeLineToOriginalGoal(m_goal.getObjectState().x(),
-   //     //     m_goal.getObjectState().y(), selected_points[num_base_heur].first,
-   //     //     selected_points[num_base_heur].second,
-   //     //     m_occupancy_grid->getResolution());
-   // }
-   // initNewMHABaseHeur("base_with_rot_door", selected_points[0].first,
-   //     selected_points[0].second, cost_multiplier, 0.0);
-   // 
+        // Visualize the line from the sampled point to the original goal point.
+        // BaseWithRotationHeuristic::visualizeLineToOriginalGoal(m_goal.getObjectState().x(),
+        //     m_goal.getObjectState().y(), selected_points[num_base_heur].first,
+        //     selected_points[num_base_heur].second,
+        //     m_occupancy_grid->getResolution());
+    }
+    initNewMHABaseHeur("base_with_rot_door", selected_points[0].first,
+        selected_points[0].second, cost_multiplier, 0.0);
+    
 
     {
         int cost_multiplier = 20;

@@ -119,11 +119,11 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
           return anchor_h;
         case 1:  // Anchor
           return int(0.1*ad_base) + int(0.1*ad_endeff) + int(0.2*endeff_rot_goal);
-        case 2: 
-          return inad_arm_heur;
           //return anchor_h;
-        //case 2:  // Base1, Base2 heur
-        //  return static_cast<int>(0.1*(*values).at("base_with_rot_0") + 0.1*(*values).at("endeff_rot_goal"));
+        case 2:  // Base1, Base2 heur
+          return static_cast<int>(0.1*(*values).at("base_with_rot_0") + 0.1*(*values).at("endeff_rot_goal"));
+        case 3: 
+          return 0.1*ad_base + ad_endeff;
         //  // Shivam: I have disabled the tuck-arm heuristic to check the
         //  // effectiveness of island heuristic.
         //case 3:  // Base1, Base2 heur
@@ -162,14 +162,16 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
        // case 19:
        //   return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*inad_arm_heur);
       }
-    int num_non_island = 3;
+      //ROS_INFO("%d %d", ad_endeff, endeff_rot_goal);
+    int num_non_island = 4;
       if(heuristic_id > 1) {
           if(heuristic_id < m_num_islands_yaw + num_non_island) {
             heuristic_id -= num_non_island;
               std::string base_heuristic_name = "baseIslandHeur" + std::to_string(heuristic_id);
               std::string yaw_heuristic_name = "yawIslandHeur" + std::to_string(heuristic_id);
               //return static_cast<int>((0.01 * endeff_rot_goal)+ (*values).at(arm_heuristic_name));
-              return static_cast<int>(0.1*ad_base + (*values).at(yaw_heuristic_name));
+              ROS_INFO("%d", (*values).at(yaw_heuristic_name));
+              return static_cast<int>(0.05*ad_base + (*values).at(yaw_heuristic_name));
           }
 
           else if(heuristic_id < m_num_islands_arm + m_num_islands_yaw + num_non_island) {
@@ -180,8 +182,8 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
          }
           else if(heuristic_id < m_num_islands_base + m_num_islands_arm + m_num_islands_yaw + num_non_island) {
               heuristic_id -= (m_num_islands_arm + m_num_islands_yaw + num_non_island);
-              std::string arm_heuristic_name = "baseIslandHeur" + std::to_string(heuristic_id);
-              return static_cast<int>( 0.1*ad_base + (*values).at(base_heuristic_name));
+              std::string base_heuristic_name = "baseIslandHeur" + std::to_string(heuristic_id);
+              return static_cast<int>(ad_base + (*values).at(base_heuristic_name));
                 
          }
     }
@@ -650,6 +652,7 @@ void Environment::configurePlanningDomain(){
 
     std::string island_file_name;
     m_nodehandle.param("planner/island_points_base_file", island_file_name, std::string(" "));
+    m_island_base_file_name = island_file_name;
     m_nodehandle.param("planner/island_points_yaw_file", island_file_name, std::string(" "));
     m_island_yaw_file_name = island_file_name;
     m_nodehandle.param("planner/island_points_arm_file", island_file_name, std::string(" "));

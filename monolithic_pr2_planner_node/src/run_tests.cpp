@@ -65,6 +65,11 @@ int main(int argc, char** argv){
       gotMetaType = true;
     }
     else if(strcmp(argv[i],"focal_mha")==0){
+      req.meta_search_type = mha_planner::MetaSearchType::ROUND_ROBIN;
+      req.mha_type = mha_planner::MHAType::FOCAL;
+      gotMetaType = true;
+    }
+    else if(strcmp(argv[i],"focal_mha_dts")==0){
       req.meta_search_type = mha_planner::MetaSearchType::DTS;
       req.mha_type = mha_planner::MHAType::FOCAL;
       gotMetaType = true;
@@ -72,6 +77,11 @@ int main(int argc, char** argv){
     else if(strcmp(argv[i],"unconstrained_mha")==0){
       req.meta_search_type = mha_planner::MetaSearchType::DTS;
       req.mha_type = mha_planner::MHAType::UNCONSTRAINED;
+      gotMetaType = true;
+    }
+    else if(strcmp(argv[i],"focal_mha_meta")==0){
+      req.meta_search_type = mha_planner::MetaSearchType::META_A_STAR;
+      req.mha_type = mha_planner::MHAType::FOCAL;
       gotMetaType = true;
     }
     else if(strcmp(argv[i],"gbfs")==0){
@@ -95,8 +105,8 @@ int main(int argc, char** argv){
   }
 
   //planner parameters
-  req.initial_eps = 100.0;
-  req.final_eps = 100.0;
+  req.initial_eps = 20.0;
+  req.final_eps = 20.0;
   req.dec_eps = 0.2;
 
   req.rarm_object.pose.position.x = 0;
@@ -118,7 +128,7 @@ int main(int argc, char** argv){
   req.roll_tolerance = .1;
   req.pitch_tolerance = .1;
   req.yaw_tolerance = .1;
-  req.allocated_planning_time = 100;
+  req.allocated_planning_time = 300;
   req.planning_mode = monolithic_pr2_planner::PlanningModes::RIGHT_ARM_MOBILE;
 
   req.body_start.resize(4);

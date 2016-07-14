@@ -35,7 +35,7 @@
       <param name="use_new_heuristics" value="true" />
       <!-- Island heuristic related parameters -->
       <param name="use_island_heuristics" value="true" />
-      <param name="planner/island_points_base" value="$(find monolithic_pr2_planner_node)/experiments/islands_base.points" />
+      <param name="planner/island_points_base_file" value="$(find monolithic_pr2_planner_node)/experiments/islands_base.points" />
       <param name="num_islands_base" value="5"  type="int" />
       <param name="planner/island_points_yaw_file" value="$(find monolithic_pr2_planner_node)/experiments/islands_yaw.points" />
       <param name="num_islands_yaw" value="5"  type="int" />

@@ -323,7 +323,7 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
   if (!use_new_heuristics) {
     planner_queues = 4;
   } else {
-    planner_queues = 3;
+    planner_queues = 4;
   }
 
   if(use_island_heuristics) {
@@ -468,6 +468,7 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
   SearchRequestParamsPtr search_request = make_shared<SearchRequestParams>();
   search_request->initial_epsilon = req.initial_eps;
   search_request->final_epsilon = req.final_eps;
+  ROS_ERROR("%f\t%f", req.initial_eps, req.final_eps);
   search_request->decrement_epsilon = req.dec_eps;
   search_request->base_start = req.body_start;
   search_request->left_arm_start = LeftContArmState(req.larm_start);
