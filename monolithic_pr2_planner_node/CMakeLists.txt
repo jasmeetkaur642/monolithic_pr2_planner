@@ -8,7 +8,7 @@ project(monolithic_pr2_planner_node)
 # TODO: remove all from COMPONENTS that are not catkin packages.
 #find_package(ompl REQUIRED)
 find_package(catkin REQUIRED COMPONENTS roscpp geometry_msgs monolithic_pr2_planner leatherman pcl_ros geometry_msgs sensor_msgs arm_navigation_msgs costmap_2d
-                             sbpl_manipulation_components_pr2 interactive_markers sbpl_mha message_generation pviz tf2 pcl_conversions gridmap_2d)
+                             sbpl_manipulation_components_pr2 interactive_markers sbpl_mha message_generation pviz tf2 pcl_conversions gridmap_2d full_body_controller)
 find_package(orocos_kdl)
 #uncomment if you have defined services
 add_service_files(
@@ -26,7 +26,7 @@ generate_messages(
 catkin_package(
     DEPENDS roscpp geometry_msgs costmap_2d sbpl_manipulation_components_pr2 interactive_markers
              orocos_kdl
-             CATKIN_DEPENDS pcl_conversions tf2 message_runtime pviz sbpl_manipulation_components_pr2 monolithic_pr2_planner leatherman pcl_ros  geometry_msgs sensor_msgs arm_navigation_msgs sbpl_mha gridmap_2d# TODO
+             CATKIN_DEPENDS pcl_conversions tf2 message_runtime pviz sbpl_manipulation_components_pr2 monolithic_pr2_planner leatherman pcl_ros  geometry_msgs sensor_msgs arm_navigation_msgs sbpl_mha gridmap_2d full_body_controller# TODO
     INCLUDE_DIRS include ${catkin_INCLUDE_DIRS} ${ompl_INCLUDE_DIRS}# TODO include
     LIBRARIES ${catkin_LIBRARIES} ${ompl_LIBRARIES} # TODO
 )
