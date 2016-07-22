@@ -422,6 +422,9 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
     if (isPlanFound) {
       ROS_INFO("Plan found in %s Planner. Moving on to reconstruction.",
                planner_prefix.c_str());
+
+      //m_mha_planner->save_state_time();
+
       states =  m_env->reconstructPath(soln);
       total_planning_time = clock() - total_planning_time;
       packageMHAStats(stat_names, stats, soln_cost, states.size(),

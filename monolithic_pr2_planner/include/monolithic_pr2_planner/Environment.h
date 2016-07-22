@@ -13,6 +13,8 @@
 #include <vector>
 #include <memory>
 
+#include <unordered_map>
+
 #define NUM_SMHA_HEUR 4 // Used in EnvInterfaces to initialize the planner.
 #define NUM_IMHA_HEUR 4 // Used in EnvInterfaces to initialize the planner.
 // This should include the Anchor search -> Total number of searches.
@@ -81,6 +83,11 @@ namespace monolithic_pr2_planner {
             int  SizeofCreatedEnv(){ return m_hash_mgr->size(); };
             void PrintState(int stateID, bool bVerbose, FILE* fOut=NULL){};
             void PrintEnv_Config(FILE* fOut){};
+
+            void save_state_time(vector<int> soln_path);
+
             std::map<Edge, MotionPrimitivePtr> m_edges;
+
+            std::unordered_map<int, double> m_state_time_map;
     };
 }

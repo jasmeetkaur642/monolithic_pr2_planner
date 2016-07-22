@@ -73,6 +73,9 @@ int Environment::GetGoalHeuristic(int stateID) {
 }
 
 int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
+    //Code to calculate node expansion time.
+    m_state_time_map.emplace(stateID, double(clock()) / CLOCKS_PER_SEC);
+
     GraphStatePtr successor = m_hash_mgr->getGraphState(stateID);
     if(m_goal->isSatisfiedBy(successor) || stateID == GOAL_STATE){
         return 0;
@@ -651,6 +654,9 @@ void Environment::configureQuerySpecificParams(SearchRequestPtr search_request){
  * transition data.
  */
 vector<FullBodyState> Environment::reconstructPath(vector<int> soln_path){
+    //Save state time stats.
+    save_state_time(soln_path);
+
     PathPostProcessor postprocessor(m_hash_mgr, m_cspace_mgr);
     std::vector<FullBodyState> final_path = postprocessor.reconstructPath(soln_path, *m_goal, m_mprims.getMotionPrims());
     if(m_param_catalog.m_visualization_params.final_path){
@@ -671,3 +677,32 @@ void Environment::generateStartState(SearchRequestPtr search_request) {
     search_request->m_params->right_arm_start = start_robot_state.right_arm();
     search_request->m_params->left_arm_start = start_robot_state.left_arm();
 }
+
+void Environment::save_state_time(vector<int> soln_path) {
+    ROS_INFO("Saving times to state.time.csv");
+
+    ofstream file;
+    file.open("state_time.csv", std::fstream::app);
+
+    for(int i=0;i<soln_path.size();i++) {
+        int state_id = soln_path[i];
+        GraphStatePtr state = m_hash_mgr->getGraphState(state_id);
+
+        if(i==0)
+            file<<state_id<<"\t"<<state->base_x()<<"\t"<<state->base_y()<<"\t"<<0<<"\n";
+        else
+            file<<state_id<<"\t"<<state->base_x()<<"\t"<<state->base_y()<<"\t"<<m_state_time_map[state_id] - m_state_time_map[soln_path[i-1]]<<"\n";
+    }
+
+    file.close();
+
+    ROS_INFO("File saved");
+}
+
+
+
+
+
+
+
+
