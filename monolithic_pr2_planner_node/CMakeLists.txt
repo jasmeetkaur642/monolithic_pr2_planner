@@ -13,6 +13,7 @@ find_package(orocos_kdl)
 #uncomment if you have defined services
 add_service_files(
   DIRECTORY srv
+  FILES GetMobileArmPlan.srv
 # TODO: List your msg files here
 )
 
@@ -80,7 +81,7 @@ add_executable(testPlanningRequest src/testPlanningRequest.cpp)
 target_link_libraries(testPlanningRequest monolithic_pr2_planner)
 
 add_executable(interactFullBodyPlanner src/interactFullBodyPlanner.cpp)
-add_dependencies(interactFullBodyPlanner ${catkin_EXPORTED_TARGETS})
+add_dependencies(interactFullBodyPlanner interactFullBodyPlanner_gen_cpp)
 # TODO I don't know why I have to list the packages explicitly.
 target_link_libraries(interactFullBodyPlanner monolithic_pr2_planner sbpl_manipulation_components_pr2 pviz ${catkin_LIBRARIES} ${ompl_LIBRARIES})
 

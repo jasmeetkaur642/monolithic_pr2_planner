@@ -10,6 +10,9 @@ echo "Installing debian packages using apt-get"
 rosdep install --from-paths . --ignore-src --rosdistro=indigo
 
 # orocos_kdl (Not a catkin package, so add it as a separate library in cmakelist)
+# Go to every cloned package and run rosdep.
+# ompl needs to be separately installed.
+
 # Eigen
 # livgsl0-dev
 # ompl
