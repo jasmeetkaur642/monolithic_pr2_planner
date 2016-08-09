@@ -3,6 +3,7 @@
 #include <monolithic_pr2_planner/ParameterCatalog.h>
 #include <monolithic_pr2_planner/MotionPrimitives/FileParser.h>
 #include <monolithic_pr2_planner/MotionPrimitives/BaseAdaptiveMotionPrimitive.h>
+#include <monolithic_pr2_planner/MotionPrimitives/BaseSnapMotionPrimitive.h>
 #include <monolithic_pr2_planner/MotionPrimitives/ArmAdaptiveMotionPrimitive.h>
 #include <monolithic_pr2_planner/MotionPrimitives/ArmTuckMotionPrimitive.h>
 #include <monolithic_pr2_planner/MotionPrimitives/ArmUntuckMotionPrimitive.h>
@@ -21,11 +22,17 @@ namespace monolithic_pr2_planner {
             bool loadMPrims(const MotionPrimitiveParams& files);
             void loadMPrimSet(int planning_mode);
             std::vector<MotionPrimitivePtr> getMotionPrims() { return m_active_mprims; };
+            void searchNearGoal();
+            void getUpdatedGoalandTolerances(GoalStatePtr& goal, double xyz_tol, double roll_tol, double pitch_tol, double yaw_tol) {
+                m_goal = goal;
++               basesnap_mprim->getUpdatedGoalandTolerances(m_goal, xyz_tol, roll_tol, pitch_tol, yaw_tol);
+            }
         private:
             void loadBaseOnlyMPrims();
             void loadArmOnlyMPrims();
             void loadAllMPrims();
             void loadTorsoMPrims();
+            void loadBaseSnapMPrims();
             // these are all the possible mprims we have
             std::vector<std::vector<MotionPrimitivePtr> > m_all_mprims;
             void computeAllMPrimCosts(std::vector<MPrimList> mprims);
@@ -39,5 +46,6 @@ namespace monolithic_pr2_planner {
             std::vector<MotionPrimitivePtr> m_active_mprims;
             MotionPrimitiveParams m_params;
             GoalStatePtr m_goal;
+            BaseSnapMotionPrimitivePtr basesnap_mprim;
     };
 }

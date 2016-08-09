@@ -1,12 +1,6 @@
-#include <monolithic_pr2_planner/MotionPrimitives/MotionPrimitivesMgr.h>
-#include <monolithic_pr2_planner/Constants.h>
-#include <boost/foreach.hpp>
+#include <monolithic_pr2_planner/MotionPrimitives/MotionPrimitivesMgr.h> #include <monolithic_pr2_planner/Constants.h> #include <boost/foreach.hpp> using namespace monolithic_pr2_planner; using namespace std; using namespace boost;
 
-using namespace monolithic_pr2_planner;
-using namespace std;
-using namespace boost;
-
-MotionPrimitivesMgr::MotionPrimitivesMgr(boost::shared_ptr<GoalState>& goal) : m_all_mprims(5){ }
+MotionPrimitivesMgr::MotionPrimitivesMgr(boost::shared_ptr<GoalState>& goal) : m_all_mprims(6){m_goal = goal; }
 
 /*! \brief loads all mprims from configuration. also sets up amps. note that
  * these are not necessarily the exact mprims used during search, because
@@ -46,11 +40,16 @@ bool MotionPrimitivesMgr::loadMPrims(const MotionPrimitiveParams& params){
     torso_mprims.push_back(t_mprim1);
     torso_mprims.push_back(t_mprim2);
 
+    MPrimList base_snap_mprims;
+    basesnap_mprim = make_shared<BaseSnapMotionPrimitive>();
+    base_snap_mprims.push_back(basesnap_mprim);
+
     m_all_mprims[MPrim_Types::ARM] = arm_mprims;
     m_all_mprims[MPrim_Types::BASE] = base_mprims;
     m_all_mprims[MPrim_Types::TORSO] = torso_mprims;
     m_all_mprims[MPrim_Types::ARM_ADAPTIVE] = arm_amps;
     m_all_mprims[MPrim_Types::BASE_ADAPTIVE] = base_amps;
+    m_all_mprims[MPrim_Types::BASE_SNAP] = base_snap_mprims;
 
     computeAllMPrimCosts(m_all_mprims);
 
@@ -105,10 +104,15 @@ void MotionPrimitivesMgr::loadArmOnlyMPrims(){
     combineVectors(m_all_mprims[MPrim_Types::ARM_ADAPTIVE], m_active_mprims);
 }
 
+void MotionPrimitivesMgr::loadBaseSnapMPrims(){
+     combineVectors(m_all_mprims[MPrim_Types::BASE_SNAP], m_active_mprims);
+}
+
 void MotionPrimitivesMgr::loadAllMPrims(){
     loadBaseOnlyMPrims();
     loadArmOnlyMPrims();
     loadTorsoMPrims();
+    loadBaseSnapMPrims();
 }
 
 void MotionPrimitivesMgr::computeAllMPrimCosts(vector<MPrimList> mprims){

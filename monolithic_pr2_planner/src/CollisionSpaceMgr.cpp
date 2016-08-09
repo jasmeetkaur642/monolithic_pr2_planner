@@ -65,16 +65,16 @@ bool CollisionSpaceMgr::isValid(RobotState& robot_pose){
     double dist_temp;
     int debug_code;
     ROS_DEBUG_NAMED(CSPACE_LOG, "collision checking pose");
-    ROS_DEBUG_NAMED(CSPACE_LOG, "body pose is %f %f %f", body_pose.x, 
+    ROS_DEBUG_NAMED(CSPACE_LOG, "body pose is %f %f %f", body_pose.x,
                                 body_pose.y, body_pose.z);
     robot_pose.printToDebug(CSPACE_LOG);
-    // Visualizer::pviz->visualizeRobot(r_arm, l_arm, body_pose, 150, 
+    // Visualizer::pviz->visualizeRobot(r_arm, l_arm, body_pose, 150,
                                     // std::string("planner"), 0);
-    return m_cspace->checkAllMotion(l_arm, r_arm, body_pose, false, dist_temp, 
+    return m_cspace->checkAllMotion(l_arm, r_arm, body_pose, false, dist_temp,
                                     debug_code);
 }
 
-bool CollisionSpaceMgr::isValid(ContBaseState& base, RightContArmState& r_arm, 
+bool CollisionSpaceMgr::isValid(ContBaseState& base, RightContArmState& r_arm,
                                 LeftContArmState& l_arm){
     vector<double> l_arm_v;
     vector<double> r_arm_v;
@@ -83,7 +83,7 @@ bool CollisionSpaceMgr::isValid(ContBaseState& base, RightContArmState& r_arm,
     double dist_temp;
     int debug_code;
     BodyPose bp = base.body_pose();
-    return m_cspace->checkAllMotion(l_arm_v, r_arm_v, bp, false, dist_temp, 
+    return m_cspace->checkAllMotion(l_arm_v, r_arm_v, bp, false, dist_temp,
                                     debug_code);
 }
 
@@ -115,12 +115,15 @@ bool CollisionSpaceMgr::isValidSuccessor(const GraphState& successor,
         return m_cspace->checkBaseMotion(l_arm, r_arm, body_pose, verbose, dist,
                                          debug);
     } else if (onlyArmMotion){
-        bool isvalid = m_cspace->checkArmsMotion(l_arm, r_arm, body_pose, 
+        bool isvalid = m_cspace->checkArmsMotion(l_arm, r_arm, body_pose,
                                                  verbose, dist, debug);
         return isvalid;
     } else if (t_data.motion_type() == MPrim_Types::TORSO){
-        return m_cspace->checkSpineMotion(l_arm, r_arm, body_pose, verbose, 
+        return m_cspace->checkSpineMotion(l_arm, r_arm, body_pose, verbose,
                                           dist, debug);
+    } else if (t_data.motion_type() == MPrim_Types::BASE_SNAP){
+        return m_cspace->checkBaseMotion(l_arm, r_arm, body_pose, verbose, dist, debug);
+
     } else {
         throw std::invalid_argument("not a valid motion primitive type");
     }
@@ -154,7 +157,7 @@ bool CollisionSpaceMgr::isValidTransitionStates(const TransitionData& t_data){
         bool verbose = false;
         double dist;
         int debug;
-    
+
         // let's check the validity of all intermediate poses
         if (onlyBaseMotion){
             BodyPose body_pose = interp_base_motions[idx].body_pose();
@@ -166,16 +169,22 @@ bool CollisionSpaceMgr::isValidTransitionStates(const TransitionData& t_data){
             ROS_DEBUG_NAMED(CSPACE_LOG, "skipping the intermediate points for arms because there are none.");
         } else if (t_data.motion_type() == MPrim_Types::ARM_ADAPTIVE) {
             BodyPose body_pose = robot_state.getContBaseState().body_pose();
-            if(!m_cspace->checkArmsMotion(l_arm, r_arm, body_pose, 
+            if(!m_cspace->checkArmsMotion(l_arm, r_arm, body_pose,
                                                  verbose, dist, debug)) {
                 return false;
             }
         } else if (t_data.motion_type() == MPrim_Types::TORSO) {
             BodyPose body_pose = robot_state.getContBaseState().body_pose();
-            if (!m_cspace->checkSpineMotion(l_arm, r_arm, body_pose, verbose, 
+            if (!m_cspace->checkSpineMotion(l_arm, r_arm, body_pose, verbose,
                                                       dist, debug)) {
                 return false;
             }
+        } else if (t_data.motion_type() == MPrim_Types::BASE_SNAP){
+                    interp_base_motions = t_data.cont_base_interm_steps();
+                    BodyPose body_pose = interp_base_motions[idx].body_pose();
+                    if (!m_cspace->checkBaseMotion(l_arm, r_arm, body_pose, verbose, dist, debug)){
+                        return false;
+                    }
         } else {
             throw std::invalid_argument("not a valid motion primitive type");
         }
@@ -201,7 +210,7 @@ bool CollisionSpaceMgr::isValidContState(std::vector<double>& l_arm, std::vector
 
 /**
  * \brief visualizes the object attached to the robot.
- * 
+ *
  */
  void CollisionSpaceMgr::visualizeAttachedObject(RobotState& robot_state,
     int hue){
