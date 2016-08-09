@@ -688,10 +688,11 @@ void Environment::save_state_time(vector<int> soln_path) {
         int state_id = soln_path[i];
         GraphStatePtr state = m_hash_mgr->getGraphState(state_id);
 
-        if(i==0)
-            file<<state_id<<"\t"<<state->base_x()<<"\t"<<state->base_y()<<"\t"<<0<<"\n";
+        if(i==0) {
+            file<<state_id<<"\t"<<state->obj_x()<<"\t"<<state->obj_y()<<"\t"<<state->obj_z()<<"\t"<<state->obj_roll()<<"\t"<<state->obj_pitch()<<"\t"<<state->obj_yaw()<<"\t"<< state->base_theta()<<"\t"<<state->base_x()<<"\t"<<state->base_y()<<"\t"<<0<<"\n";
+        }
         else
-            file<<state_id<<"\t"<<state->base_x()<<"\t"<<state->base_y()<<"\t"<<m_state_time_map[state_id] - m_state_time_map[soln_path[i-1]]<<"\n";
+            file<<state_id<<"\t"<<state->obj_x()<<"\t"<<state->obj_y()<<"\t"<<state->obj_z()<<"\t"<<state->obj_roll()<<"\t"<<state->obj_pitch()<<"\t"<<state->obj_yaw()<<"\t"<< state->base_theta()<<"\t"<<state->base_x()<<"\t"<<state->base_y()<<"\t"<<m_state_time_map[state_id] - m_state_time_map[soln_path[i-1]]<<"\n";
     }
 
     file.close();

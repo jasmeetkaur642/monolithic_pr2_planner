@@ -44,6 +44,11 @@ int main(int argc, char** argv){
       req.mha_type = mha_planner::MHAType::ORIGINAL;
       gotMetaType = true;
     }
+    else if(strcmp(argv[i],"rr_focal")==0){
+      req.meta_search_type = mha_planner::MetaSearchType::ROUND_ROBIN;
+      req.mha_type = mha_planner::MHAType::FOCAL;
+      gotMetaType = true;
+    }
     else if(strcmp(argv[i],"ma")==0){
       req.meta_search_type = mha_planner::MetaSearchType::META_A_STAR;
       req.mha_type = mha_planner::MHAType::ORIGINAL;
@@ -118,7 +123,7 @@ int main(int argc, char** argv){
   req.roll_tolerance = .1;
   req.pitch_tolerance = .1;
   req.yaw_tolerance = .1;
-  req.allocated_planning_time = 150;
+  req.allocated_planning_time = 250;
   req.planning_mode = monolithic_pr2_planner::PlanningModes::RIGHT_ARM_MOBILE;
 
   req.body_start.resize(4);
