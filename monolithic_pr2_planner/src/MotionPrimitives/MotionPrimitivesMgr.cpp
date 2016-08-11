@@ -1,4 +1,9 @@
-#include <monolithic_pr2_planner/MotionPrimitives/MotionPrimitivesMgr.h> #include <monolithic_pr2_planner/Constants.h> #include <boost/foreach.hpp> using namespace monolithic_pr2_planner; using namespace std; using namespace boost;
+#include <monolithic_pr2_planner/MotionPrimitives/MotionPrimitivesMgr.h>
+#include <monolithic_pr2_planner/Constants.h>
+#include <boost/foreach.hpp>
+using namespace monolithic_pr2_planner;
+using namespace std;
+using namespace boost;
 
 MotionPrimitivesMgr::MotionPrimitivesMgr(boost::shared_ptr<GoalState>& goal) : m_all_mprims(6){m_goal = goal; }
 

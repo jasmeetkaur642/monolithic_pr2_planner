@@ -25,7 +25,7 @@ namespace monolithic_pr2_planner {
             void searchNearGoal();
             void getUpdatedGoalandTolerances(GoalStatePtr& goal, double xyz_tol, double roll_tol, double pitch_tol, double yaw_tol) {
                 m_goal = goal;
-+               basesnap_mprim->getUpdatedGoalandTolerances(m_goal, xyz_tol, roll_tol, pitch_tol, yaw_tol);
+                basesnap_mprim->getUpdatedGoalandTolerances(m_goal, xyz_tol, roll_tol, pitch_tol, yaw_tol);
             }
         private:
             void loadBaseOnlyMPrims();
