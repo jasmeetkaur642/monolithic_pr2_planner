@@ -22,6 +22,8 @@ Environment::Environment(ros::NodeHandle nh)
         m_heur_mgr(new HeuristicMgr()),
         m_using_lazy(false),
         m_planner_type(T_SMHA) {
+        m_goal = make_shared<GoalState>();
+        m_mprims = MotionPrimitivesMgr(m_goal);
         m_param_catalog.fetch(nh);
         configurePlanningDomain();
 }
@@ -77,8 +79,12 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
     m_state_time_map.emplace(stateID, double(clock()) / CLOCKS_PER_SEC);
 
     GraphStatePtr successor = m_hash_mgr->getGraphState(stateID);
-    if(m_goal->isSatisfiedBy(successor) || stateID == GOAL_STATE){
+    if(m_goal->isSatisfiedBy(successor, m_goal_near_search) || stateID == GOAL_STATE){
         return 0;
+    }
+
+    if(stateID == GOAL_STATE) {
+        m_goal_near_search = false;
     }
     std::unique_ptr<stringintmap> values;
     m_heur_mgr->getGoalHeuristic(successor, values);
@@ -371,7 +377,7 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
                             successor->id());
             successor->printToDebug(MPRIM_LOG);
 
-            if (m_goal->isSatisfiedBy(successor)){
+            if (m_goal->isSatisfiedBy(successor, m_goal_near_search)){
                 m_goal->storeAsSolnState(successor);
                 ROS_DEBUG_NAMED(SEARCH_LOG, "Found potential goal at state %d %d", successor->id(),
                     mprim->cost());
@@ -416,6 +422,15 @@ void Environment::GetLazySuccs(int q_id, int sourceStateID, vector<int>* succIDs
   vector<MotionPrimitivePtr> all_mprims = m_mprims.getMotionPrims();
     ROS_DEBUG_NAMED(SEARCH_LOG, "==================Expanding state %d==================", 
                     sourceStateID);
+
+    // For snap motion primitive
+    if(m_goal_near_search) {
+        ROS_INFO("Search near goal");
+        m_mprims.getUpdatedGoal(m_goal);
+        m_mprims.searchNearGoal();
+    }
+
+
     succIDs->clear();
     succIDs->reserve(all_mprims.size());
     costs->clear();
@@ -456,7 +471,7 @@ void Environment::GetLazySuccs(int q_id, int sourceStateID, vector<int>* succIDs
         m_hash_mgr->save(successor);
         Edge key; 
 
-        if (m_goal->isSatisfiedBy(successor)){
+        if (m_goal->isSatisfiedBy(successor, m_goal_near_search)){
           m_goal->storeAsSolnState(successor);
           //ROS_DEBUG_NAMED(SEARCH_LOG, "Found potential goal at state %d %d", successor->id(),
             //  mprim->cost());

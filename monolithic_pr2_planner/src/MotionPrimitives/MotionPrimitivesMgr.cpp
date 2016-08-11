@@ -127,3 +127,7 @@ void MotionPrimitivesMgr::computeAllMPrimCosts(vector<MPrimList> mprims){
         }
     }
 }
+
+void MotionPrimitivesMgr::searchNearGoal() {
+    loadBaseSnapMPrims();
+}

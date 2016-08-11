@@ -13,13 +13,14 @@ namespace monolithic_pr2_planner {
             GoalState(RobotState goal_state, double xyz_tol, 
                      double roll_tol, double pitch_tol, double yaw_tol);
             bool isSatisfiedBy(const GraphStatePtr& graph_state);
+            bool isSatisfiedBy(const GraphStatePtr& graph_state, bool &goal_near_search);
             void storeAsSolnState(const GraphStatePtr& state){ m_full_goal_state = state; };
             GraphStatePtr getSolnState(){ return m_full_goal_state; };
             bool isSolnStateID(int state_id);
             void addPotentialSolnState(const GraphStatePtr& graph_state);
             DiscObjectState getObjectState() const { return m_goal_state.getObjectStateRelMap().getDiscObjectState(); };
             RobotState getRobotState() const { return m_goal_state; };
-            void setGoal(DiscObjectState goal_state){m_goal_state =
+            void setGoal(RobotState goal_state){m_goal_state =
                 goal_state;};
             bool withinXYZTol(const GraphStatePtr& graph_state);
             void visualize();
