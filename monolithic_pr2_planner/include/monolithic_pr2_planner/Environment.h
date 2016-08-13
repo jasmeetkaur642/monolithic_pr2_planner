@@ -71,6 +71,8 @@ namespace monolithic_pr2_planner {
 
             bool m_goal_near_search;
 
+            //std::vector<RobotState> m_island_base_states;
+
         // SBPL interface stuff
         public:
             bool InitializeEnv(const char* sEnvFile){return false;};
@@ -85,6 +87,8 @@ namespace monolithic_pr2_planner {
             int  SizeofCreatedEnv(){ return m_hash_mgr->size(); };
             void PrintState(int stateID, bool bVerbose, FILE* fOut=NULL){};
             void PrintEnv_Config(FILE* fOut){};
+
+            std::vector<RobotState> getBaseIslandStates();
 
             void save_state_time(vector<int> soln_path);
 

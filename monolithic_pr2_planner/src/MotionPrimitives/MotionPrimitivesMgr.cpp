@@ -7,6 +7,9 @@ using namespace boost;
 
 MotionPrimitivesMgr::MotionPrimitivesMgr(boost::shared_ptr<GoalState>& goal) : m_all_mprims(6){m_goal = goal; }
 
+// Pass island states to MotionPrimitiveMgs from Environment.
+MotionPrimitivesMgr::MotionPrimitivesMgr(boost::shared_ptr<GoalState>& goal, std::vector<RobotState> &islandStates) : m_all_mprims(6){m_goal = goal; m_islandStates = islandStates;}
+
 /*! \brief loads all mprims from configuration. also sets up amps. note that
  * these are not necessarily the exact mprims used during search, because
  * there's a user parameter that selects which mprims to actually use. 

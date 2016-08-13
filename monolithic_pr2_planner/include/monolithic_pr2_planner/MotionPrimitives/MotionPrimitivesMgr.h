@@ -48,5 +48,7 @@ namespace monolithic_pr2_planner {
             MotionPrimitiveParams m_params;
             GoalStatePtr m_goal;
             BaseSnapMotionPrimitivePtr basesnap_mprim;
+
+            std::vector<RobotState> m_islandStates;
     };
 }

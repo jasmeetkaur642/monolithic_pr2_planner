@@ -18,12 +18,14 @@ using namespace boost;
 // stateid2mapping pointer inherited from sbpl interface. needed for planner.
 Environment::Environment(ros::NodeHandle nh)
     :   m_hash_mgr(new HashManager(&StateID2IndexMapping)),
-        m_nodehandle(nh), m_mprims(m_goal),
+        m_nodehandle(nh), //m_mprims(m_goal),
         m_heur_mgr(new HeuristicMgr()),
         m_using_lazy(false),
         m_planner_type(T_SMHA) {
-        m_goal = make_shared<GoalState>();
-        m_mprims = MotionPrimitivesMgr(m_goal);
+        //m_goal = make_shared<GoalState>();
+        //m_mprims = MotionPrimitivesMgr(m_goal);
+        std::vector<RobotState> islandStates = getBaseIslandStates();
+        m_mprims - MotionPrimitivesMgr(m_goal, islandStates);
         m_param_catalog.fetch(nh);
         configurePlanningDomain();
 }
@@ -713,6 +715,36 @@ void Environment::save_state_time(vector<int> soln_path) {
     file.close();
 
     ROS_INFO("File saved");
+}
+
+std::vector<RobotState> getBaseIslandStates() {
+    std::string base_file_name;
+    m_nodehandle.param("base_island_file_name", base_file_name, std::string(" "));
+    ROS_INFO("Base island file name %s", base_file_name.c_str());
+
+    ifstream island_file(base_file_name);
+    std::string line;
+    std::vector<RobotState> islandStates;
+
+    while(std::getline(island_file, line)) {
+        ROS_INFO("%s", line.c_str());
+
+        std::istringstream ss(line);
+        std::string x_str, y_str, yaw_str;
+
+        ss >> x_str >> y_str >> yaw_str;
+
+        double x = 0, y = 0, yaw = 0;
+        x = atof(x_str.c_str());
+        y = atof(y_str.c_str());
+        yaw = atof(yaw_str.c_str());
+        ContBaseState base(x, y, 0.3, yaw);
+
+        RobotState islandState(base, RightContArmState right_arm(), LeftContArmState left_arm());
+        islandStates.push_back(islandState);
+    }
+    //m_island_base_states = islandStates;
+    return islandStates;
 }
 
 
