@@ -49,8 +49,11 @@ bool MotionPrimitivesMgr::loadMPrims(const MotionPrimitiveParams& params){
     torso_mprims.push_back(t_mprim2);
 
     MPrimList base_snap_mprims;
-    basesnap_mprim = make_shared<BaseSnapMotionPrimitive>();
-    base_snap_mprims.push_back(basesnap_mprim);
+    for(RobotState islandState : m_islandStates) {
+        BaseSnapMotionPrimitivePtr temp = make_shared<BaseSnapMotionPrimitive>(islandState);
+        basesnap_mprim.push_back(temp);
+        base_snap_mprims.push_back(temp);
+    }
 
     m_all_mprims[MPrim_Types::ARM] = arm_mprims;
     m_all_mprims[MPrim_Types::BASE] = base_mprims;

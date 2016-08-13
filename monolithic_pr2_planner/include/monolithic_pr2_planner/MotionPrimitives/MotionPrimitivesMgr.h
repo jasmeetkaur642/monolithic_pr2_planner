@@ -18,7 +18,8 @@ namespace monolithic_pr2_planner {
     class MotionPrimitivesMgr {
         public:
             MotionPrimitivesMgr(){};
-            MotionPrimitivesMgr(GoalStatePtr& goal);
+            MotionPrimitivesMgr(GoalStatePtr&);
+            MotionPrimitivesMgr(GoalStatePtr& goal, std::vector<RobotState>&);
             bool loadMPrims(const MotionPrimitiveParams& files);
             void loadMPrimSet(int planning_mode);
             std::vector<MotionPrimitivePtr> getMotionPrims() { return m_active_mprims; };
@@ -26,7 +27,8 @@ namespace monolithic_pr2_planner {
             void getUpdatedGoal(GoalStatePtr& goal) { m_goal = goal; }
             void getUpdatedGoalandTolerances(GoalStatePtr& goal, double xyz_tol, double roll_tol, double pitch_tol, double yaw_tol) {
                 m_goal = goal;
-                basesnap_mprim->getUpdatedGoalandTolerances(m_goal, xyz_tol, roll_tol, pitch_tol, yaw_tol);
+                for(int i=0;i < m_islandStates.size();i++)
+                    basesnap_mprim[i]->getUpdatedGoalandTolerances(m_islandStates[i], xyz_tol, roll_tol, pitch_tol, yaw_tol);
             }
         private:
             void loadBaseOnlyMPrims();
@@ -47,7 +49,7 @@ namespace monolithic_pr2_planner {
             std::vector<MotionPrimitivePtr> m_active_mprims;
             MotionPrimitiveParams m_params;
             GoalStatePtr m_goal;
-            BaseSnapMotionPrimitivePtr basesnap_mprim;
+            std::vector<BaseSnapMotionPrimitivePtr> basesnap_mprim;
 
             std::vector<RobotState> m_islandStates;
     };

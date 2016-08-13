@@ -14,6 +14,7 @@ class BaseSnapMotionPrimitive : public MotionPrimitive {
     //Quickly hardcoded. Should be read from SearchReqParam
 
     }
+    BaseSnapMotionPrimitive(RobotState& goal): m_goal_robot(goal), m_tolerances(4,0) {}
     virtual bool apply(const GraphState& graph_state,
         GraphStatePtr& successor,
         TransitionData& t_data);
@@ -24,15 +25,17 @@ class BaseSnapMotionPrimitive : public MotionPrimitive {
     bool computeIntermSteps(const GraphState& source_state,
                         const GraphState& successor,
                         TransitionData& t_data);
-    void getUpdatedGoalandTolerances(GoalStatePtr& goal,double xyz_tol, double roll_tol, double pitch_tol, double yaw_tol)
+    void getUpdatedGoalandTolerances(RobotState& goal,double xyz_tol, double roll_tol, double pitch_tol, double yaw_tol)
     {
-        m_goal = goal;
+        m_goal = boost::make_shared<GoalState>(m_goal_robot, xyz_tol, roll_tol, pitch_tol, yaw_tol);
         m_tolerances[Tolerances::XYZ] =  xyz_tol;
         m_tolerances[Tolerances::ROLL] =  roll_tol;
         m_tolerances[Tolerances::PITCH] =  pitch_tol;
         m_tolerances[Tolerances::YAW] =  yaw_tol;
     }
+
     GoalStatePtr m_goal;
+    RobotState m_goal_robot;
     std::vector<double> m_tolerances;
 };
 typedef boost::shared_ptr<BaseSnapMotionPrimitive> BaseSnapMotionPrimitivePtr;

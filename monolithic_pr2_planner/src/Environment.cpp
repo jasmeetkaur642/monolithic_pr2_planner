@@ -25,7 +25,7 @@ Environment::Environment(ros::NodeHandle nh)
         //m_goal = make_shared<GoalState>();
         //m_mprims = MotionPrimitivesMgr(m_goal);
         std::vector<RobotState> islandStates = getBaseIslandStates();
-        m_mprims - MotionPrimitivesMgr(m_goal, islandStates);
+        m_mprims = MotionPrimitivesMgr(m_goal, islandStates);
         m_param_catalog.fetch(nh);
         configurePlanningDomain();
 }
@@ -426,11 +426,11 @@ void Environment::GetLazySuccs(int q_id, int sourceStateID, vector<int>* succIDs
                     sourceStateID);
 
     // For snap motion primitive
-    if(m_goal_near_search) {
-        ROS_INFO("Search near goal");
-        m_mprims.getUpdatedGoal(m_goal);
+    //if(m_goal_near_search) {
+        //ROS_INFO("Search near goal");
+        //m_mprims.getUpdatedGoal(m_goal);
         m_mprims.searchNearGoal();
-    }
+    //}
 
 
     succIDs->clear();
@@ -592,6 +592,12 @@ bool Environment::setStartGoal(SearchRequestPtr search_request,
     // informs the heuristic about the goal
     m_heur_mgr->setGoal(*m_goal);
 
+    m_mprims.getUpdatedGoalandTolerances(m_goal,
+            search_request->m_params->xyz_tolerance,
+            search_request->m_params->roll_tolerance,
+            search_request->m_params->pitch_tolerance,
+            search_request->m_params->yaw_tolerance);
+
     return true;
 }
 
@@ -717,7 +723,7 @@ void Environment::save_state_time(vector<int> soln_path) {
     ROS_INFO("File saved");
 }
 
-std::vector<RobotState> getBaseIslandStates() {
+std::vector<RobotState> Environment::getBaseIslandStates() {
     std::string base_file_name;
     m_nodehandle.param("base_island_file_name", base_file_name, std::string(" "));
     ROS_INFO("Base island file name %s", base_file_name.c_str());
@@ -738,9 +744,12 @@ std::vector<RobotState> getBaseIslandStates() {
         x = atof(x_str.c_str());
         y = atof(y_str.c_str());
         yaw = atof(yaw_str.c_str());
-        ContBaseState base(x, y, 0.3, yaw);
 
-        RobotState islandState(base, RightContArmState right_arm(), LeftContArmState left_arm());
+        ContBaseState base(x, y, 0.3, yaw);
+        RightContArmState right_arm{};
+        LeftContArmState left_arm{};
+
+        RobotState islandState{base, right_arm, left_arm};
         islandStates.push_back(islandState);
     }
     //m_island_base_states = islandStates;
