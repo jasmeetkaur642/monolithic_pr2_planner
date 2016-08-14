@@ -27,8 +27,8 @@ bool ArmSnapMotionPrimitive::apply(const GraphState& source_state,
                            abs(m_goal->getObjectState().z()-obj.z()) < 25*d_tol.z());
 
 
-    bool within_basexy_tol = (abs(m_goal->getRobotState().base_state().x()-base.x()) < 25*d_tol.x() &&
-                              abs(m_goal->getRobotState().base_state().y()-base.y()) < 25*d_tol.y());
+   // bool within_basexy_tol = (abs(m_goal->getRobotState().base_state().x()-base.x()) < 25*d_tol.x() &&
+   //                           abs(m_goal->getRobotState().base_state().y()-base.y()) < 25*d_tol.y());
 
     bool ik_success = false;
     if(within_xyz_tol) {

@@ -22,9 +22,9 @@ bool BaseSnapMotionPrimitive::apply(const GraphState& source_state,
     DiscBaseState base = robot_pose.base_state();
     unsigned int r_free_angle = robot_pose.right_free_angle();
 
-    bool within_xyz_tol = (abs(m_goal->getObjectState().x()-obj.x()) < d_tol.x() &&
-                           abs(m_goal->getObjectState().y()-obj.y()) < d_tol.y() &&
-                           abs(m_goal->getObjectState().z()-obj.z()) < d_tol.z());
+    //bool within_xyz_tol = (abs(m_goal->getObjectState().x()-obj.x()) < d_tol.x() &&
+    //                       abs(m_goal->getObjectState().y()-obj.y()) < d_tol.y() &&
+    //                       abs(m_goal->getObjectState().z()-obj.z()) < d_tol.z());
 
 
     bool within_basexy_tol = (abs(m_goal->getRobotState().base_state().x()-base.x()) < 25*d_tol.x() &&
