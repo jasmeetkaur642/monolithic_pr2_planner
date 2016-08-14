@@ -32,7 +32,7 @@ bool ArmSnapMotionPrimitive::apply(const GraphState& source_state,
     
     if(within_basexy_tol)
     { 
-      //ROS_INFO("[FBS] Search near goal");      
+      ROS_INFO("[Arm snap] Search near goal");
 
       RobotState rs(source_state.robot_pose().getContBaseState(), m_goal->getRobotState().right_arm(), m_goal->getRobotState().left_arm());
       successor.reset(new GraphState(rs));
