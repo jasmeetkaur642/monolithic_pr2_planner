@@ -5,7 +5,7 @@ using namespace monolithic_pr2_planner;
 using namespace std;
 using namespace boost;
 
-MotionPrimitivesMgr::MotionPrimitivesMgr(boost::shared_ptr<GoalState>& goal) : m_all_mprims(6){m_goal = goal; }
+MotionPrimitivesMgr::MotionPrimitivesMgr(boost::shared_ptr<GoalState>& goal) : m_all_mprims(7){m_goal = goal; }
 
 // Pass island states to MotionPrimitiveMgs from Environment.
 MotionPrimitivesMgr::MotionPrimitivesMgr(boost::shared_ptr<GoalState>& goal, std::vector<RobotState> &islandStates) : m_all_mprims(6){m_goal = goal; m_islandStates = islandStates;}
@@ -48,6 +48,7 @@ bool MotionPrimitivesMgr::loadMPrims(const MotionPrimitiveParams& params){
     torso_mprims.push_back(t_mprim1);
     torso_mprims.push_back(t_mprim2);
 
+    // Base snap mprims.
     MPrimList base_snap_mprims;
     for(RobotState islandState : m_islandStates) {
         BaseSnapMotionPrimitivePtr temp = make_shared<BaseSnapMotionPrimitive>(islandState);
@@ -55,12 +56,18 @@ bool MotionPrimitivesMgr::loadMPrims(const MotionPrimitiveParams& params){
         base_snap_mprims.push_back(temp);
     }
 
+    // Arm snap mprims.
+    MPrimList arm_snap_mprims;
+    armsnap_mprim = make_shared<ArmSnapMotionPrimitive>();
+    arm_snap_mprims.push_back(armsnap_mprim);
+
     m_all_mprims[MPrim_Types::ARM] = arm_mprims;
     m_all_mprims[MPrim_Types::BASE] = base_mprims;
     m_all_mprims[MPrim_Types::TORSO] = torso_mprims;
     m_all_mprims[MPrim_Types::ARM_ADAPTIVE] = arm_amps;
     m_all_mprims[MPrim_Types::BASE_ADAPTIVE] = base_amps;
     m_all_mprims[MPrim_Types::BASE_SNAP] = base_snap_mprims;
+    m_all_mprims[MPrim_Types::ARM_SNAP] = arm_snap_mprims;
 
     computeAllMPrimCosts(m_all_mprims);
 
@@ -119,11 +126,16 @@ void MotionPrimitivesMgr::loadBaseSnapMPrims(){
      combineVectors(m_all_mprims[MPrim_Types::BASE_SNAP], m_active_mprims);
 }
 
+void MotionPrimitivesMgr::loadArmSnapMPrims() {
+    combineVectors(m_all_prims[MPrim_Types::ARM_SNAP], m_active_mprims);
+}
+
 void MotionPrimitivesMgr::loadAllMPrims(){
     loadBaseOnlyMPrims();
     loadArmOnlyMPrims();
     loadTorsoMPrims();
     loadBaseSnapMPrims();
+    loadArmSnapMPrims();
 }
 
 void MotionPrimitivesMgr::computeAllMPrimCosts(vector<MPrimList> mprims){
@@ -135,5 +147,10 @@ void MotionPrimitivesMgr::computeAllMPrimCosts(vector<MPrimList> mprims){
 }
 
 void MotionPrimitivesMgr::searchNearGoal() {
+    //loadBaseSnapMPrims();
+    loadArmSnapMPrims();
+}
+
+void MotionPrimitivesMgr::addIslandSnapPrimitives() {
     loadBaseSnapMPrims();
 }

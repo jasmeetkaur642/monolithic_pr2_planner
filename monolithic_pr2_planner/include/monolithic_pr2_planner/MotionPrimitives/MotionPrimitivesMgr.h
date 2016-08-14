@@ -4,6 +4,7 @@
 #include <monolithic_pr2_planner/MotionPrimitives/FileParser.h>
 #include <monolithic_pr2_planner/MotionPrimitives/BaseAdaptiveMotionPrimitive.h>
 #include <monolithic_pr2_planner/MotionPrimitives/BaseSnapMotionPrimitive.h>
+#include <monolithic_pr2_planner/MotionPrimitives/ArmSnapMotionPrimitive.h>
 #include <monolithic_pr2_planner/MotionPrimitives/ArmAdaptiveMotionPrimitive.h>
 #include <monolithic_pr2_planner/MotionPrimitives/ArmTuckMotionPrimitive.h>
 #include <monolithic_pr2_planner/MotionPrimitives/ArmUntuckMotionPrimitive.h>
@@ -21,6 +22,7 @@ namespace monolithic_pr2_planner {
             MotionPrimitivesMgr(GoalStatePtr&);
             MotionPrimitivesMgr(GoalStatePtr& goal, std::vector<RobotState>&);
             bool loadMPrims(const MotionPrimitiveParams& files);
+            void addIslandSnapPrimitives();
             void loadMPrimSet(int planning_mode);
             std::vector<MotionPrimitivePtr> getMotionPrims() { return m_active_mprims; };
             void searchNearGoal();
@@ -29,6 +31,9 @@ namespace monolithic_pr2_planner {
                 m_goal = goal;
                 for(int i=0;i < m_islandStates.size();i++)
                     basesnap_mprim[i]->getUpdatedGoalandTolerances(m_islandStates[i], xyz_tol, roll_tol, pitch_tol, yaw_tol);
+
+                armsnap_mprim->getUpdatedGoalandTolerances(m_goal, xyz_tol, roll_tol, pitch_tol, yaw_tol);
+
             }
         private:
             void loadBaseOnlyMPrims();
@@ -36,6 +41,7 @@ namespace monolithic_pr2_planner {
             void loadAllMPrims();
             void loadTorsoMPrims();
             void loadBaseSnapMPrims();
+            void loadArmSnapMPrims();
             // these are all the possible mprims we have
             std::vector<std::vector<MotionPrimitivePtr> > m_all_mprims;
             void computeAllMPrimCosts(std::vector<MPrimList> mprims);
@@ -50,6 +56,8 @@ namespace monolithic_pr2_planner {
             MotionPrimitiveParams m_params;
             GoalStatePtr m_goal;
             std::vector<BaseSnapMotionPrimitivePtr> basesnap_mprim;
+            ArmSnapMotionPrimitivePtr armsnap_mprim;
+
 
             std::vector<RobotState> m_islandStates;
     };

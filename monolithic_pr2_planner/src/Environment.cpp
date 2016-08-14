@@ -22,10 +22,10 @@ Environment::Environment(ros::NodeHandle nh)
         m_heur_mgr(new HeuristicMgr()),
         m_using_lazy(false),
         m_planner_type(T_SMHA) {
-        //m_goal = make_shared<GoalState>();
+        m_goal = make_shared<GoalState>();
         //m_mprims = MotionPrimitivesMgr(m_goal);
-        std::vector<RobotState> islandStates = getBaseIslandStates();
-        m_mprims = MotionPrimitivesMgr(m_goal, islandStates);
+        //std::vector<RobotState> islandStates = getBaseIslandStates();
+        //m_mprims = MotionPrimitivesMgr(m_goal, islandStates);
         m_param_catalog.fetch(nh);
         configurePlanningDomain();
 }
@@ -425,12 +425,14 @@ void Environment::GetLazySuccs(int q_id, int sourceStateID, vector<int>* succIDs
     ROS_DEBUG_NAMED(SEARCH_LOG, "==================Expanding state %d==================", 
                     sourceStateID);
 
-    // For snap motion primitive
-    //if(m_goal_near_search) {
-        //ROS_INFO("Search near goal");
-        //m_mprims.getUpdatedGoal(m_goal);
+    // For snap motion primitive near goal.
+    if(m_goal_near_search) {
+        ROS_INFO("Search near goal");
+        m_mprims.getUpdatedGoal(m_goal);
         m_mprims.searchNearGoal();
-    //}
+    }
+
+    m_mprims.addIslandSnapPrimitives();
 
 
     succIDs->clear();
@@ -646,6 +648,10 @@ void Environment::configurePlanningDomain(){
     // variable + inheritance (see ContArmState for details)
     LeftContArmState l_arm;
     RightContArmState r_arm;
+
+    std::vector<RobotState> islandStates = getBaseIslandStates();
+    m_mprims = MotionPrimitivesMgr(m_goal, islandStates);
+
     m_cspace_mgr = make_shared<CollisionSpaceMgr>(r_arm.getArmModel(),
                                                   l_arm.getArmModel());
     m_heur_mgr->setCollisionSpaceMgr(m_cspace_mgr);
@@ -725,7 +731,8 @@ void Environment::save_state_time(vector<int> soln_path) {
 
 std::vector<RobotState> Environment::getBaseIslandStates() {
     std::string base_file_name;
-    m_nodehandle.param("base_island_file_name", base_file_name, std::string(" "));
+    ROS_INFO("Loading bottleneck points");
+    m_nodehandle.param("planner/island", base_file_name, std::string("Empty"));
     ROS_INFO("Base island file name %s", base_file_name.c_str());
 
     ifstream island_file(base_file_name);
@@ -738,19 +745,25 @@ std::vector<RobotState> Environment::getBaseIslandStates() {
         std::istringstream ss(line);
         std::string x_str, y_str, yaw_str;
 
+        ROS_ERROR("DONE1");
         ss >> x_str >> y_str >> yaw_str;
 
+        ROS_ERROR("DONE2");
         double x = 0, y = 0, yaw = 0;
         x = atof(x_str.c_str());
         y = atof(y_str.c_str());
         yaw = atof(yaw_str.c_str());
 
-        ContBaseState base(x, y, 0.3, yaw);
-        RightContArmState right_arm{};
-        LeftContArmState left_arm{};
+        const ContBaseState base(x, y, 0.3, yaw);
+        // Dummy values
+        vector<double> arm(7,0);
+        RightContArmState r_arm(arm);
+        LeftContArmState l_arm(arm);
 
-        RobotState islandState{base, right_arm, left_arm};
+        ROS_ERROR("DONE3");
+        RobotState islandState(base, m_goal->getRobotState().right_arm(), m_goal->getRobotState().left_arm());
         islandStates.push_back(islandState);
+        ROS_ERROR("DONE4");
     }
     //m_island_base_states = islandStates;
     return islandStates;

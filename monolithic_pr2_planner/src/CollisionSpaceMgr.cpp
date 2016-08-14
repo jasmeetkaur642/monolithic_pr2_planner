@@ -123,6 +123,8 @@ bool CollisionSpaceMgr::isValidSuccessor(const GraphState& successor,
                                           dist, debug);
     } else if (t_data.motion_type() == MPrim_Types::BASE_SNAP){
         return m_cspace->checkBaseMotion(l_arm, r_arm, body_pose, verbose, dist, debug);
+    } else if (t_data.motion_type() == MPrim_Types::ARM_SNAP){
+            return m_cspace->checkArmsMotion(l_arm, r_arm, body_pose, verbose, dist, debug);
 
     } else {
         throw std::invalid_argument("not a valid motion primitive type");
@@ -185,6 +187,13 @@ bool CollisionSpaceMgr::isValidTransitionStates(const TransitionData& t_data){
             if (!m_cspace->checkBaseMotion(l_arm, r_arm, body_pose, verbose, dist, debug)){
                 return false;
             }
+        } else if (t_data.motion_type() == MPrim_Types::ARM_SNAP){
+                    interp_base_motions = t_data.cont_base_interm_steps();
+                    BodyPose body_pose = interp_base_motions[idx].body_pose();
+                    if(!m_cspace->checkArmsMotion(l_arm, r_arm, body_pose, 
+                                                        verbose, dist, debug)) {
+                        return false;
+                    }
         } else {
             throw std::invalid_argument("not a valid motion primitive type");
         }
