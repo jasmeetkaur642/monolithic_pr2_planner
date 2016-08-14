@@ -425,6 +425,7 @@ void Environment::GetLazySuccs(int q_id, int sourceStateID, vector<int>* succIDs
     ROS_DEBUG_NAMED(SEARCH_LOG, "==================Expanding state %d==================", 
                     sourceStateID);
 
+    /*
     // For snap motion primitive near goal.
     if(m_goal_near_search) {
         ROS_INFO("Search near goal");
@@ -433,6 +434,7 @@ void Environment::GetLazySuccs(int q_id, int sourceStateID, vector<int>* succIDs
     }
 
     m_mprims.addIslandSnapPrimitives();
+    */
 
 
     succIDs->clear();

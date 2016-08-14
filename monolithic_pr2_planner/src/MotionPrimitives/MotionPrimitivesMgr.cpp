@@ -127,7 +127,7 @@ void MotionPrimitivesMgr::loadBaseSnapMPrims(){
 }
 
 void MotionPrimitivesMgr::loadArmSnapMPrims() {
-    combineVectors(m_all_prims[MPrim_Types::ARM_SNAP], m_active_mprims);
+    combineVectors(m_all_mprims[MPrim_Types::ARM_SNAP], m_active_mprims);
 }
 
 void MotionPrimitivesMgr::loadAllMPrims(){

@@ -29,10 +29,13 @@ namespace monolithic_pr2_planner {
             void getUpdatedGoal(GoalStatePtr& goal) { m_goal = goal; }
             void getUpdatedGoalandTolerances(GoalStatePtr& goal, double xyz_tol, double roll_tol, double pitch_tol, double yaw_tol) {
                 m_goal = goal;
-                for(int i=0;i < m_islandStates.size();i++)
-                    basesnap_mprim[i]->getUpdatedGoalandTolerances(m_islandStates[i], xyz_tol, roll_tol, pitch_tol, yaw_tol);
+                GoalStatePtr islandState;
+                for(int i=0;i < m_islandStates.size();i++) {
+                    islandState = boost::make_shared<GoalState>(m_islandStates[i], xyz_tol, roll_tol, pitch_tol, yaw_tol);
+                    basesnap_mprim[i]->getUpdatedGoalandTolerances(islandState, xyz_tol, roll_tol, pitch_tol, yaw_tol);
+                }
 
-                armsnap_mprim->getUpdatedGoalandTolerances(m_goal, xyz_tol, roll_tol, pitch_tol, yaw_tol);
+                armsnap_mprim->getUpdatedGoalandTolerances(goal, xyz_tol, roll_tol, pitch_tol, yaw_tol);
 
             }
         private:
