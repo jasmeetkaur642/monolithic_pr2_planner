@@ -25,6 +25,8 @@ class BaseSnapMotionPrimitive : public MotionPrimitive {
     bool computeIntermSteps(const GraphState& source_state,
                         const GraphState& successor,
                         TransitionData& t_data);
+    // Update the goal and tolerances.
+    // Called primarily by the MotionPrimitiveMgr.
     void getUpdatedGoalandTolerances(GoalStatePtr& goal, double xyz_tol, double roll_tol, double pitch_tol, double yaw_tol)
     {
         m_goal = goal;
@@ -35,6 +37,7 @@ class BaseSnapMotionPrimitive : public MotionPrimitive {
     }
 
     GoalStatePtr m_goal;
+    RobotState m_goal_robot;
     std::vector<double> m_tolerances;
 };
 typedef boost::shared_ptr<BaseSnapMotionPrimitive> BaseSnapMotionPrimitivePtr;

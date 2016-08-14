@@ -35,7 +35,7 @@ namespace monolithic_pr2_planner {
                     basesnap_mprim[i]->getUpdatedGoalandTolerances(islandState, xyz_tol, roll_tol, pitch_tol, yaw_tol);
                 }
 
-                armsnap_mprim->getUpdatedGoalandTolerances(goal, xyz_tol, roll_tol, pitch_tol, yaw_tol);
+                armsnap_mprim->getUpdatedGoalandTolerances(m_goal, xyz_tol, roll_tol, pitch_tol, yaw_tol);
 
             }
         private:
@@ -60,7 +60,6 @@ namespace monolithic_pr2_planner {
             GoalStatePtr m_goal;
             std::vector<BaseSnapMotionPrimitivePtr> basesnap_mprim;
             ArmSnapMotionPrimitivePtr armsnap_mprim;
-
 
             std::vector<RobotState> m_islandStates;
     };
