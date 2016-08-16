@@ -378,6 +378,8 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
             ROS_DEBUG_NAMED(MPRIM_LOG, "successor state with id %d is:", 
                             successor->id());
             successor->printToDebug(MPRIM_LOG);
+            //if(mprim)
+            //ROS_INFO()
 
             if (m_goal->isSatisfiedBy(successor, m_goal_near_search)){
                 m_goal->storeAsSolnState(successor);

@@ -61,6 +61,7 @@ RobotState::RobotState(ContBaseState base_state, ContObjectState object_state)
         ik_success = computeRobotPose(disc_obj_state, *this, new_robot_pose_ptr);
         c++;
     }
+    std::cerr<<"ik "<<ik_success<<"\n";
     if (!ik_success) {
         ROS_ERROR("Failed to compute IK");
     }

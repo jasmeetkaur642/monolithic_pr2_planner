@@ -31,11 +31,26 @@ bool ArmSnapMotionPrimitive::apply(const GraphState& source_state,
    //                           abs(m_goal->getRobotState().base_state().y()-base.y()) < 25*d_tol.y());
 
     bool ik_success = false;
+    RobotState temp_pose(robot_pose.base_state(), robot_pose.right_arm(), robot_pose.left_arm());
     if(within_xyz_tol) {
+        ROS_INFO("Inside arm tol");
         RobotPosePtr new_robot_pose_ptr;
         DiscObjectState disc_obj_state(m_goal->getObjectState());
 
-        ik_success = robot_pose.computeRobotPose(disc_obj_state, robot_pose, new_robot_pose_ptr);
+        ik_success = temp_pose.computeRobotPose(disc_obj_state, temp_pose, new_robot_pose_ptr);
+
+        int c = 0;
+        RightContArmState r_arm = temp_pose.right_arm();
+        LeftContArmState l_arm = temp_pose.left_arm();
+        while (!ik_success && c < 10000) {
+            // ROS_ERROR("Failed to compute IK");
+            r_arm.setUpperArmRoll(temp_pose.randomDouble(-3.75, 0.65));
+            l_arm.setUpperArmRoll(temp_pose.randomDouble(-3.75, 0.65));
+            temp_pose.right_arm(r_arm);
+            temp_pose.left_arm(l_arm);
+            ik_success = temp_pose.computeRobotPose(disc_obj_state, temp_pose, new_robot_pose_ptr);
+            c++;
+        }
     }
 
     if(within_xyz_tol && ik_success)

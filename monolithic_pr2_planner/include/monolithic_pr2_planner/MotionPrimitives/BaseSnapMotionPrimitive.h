@@ -20,6 +20,7 @@ class BaseSnapMotionPrimitive : public MotionPrimitive {
         TransitionData& t_data);
     virtual void print() const;
     virtual int motion_type() const { return MPrim_Types::BASE_SNAP; };
+    void computeCost();
     virtual void computeCost(const MotionPrimitiveParams& params);
     int numInterpSteps(const RobotState& start, const RobotState& end);
     bool computeIntermSteps(const GraphState& source_state,
@@ -39,6 +40,7 @@ class BaseSnapMotionPrimitive : public MotionPrimitive {
     GoalStatePtr m_goal;
     RobotState m_goal_robot;
     std::vector<double> m_tolerances;
+    std::vector<ContBaseState> m_interp_base_steps;
 };
 typedef boost::shared_ptr<BaseSnapMotionPrimitive> BaseSnapMotionPrimitivePtr;
 

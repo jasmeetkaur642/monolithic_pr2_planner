@@ -182,7 +182,8 @@ bool GoalState::isSatisfiedBy(const GraphStatePtr& graph_state, bool & search_ne
      //   ROS_INFO("within_xyz_tol : %f  within_quat_tol : %f within_basexy_tol : %f", )
      // }
 
-     if (within_xyz_tol && within_quat_tol &&  within_basexy_tol && within_basez_tol && within_baseyaw_tol){
+     if (within_xyz_tol && within_quat_tol) {// &&  within_basexy_tol && within_basez_tol && within_baseyaw_tol){
+         ROS_ERROR("is satisfied by");
          return true;
      } else {
          return false;
