@@ -81,7 +81,7 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
     m_state_time_map.emplace(stateID, double(clock()) / CLOCKS_PER_SEC);
 
     GraphStatePtr successor = m_hash_mgr->getGraphState(stateID);
-    if(m_goal->isSatisfiedBy(successor, m_goal_near_search) || stateID == GOAL_STATE){
+    if(m_goal->isSatisfiedBy(successor) || stateID == GOAL_STATE){
         return 0;
     }
 
@@ -381,7 +381,7 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
             //if(mprim)
             //ROS_INFO()
 
-            if (m_goal->isSatisfiedBy(successor, m_goal_near_search)){
+            if (m_goal->isSatisfiedBy(successor)){
                 m_goal->storeAsSolnState(successor);
                 ROS_DEBUG_NAMED(SEARCH_LOG, "Found potential goal at state %d %d", successor->id(),
                     mprim->cost());
@@ -479,7 +479,7 @@ void Environment::GetLazySuccs(int q_id, int sourceStateID, vector<int>* succIDs
         m_hash_mgr->save(successor);
         Edge key; 
 
-        if (m_goal->isSatisfiedBy(successor, m_goal_near_search)){
+        if (m_goal->isSatisfiedBy(successor)){
           m_goal->storeAsSolnState(successor);
           //ROS_DEBUG_NAMED(SEARCH_LOG, "Found potential goal at state %d %d", successor->id(),
             //  mprim->cost());
