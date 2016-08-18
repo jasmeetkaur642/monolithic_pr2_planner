@@ -77,6 +77,10 @@ int Environment::GetGoalHeuristic(int stateID) {
 }
 
 int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
+    // Update params in snap primitives.
+    //m_param_catalog.fetch(m_nodehandle);
+    //m_mprims.updateParams(m_param_catalog.m_motion_primitive_params);
+    
     //Code to calculate node expansion time.
     m_state_time_map.emplace(stateID, double(clock()) / CLOCKS_PER_SEC);
 
@@ -85,9 +89,6 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
         return 0;
     }
 
-    if(stateID == GOAL_STATE) {
-        m_goal_near_search = false;
-    }
     std::unique_ptr<stringintmap> values;
     m_heur_mgr->getGoalHeuristic(successor, values);
     
@@ -426,18 +427,6 @@ void Environment::GetLazySuccs(int q_id, int sourceStateID, vector<int>* succIDs
   vector<MotionPrimitivePtr> all_mprims = m_mprims.getMotionPrims();
     ROS_DEBUG_NAMED(SEARCH_LOG, "==================Expanding state %d==================", 
                     sourceStateID);
-
-    /*
-    // For snap motion primitive near goal.
-    if(m_goal_near_search) {
-        ROS_INFO("Search near goal");
-        m_mprims.getUpdatedGoal(m_goal);
-        m_mprims.searchNearGoal();
-    }
-
-    m_mprims.addIslandSnapPrimitives();
-    */
-
 
     succIDs->clear();
     succIDs->reserve(all_mprims.size());

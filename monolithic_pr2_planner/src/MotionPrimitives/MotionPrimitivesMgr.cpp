@@ -146,9 +146,9 @@ void MotionPrimitivesMgr::computeAllMPrimCosts(vector<MPrimList> mprims){
     }
 }
 
-void MotionPrimitivesMgr::searchNearGoal() {
-    //loadBaseSnapMPrims();
-    loadArmSnapMPrims();
+void MotionPrimitivesMgr::updateParams(MotionPrimitiveParams params) {
+    for(auto mprim: basesnap_mprim) { mprim->updateParams(params);
+    }
 }
 
 void MotionPrimitivesMgr::addIslandSnapPrimitives() {

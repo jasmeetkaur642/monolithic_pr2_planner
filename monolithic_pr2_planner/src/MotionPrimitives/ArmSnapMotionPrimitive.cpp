@@ -22,20 +22,21 @@ bool ArmSnapMotionPrimitive::apply(const GraphState& source_state,
     DiscBaseState base = robot_pose.base_state();
     unsigned int r_free_angle = robot_pose.right_free_angle();
 
-    bool within_xyz_tol = (abs(m_goal->getObjectState().x()-obj.x()) < 25*d_tol.x() &&
-                           abs(m_goal->getObjectState().y()-obj.y()) < 25*d_tol.y() &&
-                           abs(m_goal->getObjectState().z()-obj.z()) < 25*d_tol.z());
+    bool within_xyz_tol = (abs(m_goal->getObjectState().x()-obj.x()) < 40*d_tol.x() &&
+                           abs(m_goal->getObjectState().y()-obj.y()) < 40*d_tol.y() &&
+                           abs(m_goal->getObjectState().z()-obj.z()) < 40*d_tol.z());
 
 
    // bool within_basexy_tol = (abs(m_goal->getRobotState().base_state().x()-base.x()) < 25*d_tol.x() &&
    //                           abs(m_goal->getRobotState().base_state().y()-base.y()) < 25*d_tol.y());
 
+    /*
     bool ik_success = false;
     RobotState temp_pose(robot_pose.base_state(), robot_pose.right_arm(), robot_pose.left_arm());
     if(within_xyz_tol) {
         ROS_INFO("Inside arm tol");
         RobotPosePtr new_robot_pose_ptr;
-        DiscObjectState disc_obj_state(m_goal->getObjectState());
+        DiscObjectState disc_obj_state(m_goal->getRobotState().getObjectStateRelBody());
 
         ik_success = temp_pose.computeRobotPose(disc_obj_state, temp_pose, new_robot_pose_ptr);
 
@@ -53,11 +54,12 @@ bool ArmSnapMotionPrimitive::apply(const GraphState& source_state,
         }
     }
 
-    if(within_xyz_tol && ik_success)
+    */
+    if(within_xyz_tol)// && ik_success)
     { 
       ROS_INFO("[Arm snap] Search near goal");
 
-      RobotState rs(source_state.robot_pose().getContBaseState(), m_goal->getObjectState());
+      RobotState rs(source_state.robot_pose().getContBaseState(), m_goal->getRobotState().right_arm(), m_goal->getRobotState().left_arm());
       successor.reset(new GraphState(rs));
 
       t_data.motion_type(motion_type());

@@ -9,6 +9,7 @@ using namespace monolithic_pr2_planner;
 bool BaseSnapMotionPrimitive::apply(const GraphState& source_state,
                            GraphStatePtr& successor,
                            TransitionData& t_data){
+    //computeCost();
 
     // not sure why there's a .005 here. ask ben
     ContObjectState c_tol(m_tolerances[Tolerances::XYZ]-.005,
@@ -29,13 +30,14 @@ bool BaseSnapMotionPrimitive::apply(const GraphState& source_state,
     //                       abs(m_goal->getObjectState().z()-obj.z()) < d_tol.z());
 
 
-    bool within_basexy_tol = (abs(m_goal->getRobotState().base_state().x()-base.x()) < 40*d_tol.x() &&
-                              abs(m_goal->getRobotState().base_state().y()-base.y()) < 40*d_tol.y());
+    bool within_basexy_tol = (abs(m_goal->getRobotState().base_state().x()-base.x()) < 25*d_tol.x() &&
+                              abs(m_goal->getRobotState().base_state().y()-base.y()) < 25*d_tol.y());
 
-    if(within_basexy_tol)
+    bool near_end = (abs(m_end->getRobotState().base_state().x()-base.x()) < 50*d_tol.x() &&
+                              abs(m_end->getRobotState().base_state().y()-base.y()) < 50*d_tol.y());
+
+    if(within_basexy_tol && !near_end)
     {
-      //ROS_INFO("[FBS] Search near goal");
-
       RobotState rs(m_goal->getRobotState().getContBaseState(), source_state.robot_pose().right_arm(), source_state.robot_pose().left_arm());
       successor.reset(new GraphState(rs));
 
@@ -80,11 +82,12 @@ void BaseSnapMotionPrimitive::print() const {
 
 void BaseSnapMotionPrimitive::computeCost(const MotionPrimitiveParams& params){
     //TODO: Calculate actual cost
-    //m_cost = 1;
-
+    m_cost = 3;
+/*
     if(!m_interp_base_steps.size()) {
         ROS_INFO("default cost");
         m_cost = 3;
+        m_params = params;
     }
 
     else {
@@ -101,23 +104,30 @@ void BaseSnapMotionPrimitive::computeCost(const MotionPrimitiveParams& params){
             double dy = y1-y0;
             linear_distance += sqrt(dx*dx + dy*dy);
         }
+        std::cerr<<"vel "<<params.nominal_vel<<"\n";
         double linear_time = linear_distance/static_cast<double>(params.nominal_vel);
         double first_angle = steps[0].theta(); //[GraphStateElement::BASE_THETA];
         double final_angle = steps.back().theta(); //[GraphStateElement::BASE_THETA];
         double angular_distance = fabs(shortest_angular_distance(first_angle, 
                                                                 final_angle));
-        assert((linear_time > 0) || (angular_distance > 0));
+        //assert((linear_time > 0) || (angular_distance > 0));
 
         double angular_time = angular_distance/params.angular_vel;
 
         //make the cost the max of the two times
-        m_cost = ceil(static_cast<double>(METER_TO_MM_MULT)*(max(linear_time, angular_time)));
+        //m_cost = ceil(static_cast<double>(METER_TO_MM_MULT)*(max(linear_time, angular_time)));
+        m_cost = ceil(static_cast<double>(max(linear_time, angular_time))); //Multiplying makes the cost too high.
         //use any additional cost multiplier
-        m_cost *= getAdditionalCostMult();
+        //m_cost *= getAdditionalCostMult();
         ROS_INFO("base snap cost: %d", m_cost);
 
         assert(m_cost >= 0.0);
     }
+    */
+}
+
+void BaseSnapMotionPrimitive::computeCost() {
+    computeCost(m_params);
 }
 
 int BaseSnapMotionPrimitive::numInterpSteps(const RobotState& start, const RobotState& end){

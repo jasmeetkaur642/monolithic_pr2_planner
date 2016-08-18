@@ -33,11 +33,13 @@ namespace monolithic_pr2_planner {
                 for(int i=0;i < m_islandStates.size();i++) {
                     islandState = boost::make_shared<GoalState>(m_islandStates[i], xyz_tol, roll_tol, pitch_tol, yaw_tol);
                     basesnap_mprim[i]->getUpdatedGoalandTolerances(islandState, xyz_tol, roll_tol, pitch_tol, yaw_tol);
+                    basesnap_mprim[i]->m_end = goal;
                 }
 
                 armsnap_mprim->getUpdatedGoalandTolerances(m_goal, xyz_tol, roll_tol, pitch_tol, yaw_tol);
 
             }
+            void updateParams(MotionPrimitiveParams);
         private:
             void loadBaseOnlyMPrims();
             void loadArmOnlyMPrims();

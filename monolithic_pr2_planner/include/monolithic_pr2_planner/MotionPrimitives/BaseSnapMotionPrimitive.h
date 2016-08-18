@@ -36,8 +36,11 @@ class BaseSnapMotionPrimitive : public MotionPrimitive {
         m_tolerances[Tolerances::PITCH] =  pitch_tol;
         m_tolerances[Tolerances::YAW] =  yaw_tol;
     }
+    void updateParams(MotionPrimitiveParams params) {m_params = params;}
 
     GoalStatePtr m_goal;
+    GoalStatePtr m_end; // m_end is actually the of search. We want to deactivate base snap near goal.
+    MotionPrimitiveParams m_params;
     RobotState m_goal_robot;
     std::vector<double> m_tolerances;
     std::vector<ContBaseState> m_interp_base_steps;
