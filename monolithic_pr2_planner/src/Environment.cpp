@@ -642,8 +642,11 @@ void Environment::configurePlanningDomain(){
     LeftContArmState l_arm;
     RightContArmState r_arm;
 
-    std::vector<RobotState> islandStates = getBaseIslandStates();
+    std::vector<RobotState> islandStates = getIslandStates();
     m_mprims = MotionPrimitivesMgr(m_goal, islandStates);
+
+    // Choosed the snap mprims from launch file.
+    chooseSnapMprims();
 
     m_cspace_mgr = make_shared<CollisionSpaceMgr>(r_arm.getArmModel(),
                                                   l_arm.getArmModel());
@@ -722,13 +725,13 @@ void Environment::save_state_time(vector<int> soln_path) {
     ROS_INFO("File saved");
 }
 
-std::vector<RobotState> Environment::getBaseIslandStates() {
-    std::string base_file_name;
+std::vector<RobotState> Environment::getIslandStates() {
+    std::string file_name;
     ROS_INFO("Loading bottleneck points");
-    m_nodehandle.param("planner/island", base_file_name, std::string("Empty"));
-    ROS_INFO("Base island file name %s", base_file_name.c_str());
+    m_nodehandle.param("planner/island", file_name, std::string("Empty"));
+    ROS_INFO("Base island file name %s", file_name.c_str());
 
-    ifstream island_file(base_file_name);
+    ifstream island_file(file_name);
     std::string line;
     std::vector<RobotState> islandStates;
 
@@ -736,30 +739,50 @@ std::vector<RobotState> Environment::getBaseIslandStates() {
         ROS_INFO("%s", line.c_str());
 
         std::istringstream ss(line);
-        std::string x_str, y_str, yaw_str;
+        std::string x_str, y_str, yaw_str, z_str;
+        std::vector<std::string> rarm_str;
+        rarm_str.resize(7);
 
         ROS_ERROR("DONE1");
-        ss >> x_str >> y_str >> yaw_str;
-
+        for(int j=0;j<7;j++) {
+            ss >> rarm_str[j];
+        }
         ROS_ERROR("DONE2");
-        double x = 0, y = 0, yaw = 0;
-        x = atof(x_str.c_str());
+        ss >> x_str >> y_str >> z_str >> yaw_str;
+
+        double x = 0, y = 0, z = 0, yaw = 0;
+        std::vector<double> rarm(7, 0);
+        x =  atof(x_str.c_str());
         y = atof(y_str.c_str());
+        //z = atof(z_str.c_str());
+        z = 0.3;
         yaw = atof(yaw_str.c_str());
+        for(int j=0;j<7;j++)
+            rarm[j] = atof(rarm_str[j].c_str());
 
-        const ContBaseState base(x, y, 0.3, yaw);
+        const ContBaseState base(x, y, z, yaw);
+        RightContArmState r_arm(rarm);
         // Dummy values
-        vector<double> arm(7,0);
-        RightContArmState r_arm(arm);
-        LeftContArmState l_arm(arm);
-
-        ROS_ERROR("DONE3");
-        RobotState islandState(base, m_goal->getRobotState().right_arm(), m_goal->getRobotState().left_arm());
+        LeftContArmState l_arm({-0.2, 1.1072800, -1.5566882, -2.124408, 0.0, -1.57, 0.0});
+        //ROS_ERROR("DONE3");
+        RobotState islandState(base, r_arm, l_arm);
         islandStates.push_back(islandState);
-        ROS_ERROR("DONE4");
+        //ROS_ERROR("DONE4");
     }
     //m_island_base_states = islandStates;
     return islandStates;
+}
+
+void Environment::chooseSnapMprims() {
+    int baseSnap, fullBodySnap, armSnap;
+    ROS_INFO("Setting snap mprim types from launch file");
+    m_nodehandle.param("planner/baseSnap", baseSnap, 0);
+    m_nodehandle.param("planner/fullBodySnap", fullBodySnap, 0);
+    m_nodehandle.param("planner/armSnap", armSnap, 0);
+    m_mprims.baseSnap = int(baseSnap);
+    m_mprims.fullBodySnap = int(fullBodySnap);
+    m_mprims.armSnap = int(armSnap);
+    ROS_INFO("%d\t%d\t%d\n", int(baseSnap), int(fullBodySnap), int(armSnap));
 }
 
 

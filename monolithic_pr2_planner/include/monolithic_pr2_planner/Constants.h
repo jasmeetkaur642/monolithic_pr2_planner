@@ -54,7 +54,7 @@ namespace monolithic_pr2_planner {
 
     class MPrim_Types {
         public:
-            enum { BASE, ARM, ARM_ADAPTIVE, BASE_ADAPTIVE, TORSO, BASE_SNAP, ARM_SNAP };
+            enum { BASE, ARM, ARM_ADAPTIVE, BASE_ADAPTIVE, TORSO, BASE_SNAP, FULLBODY_SNAP, ARM_SNAP };
     };
 
     class PlanningModes {

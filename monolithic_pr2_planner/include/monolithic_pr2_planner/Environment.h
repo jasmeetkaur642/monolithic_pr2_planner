@@ -48,6 +48,7 @@ namespace monolithic_pr2_planner {
             void reset();
             void setPlannerType(int planner_type);
             void setUseNewHeuristics(bool use_new_heuristics){m_use_new_heuristics = use_new_heuristics;};
+            void chooseSnapMprims();
 
         protected:
             bool setStartGoal(SearchRequestPtr search_request, 
@@ -86,7 +87,7 @@ namespace monolithic_pr2_planner {
             void PrintState(int stateID, bool bVerbose, FILE* fOut=NULL){};
             void PrintEnv_Config(FILE* fOut){};
 
-            std::vector<RobotState> getBaseIslandStates();
+            std::vector<RobotState> getIslandStates();
 
             void save_state_time(vector<int> soln_path);
 

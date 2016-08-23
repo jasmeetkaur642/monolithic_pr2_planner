@@ -5,10 +5,10 @@ using namespace monolithic_pr2_planner;
 using namespace std;
 using namespace boost;
 
-MotionPrimitivesMgr::MotionPrimitivesMgr(boost::shared_ptr<GoalState>& goal) : m_all_mprims(7){m_goal = goal; }
+MotionPrimitivesMgr::MotionPrimitivesMgr(boost::shared_ptr<GoalState>& goal) : m_all_mprims(8){m_goal = goal; }
 
 // Pass island states to MotionPrimitiveMgs from Environment.
-MotionPrimitivesMgr::MotionPrimitivesMgr(boost::shared_ptr<GoalState>& goal, std::vector<RobotState> &islandStates) : m_all_mprims(7){m_goal = goal; m_islandStates = islandStates;}
+MotionPrimitivesMgr::MotionPrimitivesMgr(boost::shared_ptr<GoalState>& goal, std::vector<RobotState> &islandStates) : m_all_mprims(8){m_goal = goal; m_islandStates = islandStates;}
 
 /*! \brief loads all mprims from configuration. also sets up amps. note that
  * these are not necessarily the exact mprims used during search, because
@@ -50,24 +50,41 @@ bool MotionPrimitivesMgr::loadMPrims(const MotionPrimitiveParams& params){
 
     // Base snap mprims.
     MPrimList base_snap_mprims;
-    for(RobotState islandState : m_islandStates) {
-        BaseSnapMotionPrimitivePtr temp = make_shared<BaseSnapMotionPrimitive>(islandState);
-        basesnap_mprim.push_back(temp);
-        base_snap_mprims.push_back(temp);
+    if(baseSnap) {
+        for(RobotState islandState : m_islandStates) {
+            BaseSnapMotionPrimitivePtr temp = make_shared<BaseSnapMotionPrimitive>(islandState);
+            basesnap_mprim.push_back(temp);
+            base_snap_mprims.push_back(temp);
+        }
+    }
+
+    MPrimList full_body_snap_mprims;
+    if(fullBodySnap) {
+        for(RobotState islandState : m_islandStates) {
+            FullBodySnapMotionPrimitivePtr temp = make_shared<FullBodySnapMotionPrimitive>(islandState);
+            fullbody_snap_mprim.push_back(temp);
+            full_body_snap_mprims.push_back(temp);
+        }
     }
 
     // Arm snap mprims.
     MPrimList arm_snap_mprims;
-    armsnap_mprim = boost::make_shared<ArmSnapMotionPrimitive>();
-    arm_snap_mprims.push_back(armsnap_mprim);
+    if(armSnap) {
+        armsnap_mprim = boost::make_shared<ArmSnapMotionPrimitive>();
+        arm_snap_mprims.push_back(armsnap_mprim);
+    }
 
     m_all_mprims[MPrim_Types::ARM] = arm_mprims;
     m_all_mprims[MPrim_Types::BASE] = base_mprims;
     m_all_mprims[MPrim_Types::TORSO] = torso_mprims;
     m_all_mprims[MPrim_Types::ARM_ADAPTIVE] = arm_amps;
     m_all_mprims[MPrim_Types::BASE_ADAPTIVE] = base_amps;
-    m_all_mprims[MPrim_Types::BASE_SNAP] = base_snap_mprims;
-    m_all_mprims[MPrim_Types::ARM_SNAP] = arm_snap_mprims;
+    if(baseSnap)
+        m_all_mprims[MPrim_Types::BASE_SNAP] = base_snap_mprims;
+    if(fullBodySnap)
+        m_all_mprims[MPrim_Types::FULLBODY_SNAP] = full_body_snap_mprims;
+    if(armSnap)
+        m_all_mprims[MPrim_Types::ARM_SNAP] = arm_snap_mprims;
 
     computeAllMPrimCosts(m_all_mprims);
 
@@ -126,6 +143,10 @@ void MotionPrimitivesMgr::loadBaseSnapMPrims(){
      combineVectors(m_all_mprims[MPrim_Types::BASE_SNAP], m_active_mprims);
 }
 
+void MotionPrimitivesMgr::loadFullBodySnapMPrims(){
+     combineVectors(m_all_mprims[MPrim_Types::FULLBODY_SNAP], m_active_mprims);
+}
+
 void MotionPrimitivesMgr::loadArmSnapMPrims() {
     combineVectors(m_all_mprims[MPrim_Types::ARM_SNAP], m_active_mprims);
 }
@@ -134,8 +155,12 @@ void MotionPrimitivesMgr::loadAllMPrims(){
     loadBaseOnlyMPrims();
     loadArmOnlyMPrims();
     loadTorsoMPrims();
-    loadBaseSnapMPrims();
-    loadArmSnapMPrims();
+    if(baseSnap)
+        loadBaseSnapMPrims();
+    if(fullBodySnap)
+        loadFullBodySnapMPrims();
+    if(armSnap)
+        loadArmSnapMPrims();
 }
 
 void MotionPrimitivesMgr::computeAllMPrimCosts(vector<MPrimList> mprims){

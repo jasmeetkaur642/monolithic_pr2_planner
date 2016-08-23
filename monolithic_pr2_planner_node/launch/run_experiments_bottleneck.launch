@@ -31,10 +31,10 @@
 
   <param name="robot_description" command="$(find xacro)/xacro.py '$(find pr2_description)/robots/pr2.urdf.xacro'" />
   
-  <node pkg="monolithic_pr2_planner_node" type="node" name="monolithic_pr2_planner_node" output="screen" launch-prefix="gdb -ex run --args">
+  <node pkg="monolithic_pr2_planner_node" type="node" name="monolithic_pr2_planner_node" output="screen">
       <param name="use_new_heuristics" value="true" />
-      <param name="planner/island" value="$(find monolithic_pr2_planner_node)/experiments/bottleneck_base.points" />
-      <param name="planner/baseSnap" value="0" type="int" />
+      <param name="planner/island" value="$(find monolithic_pr2_planner_node)/experiments/bottlenecks.points" />
+      <param name="planner/baseSnap" value="1" type="int" />
       <param name="planner/fullBodySnap" value="1" type="int" />
       <param name="planner/armSnap" value="0" type="int" />
       <rosparam command="load" file="$(find monolithic_pr2_planner_node)/config/logging_levels.yaml" />

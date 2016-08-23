@@ -4,6 +4,7 @@
 #include <monolithic_pr2_planner/MotionPrimitives/FileParser.h>
 #include <monolithic_pr2_planner/MotionPrimitives/BaseAdaptiveMotionPrimitive.h>
 #include <monolithic_pr2_planner/MotionPrimitives/BaseSnapMotionPrimitive.h>
+#include <monolithic_pr2_planner/MotionPrimitives/FullBodySnapMotionPrimitive.h>
 #include <monolithic_pr2_planner/MotionPrimitives/ArmSnapMotionPrimitive.h>
 #include <monolithic_pr2_planner/MotionPrimitives/ArmAdaptiveMotionPrimitive.h>
 #include <monolithic_pr2_planner/MotionPrimitives/ArmTuckMotionPrimitive.h>
@@ -29,23 +30,40 @@ namespace monolithic_pr2_planner {
             void getUpdatedGoal(GoalStatePtr& goal) { m_goal = goal; }
             void getUpdatedGoalandTolerances(GoalStatePtr& goal, double xyz_tol, double roll_tol, double pitch_tol, double yaw_tol) {
                 m_goal = goal;
-                GoalStatePtr islandState;
-                for(int i=0;i < m_islandStates.size();i++) {
-                    islandState = boost::make_shared<GoalState>(m_islandStates[i], xyz_tol, roll_tol, pitch_tol, yaw_tol);
-                    basesnap_mprim[i]->getUpdatedGoalandTolerances(islandState, xyz_tol, roll_tol, pitch_tol, yaw_tol);
-                    basesnap_mprim[i]->m_end = goal;
+                if(baseSnap) {
+                    GoalStatePtr islandState;
+                    for(int i=0;i < m_islandStates.size();i++) {
+                        islandState = boost::make_shared<GoalState>(m_islandStates[i], xyz_tol, roll_tol, pitch_tol, yaw_tol);
+                        basesnap_mprim[i]->getUpdatedGoalandTolerances(islandState, xyz_tol, roll_tol, pitch_tol, yaw_tol);
+                        basesnap_mprim[i]->m_end = goal;
+                    }
                 }
 
-                armsnap_mprim->getUpdatedGoalandTolerances(m_goal, xyz_tol, roll_tol, pitch_tol, yaw_tol);
+                if(fullBodySnap) {
+                    GoalStatePtr islandState;
+                    for(int i=0;i < m_islandStates.size();i++) {
+                        islandState = boost::make_shared<GoalState>(m_islandStates[i], xyz_tol, roll_tol, pitch_tol, yaw_tol);
+                        fullbody_snap_mprim[i]->getUpdatedGoalandTolerances(islandState, xyz_tol, roll_tol, pitch_tol, yaw_tol);
+                        fullbody_snap_mprim[i]->m_end = goal;
+                    }
+                }
+
+                if(armSnap)
+                    armsnap_mprim->getUpdatedGoalandTolerances(m_goal, xyz_tol, roll_tol, pitch_tol, yaw_tol);
 
             }
             void updateParams(MotionPrimitiveParams);
+
+            bool fullBodySnap;
+            bool baseSnap;
+            bool armSnap;
         private:
             void loadBaseOnlyMPrims();
             void loadArmOnlyMPrims();
             void loadAllMPrims();
             void loadTorsoMPrims();
             void loadBaseSnapMPrims();
+            void loadFullBodySnapMPrims();
             void loadArmSnapMPrims();
             // these are all the possible mprims we have
             std::vector<std::vector<MotionPrimitivePtr> > m_all_mprims;
@@ -61,6 +79,7 @@ namespace monolithic_pr2_planner {
             MotionPrimitiveParams m_params;
             GoalStatePtr m_goal;
             std::vector<BaseSnapMotionPrimitivePtr> basesnap_mprim;
+            std::vector<FullBodySnapMotionPrimitivePtr> fullbody_snap_mprim;
             ArmSnapMotionPrimitivePtr armsnap_mprim;
 
             std::vector<RobotState> m_islandStates;
