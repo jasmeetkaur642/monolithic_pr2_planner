@@ -754,8 +754,8 @@ std::vector<RobotState> Environment::getIslandStates() {
         std::vector<double> rarm(7, 0);
         x =  atof(x_str.c_str());
         y = atof(y_str.c_str());
-        //z = atof(z_str.c_str());
-        z = 0.3;
+        z = atof(z_str.c_str());
+        //z = 0.3;
         yaw = atof(yaw_str.c_str());
         for(int j=0;j<7;j++)
             rarm[j] = atof(rarm_str[j].c_str());

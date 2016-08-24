@@ -424,6 +424,57 @@ bool RobotState::workspaceInterpolate(const RobotState& start, const RobotState&
     return true;
 }
 
+// This is the same as workspaceInterpolate other than the fact that it first moves the arms and then the base.
+bool RobotState::workspaceInterpolateSequential(const RobotState& start, const
+        RobotState& end, vector<RobotState>* interp_steps){
+    ContObjectState start_obj = start.getObjectStateRelBody();
+    ContObjectState end_obj = end.getObjectStateRelBody();
+    ContBaseState start_base = start.base_state();
+    ContBaseState end_base = end.base_state();
+
+    int num_interp_steps = numInterpSteps(start, end);
+    vector<ContObjectState> interp_obj_steps;
+    vector<ContBaseState> interp_base_steps;
+    ROS_DEBUG_NAMED(MPRIM_LOG, "start obj");
+    start_obj.printToDebug(MPRIM_LOG);
+    ROS_DEBUG_NAMED(MPRIM_LOG, "end obj");
+    end_obj.printToDebug(MPRIM_LOG);
+    interp_obj_steps = ContObjectState::interpolate(start_obj, end_obj, 
+                                                    num_interp_steps);
+    interp_base_steps = ContBaseState::interpolate(start_base, end_base, 
+                                                   num_interp_steps);
+    assert(interp_obj_steps.size() == interp_base_steps.size());
+    ROS_DEBUG_NAMED(MPRIM_LOG, "size of returned interp %lu", interp_obj_steps.size());
+
+    // should at least return the same start and end poses
+    if (num_interp_steps < 2){
+        assert(interp_obj_steps.size() == 2);
+    } else {
+        assert(interp_obj_steps.size() == static_cast<size_t>(num_interp_steps));
+    }
+
+    for (size_t i=0; i < interp_obj_steps.size(); i++){
+        interp_obj_steps[i].printToDebug(MPRIM_LOG);
+        RobotState seed(interp_base_steps[0], start.right_arm(), start.left_arm());
+        RobotPosePtr new_robot_state;
+        if (!computeRobotPose(interp_obj_steps[i], seed, new_robot_state)){
+            return false;
+        }
+        interp_steps->push_back(*new_robot_state);
+    }
+
+    for (size_t i=0; i < interp_base_steps.size(); i++){
+        interp_obj_steps[-1].printToDebug(MPRIM_LOG);
+        RobotState seed(interp_base_steps[i], end.right_arm(), end.left_arm());
+        RobotPosePtr new_robot_state;
+        if (!computeRobotPose(interp_obj_steps[interp_obj_steps.size() - 1], seed, new_robot_state)){
+            return false;
+        }
+        interp_steps->push_back(*new_robot_state);
+    }
+
+    return true;
+}
 bool RobotState::jointSpaceInterpolate(const RobotState& start,
                                         const RobotState& end,
                                         vector<RobotState>* interp_steps){

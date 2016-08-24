@@ -22,9 +22,9 @@ bool ArmSnapMotionPrimitive::apply(const GraphState& source_state,
     DiscBaseState base = robot_pose.base_state();
     unsigned int r_free_angle = robot_pose.right_free_angle();
 
-    bool within_xyz_tol = (abs(m_goal->getObjectState().x()-obj.x()) < 40*d_tol.x() &&
-                           abs(m_goal->getObjectState().y()-obj.y()) < 40*d_tol.y() &&
-                           abs(m_goal->getObjectState().z()-obj.z()) < 40*d_tol.z());
+    bool within_xyz_tol = (abs(m_goal->getObjectState().x()-base.x()) < 25*d_tol.x() &&
+                           abs(m_goal->getObjectState().y()-base.y()) < 25*d_tol.y() &&
+                           abs(m_goal->getObjectState().z()-base.z()) < 25*d_tol.z());
 
 
    // bool within_basexy_tol = (abs(m_goal->getRobotState().base_state().x()-base.x()) < 25*d_tol.x() &&
@@ -57,15 +57,78 @@ bool ArmSnapMotionPrimitive::apply(const GraphState& source_state,
     */
     if(within_xyz_tol)// && ik_success)
     { 
-      ROS_INFO("[Arm snap] Search near goal");
+      RobotState source_pose = source_state.robot_pose();
 
-      RobotState rs(source_state.robot_pose().getContBaseState(), m_goal->getRobotState().right_arm(), m_goal->getRobotState().left_arm());
-      successor.reset(new GraphState(rs));
+      ContObjectState goal_rel_map = m_goal->getRobotState().getObjectStateRelMap();
+      ContObjectState goal_rel_body = m_goal->getRobotState().getObjectStateRelBody();
 
-      t_data.motion_type(motion_type());
-      t_data.cost(cost());
+      ROS_ERROR("Goal rel orig body");
+      ROS_INFO("%f\t%f\t%f", goal_rel_body.x(), goal_rel_body.y(), goal_rel_body.z());
+
+      KDL::Rotation rot = KDL::Rotation::RPY(goal_rel_map.roll(), goal_rel_map.pitch(), goal_rel_map.yaw());
+      KDL::Vector vec(goal_rel_map.x(), goal_rel_map.y(), goal_rel_map.z());
+      KDL::Frame wrt_map(rot, vec);
+
+      ContBaseState cont_base_state = source_pose.getContBaseState();
+
+      rot = KDL::Rotation::RPY(0, 0, cont_base_state.theta());
+      //vec = KDL::Vector(source_pose.base_state().x()*0.02 , source_pose.base_state().y()*0.02, 0.803 + source_pose.base_state().z()*0.02); //Is the Z values correct?
+      vec = KDL::Vector(cont_base_state.x() - 0.050, cont_base_state.y(), cont_base_state.z() + 0.803);
+      KDL::Frame source_frame(rot, vec);
+      ROS_ERROR("Robot base frame");
+      ROS_INFO("%f\t%f\t%f", source_frame.p.x(), source_frame.p.y(), source_frame.p.z());
+
+      ROS_ERROR("Wrt map");
+      ROS_INFO("%f\t%f\t%f", wrt_map.p.x(), wrt_map.p.y(), wrt_map.p.z());
+
+      KDL::Frame wrt_body = source_frame.Inverse() * wrt_map;
+      //vec = KDL::Vector(wrt_body.p.x() + 0.051, wrt_body.p.y(), wrt_body.p.z());
+      //wrt_body = KDL::Frame(wrt_body.M, vec);
+      ROS_ERROR("Goal Wrt body");
+      ROS_INFO("%f\t%f\t%f", wrt_body.p.x(), wrt_body.p.y(), wrt_body.p.z());
+
+      wrt_map = source_frame * wrt_body;
+      ROS_INFO("%f\t%f\t%f", wrt_map.p.x(), wrt_map.p.y(), wrt_map.p.z());
+
+      //RobotState rs(source_state.robot_pose().getContBaseState(), m_goal->getRobotState().right_arm(), m_goal->getRobotState().left_arm());
+      double wr, wp, wy;
+      wrt_body.M.GetRPY(wr, wp, wy);
+      ContObjectState goal_obj_wrt_body(wrt_body.p.x(), wrt_body.p.y(), wrt_body.p.z(), wr, wp, wy);
+
+
+      RobotPosePtr new_robot_pose_ptr;
+      bool ik_success = source_pose.computeRobotPose(goal_obj_wrt_body, source_pose, new_robot_pose_ptr);
+      RobotState temp(source_pose.getContBaseState(), source_pose.right_arm(), source_pose.left_arm());
+      RightContArmState right_arm = source_pose.right_arm();
+      LeftContArmState left_arm = source_pose.left_arm();
+
+        int c = 0;
+        while (!ik_success && c < 10000) {
+            // ROS_ERROR("Failed to compute IK");
+            right_arm.setUpperArmRoll(temp.randomDouble(-3.75, 0.65));
+            //left_arm.setUpperArmRoll(temp.randomDouble(-3.75, 0.65));
+            temp.right_arm(right_arm);
+            //temp.left_arm(left_arm);
+            ik_success = temp.computeRobotPose(goal_obj_wrt_body, temp, new_robot_pose_ptr);
+            c++;
+        }
+      if(ik_success) {
+        ROS_INFO("Snapping to goal state");
+        //RobotState rs(source_pose.getContBaseState(), goal_obj_wrt_body);
+        RobotState rs(source_pose.getContBaseState(), right_arm, left_arm);
+        rs.visualize(200);
+        sleep(2);
+        successor.reset(new GraphState(rs));
+
+        t_data.motion_type(motion_type());
+        t_data.cost(cost());
+        return computeIntermSteps(source_state, *successor, t_data);
+      }
+      else {
+          ROS_INFO("IK failed");
+          return false;
+      }
     
-     return computeIntermSteps(source_state, *successor, t_data);
     }
     else{
         return false;

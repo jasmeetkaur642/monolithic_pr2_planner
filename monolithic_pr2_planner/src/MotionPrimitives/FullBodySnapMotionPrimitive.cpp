@@ -30,7 +30,10 @@ bool FullBodySnapMotionPrimitive::apply(const GraphState& source_state,
     bool within_basexy_tol = (abs(m_goal->getRobotState().base_state().x()-base.x()) < 15*d_tol.x() &&
                               abs(m_goal->getRobotState().base_state().y()-base.y()) < 15*d_tol.y());
     
-    if(within_basexy_tol)
+
+    bool near_end = (abs(m_end->getRobotState().base_state().x()-base.x()) < 50*d_tol.x() &&
+                              abs(m_end->getRobotState().base_state().y()-base.y()) < 50*d_tol.y());
+    if(within_basexy_tol && !near_end)
     { 
       //ROS_INFO("[FBS] Search near goal");      
 
@@ -53,7 +56,7 @@ bool FullBodySnapMotionPrimitive::computeIntermSteps(const GraphState& source_st
 
     ROS_DEBUG_NAMED(MPRIM_LOG, "interpolation for full body snap primitive");
     std::vector<RobotState> interp_steps;
-    bool interpolate = RobotState::workspaceInterpolate(source_state.robot_pose(), 
+    bool interpolate = RobotState::workspaceInterpolateSequential(source_state.robot_pose(), 
                                      successor.robot_pose(),
                                      &interp_steps);
     bool j_interpolate;
@@ -91,5 +94,5 @@ void FullBodySnapMotionPrimitive::print() const {
 
 void FullBodySnapMotionPrimitive::computeCost(const MotionPrimitiveParams& params){
     //TODO: Calculate actual cost 
-    m_cost = 1;
+    m_cost = 4;
 }
