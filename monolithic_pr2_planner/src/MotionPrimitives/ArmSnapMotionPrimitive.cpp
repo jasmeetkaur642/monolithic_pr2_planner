@@ -73,13 +73,14 @@ bool ArmSnapMotionPrimitive::apply(const GraphState& source_state,
 
       rot = KDL::Rotation::RPY(0, 0, cont_base_state.theta());
       //vec = KDL::Vector(source_pose.base_state().x()*0.02 , source_pose.base_state().y()*0.02, 0.803 + source_pose.base_state().z()*0.02); //Is the Z values correct?
-      vec = KDL::Vector(cont_base_state.x() - 0.050, cont_base_state.y(), cont_base_state.z() + 0.803);
+      vec = KDL::Vector(cont_base_state.x() + 0.0501, +cont_base_state.y(), cont_base_state.z() + 0.803);
       KDL::Frame source_frame(rot, vec);
-      ROS_ERROR("Robot base frame");
-      ROS_INFO("%f\t%f\t%f", source_frame.p.x(), source_frame.p.y(), source_frame.p.z());
+      ROS_INFO("Yaw: %f", cont_base_state.theta());
+      //ROS_ERROR("Robot base frame");
+      //ROS_INFO("%f\t%f\t%f", source_frame.p.x(), source_frame.p.y(), source_frame.p.z());
 
-      ROS_ERROR("Wrt map");
-      ROS_INFO("%f\t%f\t%f", wrt_map.p.x(), wrt_map.p.y(), wrt_map.p.z());
+      //ROS_ERROR("Wrt map");
+      //ROS_INFO("%f\t%f\t%f", wrt_map.p.x(), wrt_map.p.y(), wrt_map.p.z());
 
       KDL::Frame wrt_body = source_frame.Inverse() * wrt_map;
       //vec = KDL::Vector(wrt_body.p.x() + 0.051, wrt_body.p.y(), wrt_body.p.z());
@@ -116,8 +117,8 @@ bool ArmSnapMotionPrimitive::apply(const GraphState& source_state,
         ROS_INFO("Snapping to goal state");
         //RobotState rs(source_pose.getContBaseState(), goal_obj_wrt_body);
         RobotState rs(source_pose.getContBaseState(), right_arm, left_arm);
-        rs.visualize(200);
-        sleep(2);
+        //rs.visualize(200);
+        //sleep(2);
         successor.reset(new GraphState(rs));
 
         t_data.motion_type(motion_type());

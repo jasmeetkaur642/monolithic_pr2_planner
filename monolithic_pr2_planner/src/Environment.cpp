@@ -709,7 +709,7 @@ void Environment::save_state_time(vector<int> soln_path) {
     ofstream file;
     file.open("state_time.csv", std::fstream::app);
 
-    for(int i=0;i<soln_path.size();i++) {
+    for(int i=0;i<soln_path.size() - 1;i++) {
         int state_id = soln_path[i];
         GraphStatePtr state = m_hash_mgr->getGraphState(state_id);
 

@@ -105,14 +105,8 @@ bool GoalState::isSatisfiedBy(const GraphStatePtr& graph_state){
 
     within_quat_tol = diff < d_tol.roll();      //should be another parameter d_tol.quat()
 
-     bool within_basexyz_tol = (abs(m_goal_state.base_state().x()-base.x()) < d_tol.x() &&
-                                abs(m_goal_state.base_state().y()-base.y()) < d_tol.y() &&
-                                abs(m_goal_state.base_state().z()-base.z()) < d_tol.z());
 
-     bool within_baseyaw_tol = (abs(m_goal_state.base_state().theta()-base.theta()) < d_tol.yaw());
-
-
-     if (within_xyz_tol && within_quat_tol &&  within_basexyz_tol && within_baseyaw_tol){
+     if (within_xyz_tol && within_quat_tol){
         return true;
     } else {
         return false;

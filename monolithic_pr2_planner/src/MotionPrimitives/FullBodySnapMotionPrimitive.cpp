@@ -27,8 +27,8 @@ bool FullBodySnapMotionPrimitive::apply(const GraphState& source_state,
                            abs(m_goal->getObjectState().z()-obj.z()) < d_tol.z());
 
 
-    bool within_basexy_tol = (abs(m_goal->getRobotState().base_state().x()-base.x()) < 15*d_tol.x() &&
-                              abs(m_goal->getRobotState().base_state().y()-base.y()) < 15*d_tol.y());
+    bool within_basexy_tol = (abs(m_goal->getRobotState().base_state().x()-base.x()) < 20*d_tol.x() &&
+                              abs(m_goal->getRobotState().base_state().y()-base.y()) < 20*d_tol.y());
     
 
     bool near_end = (abs(m_end->getRobotState().base_state().x()-base.x()) < 50*d_tol.x() &&

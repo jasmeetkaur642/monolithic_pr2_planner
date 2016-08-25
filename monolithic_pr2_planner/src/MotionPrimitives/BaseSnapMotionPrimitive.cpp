@@ -30,8 +30,8 @@ bool BaseSnapMotionPrimitive::apply(const GraphState& source_state,
     //                       abs(m_goal->getObjectState().z()-obj.z()) < d_tol.z());
 
 
-    bool within_basexy_tol = (abs(m_goal->getRobotState().base_state().x()-base.x()) < 25*d_tol.x() &&
-                              abs(m_goal->getRobotState().base_state().y()-base.y()) < 25*d_tol.y());
+    bool within_basexy_tol = (abs(m_goal->getRobotState().base_state().x()-base.x()) < 30*d_tol.x() &&
+                              abs(m_goal->getRobotState().base_state().y()-base.y()) < 30*d_tol.y());
 
     bool near_end = (abs(m_end->getRobotState().base_state().x()-base.x()) < 50*d_tol.x() &&
                               abs(m_end->getRobotState().base_state().y()-base.y()) < 50*d_tol.y());
