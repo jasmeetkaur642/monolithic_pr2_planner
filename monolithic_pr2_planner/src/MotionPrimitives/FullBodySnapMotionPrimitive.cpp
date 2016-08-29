@@ -1,6 +1,7 @@
 #include <monolithic_pr2_planner/MotionPrimitives/FullBodySnapMotionPrimitive.h>
 #include <monolithic_pr2_planner/LoggerNames.h>
 #include <boost/shared_ptr.hpp>
+#include <angles/angles.h>
 
 using namespace monolithic_pr2_planner;
 
@@ -21,24 +22,27 @@ bool FullBodySnapMotionPrimitive::apply(const GraphState& source_state,
     DiscObjectState obj = source_state.getObjectStateRelMap();
     DiscBaseState base = robot_pose.base_state();
     unsigned int r_free_angle = robot_pose.right_free_angle();
+    ContBaseState cont_base_state = m_goal->getRobotState().getContBaseState();
 
-    bool within_xyz_tol = (abs(m_goal->getObjectState().x()-obj.x()) < d_tol.x() &&
-                           abs(m_goal->getObjectState().y()-obj.y()) < d_tol.y() &&
-                           abs(m_goal->getObjectState().z()-obj.z()) < d_tol.z());
+//    bool within_xyz_tol = (abs(m_goal->getObjectState().x()-obj.x()) < d_tol.x() &&
+//                           abs(m_goal->getObjectState().y()-obj.y()) < d_tol.y() &&
+//                           abs(m_goal->getObjectState().z()-obj.z()) < d_tol.z());
+//
+
+    bool within_basexy_tol = (abs(m_goal->getRobotState().base_state().x()-base.x()) < 3*d_tol.x() &&
+                              abs(m_goal->getRobotState().base_state().y()-base.y()) < 3*d_tol.y() &&
+                              abs(angles::shortest_angular_distance(cont_base_state.theta(), robot_pose.getContBaseState().theta())) < 15*c_tol.yaw());
 
 
-    bool within_basexy_tol = (abs(m_goal->getRobotState().base_state().x()-base.x()) < 20*d_tol.x() &&
-                              abs(m_goal->getRobotState().base_state().y()-base.y()) < 20*d_tol.y());
-    
-
-    bool near_end = (abs(m_end->getRobotState().base_state().x()-base.x()) < 50*d_tol.x() &&
-                              abs(m_end->getRobotState().base_state().y()-base.y()) < 50*d_tol.y());
+    bool near_end = (abs(m_end->getRobotState().base_state().x()-base.x()) < 30*d_tol.x() &&
+                              abs(m_end->getRobotState().base_state().y()-base.y()) < 30*d_tol.y());
     if(within_basexy_tol && !near_end)
     { 
       //ROS_INFO("[FBS] Search near goal");      
 
       RobotState rs = m_goal->getRobotState();
       successor.reset(new GraphState(rs));
+      //sleep(2);
 
       t_data.motion_type(motion_type());
       t_data.cost(cost());
@@ -56,16 +60,19 @@ bool FullBodySnapMotionPrimitive::computeIntermSteps(const GraphState& source_st
 
     ROS_DEBUG_NAMED(MPRIM_LOG, "interpolation for full body snap primitive");
     std::vector<RobotState> interp_steps;
-    bool interpolate = RobotState::workspaceInterpolateSequential(source_state.robot_pose(), 
-                                     successor.robot_pose(),
-                                     &interp_steps);
+    //bool interpolate = RobotState::workspaceInterpolate(source_state.robot_pose(), 
+    //                                 successor.robot_pose(),
+    //                                 &interp_steps);
+    bool interpolate = false;
     bool j_interpolate;
-
-    if (!interpolate) {
-        interp_steps.clear();
-        j_interpolate = RobotState::jointSpaceInterpolate(source_state.robot_pose(),
+    j_interpolate = RobotState::jointSpaceInterpolate(source_state.robot_pose(),
                                     successor.robot_pose(), &interp_steps);
-    }
+
+    //if (!interpolate) {
+    //    interp_steps.clear();
+    //    j_interpolate = RobotState::jointSpaceInterpolate(source_state.robot_pose(),
+    //                                successor.robot_pose(), &interp_steps);
+    //}
 
     for (auto robot_state: interp_steps){
         robot_state.printToDebug(MPRIM_LOG);
@@ -94,5 +101,5 @@ void FullBodySnapMotionPrimitive::print() const {
 
 void FullBodySnapMotionPrimitive::computeCost(const MotionPrimitiveParams& params){
     //TODO: Calculate actual cost 
-    m_cost = 4;
+    m_cost = 1;
 }

@@ -55,7 +55,7 @@ int main(int argc, char** argv){
       gotMetaType = true;
     }
     else if(strcmp(argv[i],"ma_plus")==0){
-      req.meta_search_type = mha_planner::MetaSearchType::DTS;
+      req.meta_search_type = mha_planner::MetaSearchType::META_A_STAR;
       req.mha_type = mha_planner::MHAType::PLUS;
       gotMetaType = true;
     }
@@ -65,7 +65,7 @@ int main(int argc, char** argv){
       gotMetaType = true;
     }
     else if(strcmp(argv[i],"dts")==0){
-      req.meta_search_type = mha_planner::MetaSearchType::META_A_STAR;
+      req.meta_search_type = mha_planner::MetaSearchType::DTS;
       req.mha_type = mha_planner::MHAType::ORIGINAL;
       gotMetaType = true;
     }
@@ -110,8 +110,8 @@ int main(int argc, char** argv){
   }
 
   //planner parameters
-  req.initial_eps = 50.0;
-  req.final_eps = 50.0;
+  req.initial_eps = 20.0;
+  req.final_eps = 20.0;
   req.dec_eps = 0.2;
 
   req.rarm_object.pose.position.x = 0;

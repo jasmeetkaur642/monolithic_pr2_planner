@@ -98,6 +98,7 @@ void BaseMotionPrimitive::computeCost(const MotionPrimitiveParams& params){
 
     //make the cost the max of the two times
     m_cost = ceil(static_cast<double>(METER_TO_MM_MULT)*(max(linear_time, angular_time)));
+    ROS_INFO("Base cost %d", m_cost) ;
     //use any additional cost multiplier
     m_cost *= getAdditionalCostMult();
     assert(m_cost >= 0.0);

@@ -22,10 +22,13 @@ bool ArmSnapMotionPrimitive::apply(const GraphState& source_state,
     DiscBaseState base = robot_pose.base_state();
     unsigned int r_free_angle = robot_pose.right_free_angle();
 
-    bool within_xyz_tol = (abs(m_goal->getObjectState().x()-base.x()) < 25*d_tol.x() &&
-                           abs(m_goal->getObjectState().y()-base.y()) < 25*d_tol.y() &&
-                           abs(m_goal->getObjectState().z()-base.z()) < 25*d_tol.z());
+    ContBaseState cont_goal_base_state = m_goal->getRobotState().getContBaseState();
 
+    bool within_xyz_tol = (abs(m_goal->getObjectState().x()-base.x()) < 15*d_tol.x() &&
+                           abs(m_goal->getObjectState().y()-base.y()) < 15*d_tol.y() &&
+                           abs(m_goal->getObjectState().z()-base.z()) < 15*d_tol.z());
+
+    bool within_yaw_tol = abs(angles::shortest_angular_distance(cont_goal_base_state.theta(), robot_pose.getContBaseState().theta())) < 15*c_tol.yaw();
 
    // bool within_basexy_tol = (abs(m_goal->getRobotState().base_state().x()-base.x()) < 25*d_tol.x() &&
    //                           abs(m_goal->getRobotState().base_state().y()-base.y()) < 25*d_tol.y());
@@ -55,15 +58,15 @@ bool ArmSnapMotionPrimitive::apply(const GraphState& source_state,
     }
 
     */
-    if(within_xyz_tol)// && ik_success)
+    if(within_xyz_tol && within_yaw_tol)// && ik_success)
     { 
       RobotState source_pose = source_state.robot_pose();
 
       ContObjectState goal_rel_map = m_goal->getRobotState().getObjectStateRelMap();
       ContObjectState goal_rel_body = m_goal->getRobotState().getObjectStateRelBody();
 
-      ROS_ERROR("Goal rel orig body");
-      ROS_INFO("%f\t%f\t%f", goal_rel_body.x(), goal_rel_body.y(), goal_rel_body.z());
+      //ROS_ERROR("Goal rel orig body");
+      //ROS_INFO("%f\t%f\t%f", goal_rel_body.x(), goal_rel_body.y(), goal_rel_body.z());
 
       KDL::Rotation rot = KDL::Rotation::RPY(goal_rel_map.roll(), goal_rel_map.pitch(), goal_rel_map.yaw());
       KDL::Vector vec(goal_rel_map.x(), goal_rel_map.y(), goal_rel_map.z());
@@ -73,9 +76,12 @@ bool ArmSnapMotionPrimitive::apply(const GraphState& source_state,
 
       rot = KDL::Rotation::RPY(0, 0, cont_base_state.theta());
       //vec = KDL::Vector(source_pose.base_state().x()*0.02 , source_pose.base_state().y()*0.02, 0.803 + source_pose.base_state().z()*0.02); //Is the Z values correct?
-      vec = KDL::Vector(cont_base_state.x() + 0.0501, +cont_base_state.y(), cont_base_state.z() + 0.803);
+      double base_shift = 0.501;
+      if(cont_base_state.theta() < 0)
+          base_shift * -1;
+      vec = KDL::Vector(cont_base_state.x() + base_shift, cont_base_state.y(), cont_base_state.z() + 0.803);
       KDL::Frame source_frame(rot, vec);
-      ROS_INFO("Yaw: %f", cont_base_state.theta());
+      //ROS_INFO("Yaw: %f", cont_base_state.theta());
       //ROS_ERROR("Robot base frame");
       //ROS_INFO("%f\t%f\t%f", source_frame.p.x(), source_frame.p.y(), source_frame.p.z());
 
@@ -85,8 +91,8 @@ bool ArmSnapMotionPrimitive::apply(const GraphState& source_state,
       KDL::Frame wrt_body = source_frame.Inverse() * wrt_map;
       //vec = KDL::Vector(wrt_body.p.x() + 0.051, wrt_body.p.y(), wrt_body.p.z());
       //wrt_body = KDL::Frame(wrt_body.M, vec);
-      ROS_ERROR("Goal Wrt body");
-      ROS_INFO("%f\t%f\t%f", wrt_body.p.x(), wrt_body.p.y(), wrt_body.p.z());
+      //ROS_ERROR("Goal Wrt body");
+      //ROS_INFO("%f\t%f\t%f", wrt_body.p.x(), wrt_body.p.y(), wrt_body.p.z());
 
       wrt_map = source_frame * wrt_body;
       ROS_INFO("%f\t%f\t%f", wrt_map.p.x(), wrt_map.p.y(), wrt_map.p.z());

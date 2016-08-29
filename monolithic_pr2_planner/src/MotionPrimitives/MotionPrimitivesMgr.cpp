@@ -16,13 +16,16 @@ MotionPrimitivesMgr::MotionPrimitivesMgr(boost::shared_ptr<GoalState>& goal, std
  */
 bool MotionPrimitivesMgr::loadMPrims(const MotionPrimitiveParams& params){
     m_params = params;
-
+    
     MPrimList arm_mprims;
     m_parser.parseArmMotionPrimitives(params.arm_motion_primitive_file, arm_mprims);
 
     MPrimList base_mprims;
     m_parser.parseBaseMotionPrimitives(params.base_motion_primitive_file, base_mprims);
+    
+    
     ArmAdaptiveMotionPrimitivePtr armAMP = make_shared<ArmAdaptiveMotionPrimitive>();
+   
     ArmTuckMotionPrimitivePtr tuckAMP = make_shared<ArmTuckMotionPrimitive>();
     ArmUntuckMotionPrimitivePtr untuckAMP = make_shared<ArmUntuckMotionPrimitive>(true);
     ArmUntuckMotionPrimitivePtr untuckPartialAMP = make_shared<ArmUntuckMotionPrimitive>(false);
