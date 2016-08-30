@@ -791,7 +791,7 @@ void Environment::getIslandStates(std::vector<RobotState> &islandStates, std::ve
                 ss >> rarm[j];
             }
             ROS_ERROR("DONE2");
-            ss >> x >> y >> z >> yaw;
+            ss >>yaw >> x >> y >> z;
 
             const ContBaseState base(x, y, z, yaw);
             RightContArmState r_arm(rarm);

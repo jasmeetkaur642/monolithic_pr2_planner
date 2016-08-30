@@ -36,8 +36,9 @@ bool FullBodySnapMotionPrimitive::apply(const GraphState& source_state,
   //                            abs(angles::shortest_angular_distance(cont_base_state.theta(), robot_pose.getContBaseState().theta())) < 15*c_tol.yaw());
 
     //ROS_INFO("%f, %f", abs(angles::shortest_angular_distance(cont_base_state.theta(), robot_pose.getContBaseState().theta())), abs(angles::shortest_angular_distance(m_activationCenter.getContBaseState().theta(), cont_base_state.theta())));
-    bool within_activation_radius = (abs(disc_base_state.x() - base.x() < max(2*d_tol.x(), abs(m_activationCenter.base_state().x() - disc_base_state.x()))) &&
-                                    abs(disc_base_state.y() - base.y() < max(2*d_tol.y(), abs(m_activationCenter.base_state().y() - disc_base_state.y()))));// &&
+    //ROS_INFO("%d, %d", abs(disc_base_state.x() - base.x()), abs(m_activationCenter.base_state().x() - disc_base_state.x()));
+    bool within_activation_radius = (abs(disc_base_state.x() - base.x()) < max(5*d_tol.x(), abs(m_activationCenter.base_state().x() - disc_base_state.x())) &&
+                                    abs(disc_base_state.y() - base.y()) < max(5*d_tol.y(), abs(m_activationCenter.base_state().y() - disc_base_state.y())));// &&
                                     //abs(angles::shortest_angular_distance(cont_base_state.theta(), robot_pose.getContBaseState().theta())) < abs(angles::shortest_angular_distance(m_activationCenter.getContBaseState().theta(), cont_base_state.theta())));
     /*
     bool temp;
