@@ -21,7 +21,7 @@ namespace monolithic_pr2_planner {
         public:
             MotionPrimitivesMgr(){};
             MotionPrimitivesMgr(GoalStatePtr&);
-            MotionPrimitivesMgr(GoalStatePtr& goal, std::vector<RobotState>&);
+            MotionPrimitivesMgr(GoalStatePtr& goal, std::vector<RobotState>&, std::vector<RobotState>&);
             bool loadMPrims(const MotionPrimitiveParams& files);
             void addIslandSnapPrimitives();
             void loadMPrimSet(int planning_mode);
@@ -45,6 +45,7 @@ namespace monolithic_pr2_planner {
                         islandState = boost::make_shared<GoalState>(m_islandStates[i], xyz_tol, roll_tol, pitch_tol, yaw_tol);
                         fullbody_snap_mprim[i]->getUpdatedGoalandTolerances(islandState, xyz_tol, roll_tol, pitch_tol, yaw_tol);
                         fullbody_snap_mprim[i]->m_end = goal;
+                        fullbody_snap_mprim[i]->m_activationCenter = m_activationCenters[i];
                     }
                 }
 
@@ -83,5 +84,6 @@ namespace monolithic_pr2_planner {
             ArmSnapMotionPrimitivePtr armsnap_mprim;
 
             std::vector<RobotState> m_islandStates;
+            std::vector<RobotState> m_activationCenters;
     };
 }

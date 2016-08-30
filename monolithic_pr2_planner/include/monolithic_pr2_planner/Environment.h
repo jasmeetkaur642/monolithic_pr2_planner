@@ -87,7 +87,7 @@ namespace monolithic_pr2_planner {
             void PrintState(int stateID, bool bVerbose, FILE* fOut=NULL){};
             void PrintEnv_Config(FILE* fOut){};
 
-            std::vector<RobotState> getIslandStates();
+            void getIslandStates(std::vector<RobotState>&, std::vector<RobotState>&);
 
             void save_state_time(vector<int> soln_path);
 

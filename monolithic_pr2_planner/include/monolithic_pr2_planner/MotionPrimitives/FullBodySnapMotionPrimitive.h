@@ -34,6 +34,7 @@ namespace monolithic_pr2_planner {
       }
       GoalStatePtr m_goal;
       GoalStatePtr m_end;
+      RobotState m_activationCenter;
       RobotState m_goal_robot;
       std::vector<double> m_tolerances;
   };

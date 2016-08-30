@@ -118,11 +118,11 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
       int endeff_rot_goal = (*values).at("endeff_rot_goal");
 
       int inad_arm_heur = static_cast<int>(0.1*(*values).at("endeff_rot_goal") + 0.1*ad_endeff);
-      //if (ad_base > 1000) //TODO: check multiplier
-      //{ 
-      //  inad_arm_heur = (*values).at("arm_angles_folded");
-      //}
-      
+      if (ad_base > 1000) //TODO: check multiplier
+      { 
+        inad_arm_heur = (*values).at("arm_angles_folded");
+      }
+      /*
       switch (heuristic_id) {
         case 0:  // Anchor
           return anchor_h;
@@ -153,7 +153,7 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
           //return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot5") + w_armFold*inad_arm_heur);
           return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*inad_arm_heur);
         }
-         /*
+         */
       switch (heuristic_id) {
         case 0:  // Anchor
           return anchor_h;
@@ -199,7 +199,7 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
           return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*inad_arm_heur);
       }
       
-      */
+      
       // switch (heuristic_id) {
       //   case 0:  // Anchor
       //     return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
@@ -683,8 +683,9 @@ void Environment::configurePlanningDomain(){
     LeftContArmState l_arm;
     RightContArmState r_arm;
 
-    std::vector<RobotState> islandStates = getIslandStates();
-    m_mprims = MotionPrimitivesMgr(m_goal, islandStates);
+    std::vector<RobotState> islandStates, activationCenters;
+    getIslandStates(islandStates, activationCenters);
+    m_mprims = MotionPrimitivesMgr(m_goal, islandStates, activationCenters);
 
     // Choosed the snap mprims from launch file.
     chooseSnapMprims();
@@ -766,7 +767,7 @@ void Environment::save_state_time(vector<int> soln_path) {
     ROS_INFO("File saved");
 }
 
-std::vector<RobotState> Environment::getIslandStates() {
+void Environment::getIslandStates(std::vector<RobotState> &islandStates, std::vector<RobotState> &activationCenters) {
     std::string file_name;
     ROS_INFO("Loading bottleneck points");
     m_nodehandle.param("planner/island", file_name, std::string("Empty"));
@@ -774,44 +775,37 @@ std::vector<RobotState> Environment::getIslandStates() {
 
     ifstream island_file(file_name);
     std::string line;
-    std::vector<RobotState> islandStates;
 
+    LeftContArmState l_arm({0.038946, 1.214670, 1.396356, -1.197227, -4.616317, -0.988727, 1.175568});
     while(std::getline(island_file, line)) {
         ROS_INFO("%s", line.c_str());
 
         std::istringstream ss(line);
-        std::string x_str, y_str, yaw_str, z_str;
-        std::vector<std::string> rarm_str;
-        rarm_str.resize(7);
+        double x, y, yaw, z;
+        std::vector<double> rarm;
+        rarm.resize(7);
 
-        ROS_ERROR("DONE1");
-        for(int j=0;j<7;j++) {
-            ss >> rarm_str[j];
+        for(int i=0;i<2;i++) {
+            ROS_ERROR("DONE1");
+            for(int j=0;j<7;j++) {
+                ss >> rarm[j];
+            }
+            ROS_ERROR("DONE2");
+            ss >> x >> y >> z >> yaw;
+
+            const ContBaseState base(x, y, z, yaw);
+            RightContArmState r_arm(rarm);
+
+            if(i==0) {
+                RobotState islandState(base, r_arm, l_arm);
+                islandStates.push_back(islandState);
+            }
+            else {
+                RobotState activationCenter(base, r_arm, l_arm);
+                activationCenters.push_back(activationCenter);
+            }
         }
-        ROS_ERROR("DONE2");
-        ss >> x_str >> y_str >> z_str >> yaw_str;
-
-        double x = 0, y = 0, z = 0, yaw = 0;
-        std::vector<double> rarm(7, 0);
-        x =  atof(x_str.c_str());
-        y = atof(y_str.c_str());
-        z = atof(z_str.c_str());
-        //z = 0.3;
-        yaw = atof(yaw_str.c_str());
-        for(int j=0;j<7;j++)
-            rarm[j] = atof(rarm_str[j].c_str());
-
-        const ContBaseState base(x, y, z, yaw);
-        RightContArmState r_arm(rarm);
-        // Dummy values
-        LeftContArmState l_arm({0.038946, 1.214670, 1.396356, -1.197227, -4.616317, -0.988727, 1.175568});
-        ROS_ERROR("DONE3");
-        RobotState islandState(base, r_arm, l_arm);
-        islandStates.push_back(islandState);
-        ROS_ERROR("DONE4");
     }
-    //m_island_base_states = islandStates;
-    return islandStates;
 }
 
 void Environment::chooseSnapMprims() {

@@ -2,6 +2,7 @@
 #include <monolithic_pr2_planner/LoggerNames.h>
 #include <boost/shared_ptr.hpp>
 #include <angles/angles.h>
+#include <algorithm>
 
 using namespace monolithic_pr2_planner;
 
@@ -23,22 +24,42 @@ bool FullBodySnapMotionPrimitive::apply(const GraphState& source_state,
     DiscBaseState base = robot_pose.base_state();
     unsigned int r_free_angle = robot_pose.right_free_angle();
     ContBaseState cont_base_state = m_goal->getRobotState().getContBaseState();
+    DiscBaseState disc_base_state = m_goal->getRobotState().base_state();
 
 //    bool within_xyz_tol = (abs(m_goal->getObjectState().x()-obj.x()) < d_tol.x() &&
 //                           abs(m_goal->getObjectState().y()-obj.y()) < d_tol.y() &&
 //                           abs(m_goal->getObjectState().z()-obj.z()) < d_tol.z());
 //
 
-    bool within_basexy_tol = (abs(m_goal->getRobotState().base_state().x()-base.x()) < 3*d_tol.x() &&
-                              abs(m_goal->getRobotState().base_state().y()-base.y()) < 3*d_tol.y() &&
-                              abs(angles::shortest_angular_distance(cont_base_state.theta(), robot_pose.getContBaseState().theta())) < 15*c_tol.yaw());
+  //  bool within_basexy_tol = (abs(m_goal->getRobotState().base_state().x()-base.x()) < 3*d_tol.x() &&
+  //                            abs(m_goal->getRobotState().base_state().y()-base.y()) < 3*d_tol.y() &&
+  //                            abs(angles::shortest_angular_distance(cont_base_state.theta(), robot_pose.getContBaseState().theta())) < 15*c_tol.yaw());
 
+    //ROS_INFO("%f, %f", abs(angles::shortest_angular_distance(cont_base_state.theta(), robot_pose.getContBaseState().theta())), abs(angles::shortest_angular_distance(m_activationCenter.getContBaseState().theta(), cont_base_state.theta())));
+    bool within_activation_radius = (abs(disc_base_state.x() - base.x() < max(2*d_tol.x(), abs(m_activationCenter.base_state().x() - disc_base_state.x()))) &&
+                                    abs(disc_base_state.y() - base.y() < max(2*d_tol.y(), abs(m_activationCenter.base_state().y() - disc_base_state.y()))));// &&
+                                    //abs(angles::shortest_angular_distance(cont_base_state.theta(), robot_pose.getContBaseState().theta())) < abs(angles::shortest_angular_distance(m_activationCenter.getContBaseState().theta(), cont_base_state.theta())));
+    /*
+    bool temp;
+    std::vector<double> r_arm_goal, r_arm_center, r_arm_source;
+    m_goal->getRobotState().right_arm().getAngles(&r_arm_goal);
+    m_activationCenter.right_arm().getAngles(&r_arm_center);
+    robot_pose.right_arm().getAngles(&r_arm_source);
 
+    if(within_activation_radius)
+        for(int i=0;i<7;i++) {
+            ROS_INFO("%f", abs(angles::shortest_angular_distance(r_arm_center[i], r_arm_source[i])));
+            if(abs(angles::shortest_angular_distance(r_arm_source[i], r_arm_goal[i])) > abs(angles::shortest_angular_distance(r_arm_center[i], r_arm_source[i]))) {
+                within_activation_radius = false;
+                break;
+            }
+        }
+        */
     bool near_end = (abs(m_end->getRobotState().base_state().x()-base.x()) < 30*d_tol.x() &&
                               abs(m_end->getRobotState().base_state().y()-base.y()) < 30*d_tol.y());
-    if(within_basexy_tol && !near_end)
+    if(within_activation_radius && !near_end)
     { 
-      //ROS_INFO("[FBS] Search near goal");      
+      ROS_INFO("[FBS] Search near goal");      
 
       RobotState rs = m_goal->getRobotState();
       successor.reset(new GraphState(rs));
