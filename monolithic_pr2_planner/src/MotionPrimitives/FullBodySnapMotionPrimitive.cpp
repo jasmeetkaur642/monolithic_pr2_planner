@@ -132,5 +132,5 @@ void FullBodySnapMotionPrimitive::print() const {
 
 void FullBodySnapMotionPrimitive::computeCost(const MotionPrimitiveParams& params){
     //TODO: Calculate actual cost 
-    m_cost = 40;
+    m_cost = 50;
 }
