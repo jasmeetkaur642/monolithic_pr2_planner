@@ -9,6 +9,9 @@
 namespace monolithic_pr2_planner {
   class FullBodySnapMotionPrimitive : public MotionPrimitive {
     public:
+      // Caches snap feasibility bw graph states.
+      static boost::shared_ptr<std::set<std::pair<int, int> > > m_infeasibleSnaps;
+
       FullBodySnapMotionPrimitive():m_tolerances(4,0)
       {
        //Quickly hardcoded. Should be read from SearchReqParam
@@ -36,8 +39,12 @@ namespace monolithic_pr2_planner {
       GoalStatePtr m_end;
       RobotState m_activationCenter;
       RobotState m_goal_robot;
+
       std::vector<double> m_tolerances;
+      RobotState m_activationRadius;
   };
+
+
   typedef boost::shared_ptr<FullBodySnapMotionPrimitive> FullBodySnapMotionPrimitivePtr;
 
 }

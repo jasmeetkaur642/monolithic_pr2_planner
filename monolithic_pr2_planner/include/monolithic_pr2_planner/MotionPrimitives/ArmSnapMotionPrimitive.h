@@ -34,6 +34,8 @@ namespace monolithic_pr2_planner {
 
       GoalStatePtr m_goal;
       std::vector<double> m_tolerances;
+      RobotState m_activationCenter;
+      RobotState m_activationRadius;
   };
   typedef boost::shared_ptr<ArmSnapMotionPrimitive> ArmSnapMotionPrimitivePtr;
 

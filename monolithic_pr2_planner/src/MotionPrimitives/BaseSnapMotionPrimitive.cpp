@@ -3,6 +3,7 @@
 #include <boost/shared_ptr.hpp>
 
 #define METER_TO_MM_MULT 1000
+#define ARM_ANGLE_TOL 0.01
 
 using namespace monolithic_pr2_planner;
 
@@ -25,19 +26,38 @@ bool BaseSnapMotionPrimitive::apply(const GraphState& source_state,
     DiscBaseState base = robot_pose.base_state();
     unsigned int r_free_angle = robot_pose.right_free_angle();
 
+    DiscBaseState baseActivationRadius = m_activationRadius.base_state();
+    DiscBaseState baseActivationCenter = m_activationCenter.base_state();
+
+    std::vector<double> armActivationRadius, armActivationCenter, armSource;
+    m_activationRadius.right_arm().getAngles(&armActivationRadius);
+    m_activationCenter.right_arm().getAngles(&armActivationCenter);
+    robot_pose.right_arm().getAngles(&armSource);
+
     //bool within_xyz_tol = (abs(m_goal->getObjectState().x()-obj.x()) < d_tol.x() &&
     //                       abs(m_goal->getObjectState().y()-obj.y()) < d_tol.y() &&
     //                       abs(m_goal->getObjectState().z()-obj.z()) < d_tol.z());
 
 
-    bool within_basexy_tol = (abs(m_goal->getRobotState().base_state().x()-base.x()) < 30*d_tol.x() &&
-                              abs(m_goal->getRobotState().base_state().y()-base.y()) < 30*d_tol.y());
+    bool within_basexy_tol = (abs(baseActivationCenter.x()-base.x()) < 20*baseActivationRadius.x() &&
+                              abs(baseActivationCenter.y()-base.y()) < 20*baseActivationRadius.y() &&
+                              abs(angles::shortest_angular_distance(m_activationCenter.getContBaseState().theta(), robot_pose.getContBaseState().theta())) < max(5*c_tol.yaw(), 10*m_activationRadius.getContBaseState().theta()));
 
     bool near_end = (abs(m_end->getRobotState().base_state().x()-base.x()) < 50*d_tol.x() &&
                               abs(m_end->getRobotState().base_state().y()-base.y()) < 50*d_tol.y());
 
-    if(within_basexy_tol && !near_end)
+    bool within_arm_tol = true;
+    //int i =0;
+    //while(within_arm_tol && i < 7) {
+    //    if(abs(angles::shortest_angular_distance(armSource[i], armActivationRadius[i])) > 10*armActivationRadius[i])
+    //        within_arm_tol = false;
+    //    i++;
+    //}
+
+
+    if(within_basexy_tol && !near_end && within_arm_tol)
     {
+        ROS_INFO("BASE SNAP");
       RobotState rs(m_goal->getRobotState().getContBaseState(), source_state.robot_pose().right_arm(), source_state.robot_pose().left_arm());
       successor.reset(new GraphState(rs));
 
@@ -82,7 +102,7 @@ void BaseSnapMotionPrimitive::print() const {
 
 void BaseSnapMotionPrimitive::computeCost(const MotionPrimitiveParams& params){
     //TODO: Calculate actual cost
-    m_cost = 3;
+    m_cost = 5;
 /*
     if(!m_interp_base_steps.size()) {
         ROS_INFO("default cost");

@@ -159,7 +159,7 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
           return anchor_h;
         case 1:  // Anchor
           return int(0.1*ad_base) + int(0.1*ad_endeff) + int(0.2*endeff_rot_goal);
-          //return anchor_h;
+          //return ad_base;
         case 2:  // Base1, Base2 heur
           return static_cast<int>(0.1*(*values).at("base_with_rot_0") + 0.1*(*values).at("endeff_rot_goal"));
         case 3:  // Base1, Base2 heur
@@ -398,6 +398,11 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
         // mprim->printEndCoord();
         GraphStatePtr successor;
         TransitionData t_data;
+
+        if((mprim->getID() == MPrim_Types::FULLBODY_SNAP || mprim->getID() == MPrim_Types::BASE_SNAP) && q_id != 0){
+            continue;
+        }
+
         if (!mprim->apply(*source_state, successor, t_data)) {
             ROS_DEBUG_NAMED(MPRIM_LOG, "couldn't apply mprim");
             continue;
@@ -433,8 +438,11 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
             }
             ROS_DEBUG_NAMED(SEARCH_LOG, "motion succeeded with cost %d", mprim->cost());
         } else {
-            if(t_data.motion_type() == MPrim_Types::FULLBODY_SNAP)
+            if(t_data.motion_type() == MPrim_Types::FULLBODY_SNAP) {
                 ROS_ERROR("FBS failed collision checking");
+
+                //m_infeasibleSnaps.emplace(sourceStateID, successor->id());
+            }
             ROS_DEBUG_NAMED(SEARCH_LOG, "successor failed collision checking");
         }
     }
@@ -685,7 +693,14 @@ void Environment::configurePlanningDomain(){
 
     std::vector<RobotState> islandStates, activationCenters;
     getIslandStates(islandStates, activationCenters);
-    m_mprims = MotionPrimitivesMgr(m_goal, islandStates, activationCenters);
+
+    // Add island states to the graph.
+    GraphStatePtr g_state;
+    for(GraphState state:islandStates) {
+        g_state = boost::make_shared<GraphState>(state);
+        m_hash_mgr->save(g_state);
+    }
+    m_mprims = MotionPrimitivesMgr(m_goal, islandStates, activationCenters, boost::make_shared<std::set<std::pair<int, int> > >(m_infeasibleSnaps));
 
     // Choosed the snap mprims from launch file.
     chooseSnapMprims();
@@ -792,6 +807,9 @@ void Environment::getIslandStates(std::vector<RobotState> &islandStates, std::ve
             }
             ROS_ERROR("DONE2");
             ss >>yaw >> x >> y >> z;
+
+            double theta_res = m_param_catalog.m_robot_resolution_params.base_theta_resolution;
+            yaw = normalize_angle_positive(static_cast<double>(yaw)*theta_res);
 
             const ContBaseState base(x, y, z, yaw);
             RightContArmState r_arm(rarm);

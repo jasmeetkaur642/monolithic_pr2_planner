@@ -21,7 +21,7 @@ namespace monolithic_pr2_planner {
         public:
             MotionPrimitivesMgr(){};
             MotionPrimitivesMgr(GoalStatePtr&);
-            MotionPrimitivesMgr(GoalStatePtr& goal, std::vector<RobotState>&, std::vector<RobotState>&);
+            MotionPrimitivesMgr(GoalStatePtr& goal, std::vector<RobotState>&, std::vector<RobotState>&, boost::shared_ptr<std::set<std::pair<int, int> > > infeasibleSnaps);
             bool loadMPrims(const MotionPrimitiveParams& files);
             void addIslandSnapPrimitives();
             void loadMPrimSet(int planning_mode);
@@ -36,10 +36,12 @@ namespace monolithic_pr2_planner {
                         islandState = boost::make_shared<GoalState>(m_islandStates[i], xyz_tol, roll_tol, pitch_tol, yaw_tol);
                         basesnap_mprim[i]->getUpdatedGoalandTolerances(islandState, xyz_tol, roll_tol, pitch_tol, yaw_tol);
                         basesnap_mprim[i]->m_end = goal;
+                        basesnap_mprim[i]->m_activationCenter = m_activationCenters[i];
                     }
                 }
 
                 if(fullBodySnap) {
+                    //FullBodySnapMotionPrimitive::m_infeasibleSnaps = m_infeasibleSnaps;
                     GoalStatePtr islandState;
                     for(int i=0;i < m_islandStates.size();i++) {
                         islandState = boost::make_shared<GoalState>(m_islandStates[i], xyz_tol, roll_tol, pitch_tol, yaw_tol);
@@ -85,5 +87,7 @@ namespace monolithic_pr2_planner {
 
             std::vector<RobotState> m_islandStates;
             std::vector<RobotState> m_activationCenters;
+            // Caches failed graph id to graph id collision check.
+            boost::shared_ptr<std::set<std::pair<int, int> > > m_infeasibleSnaps;
     };
 }

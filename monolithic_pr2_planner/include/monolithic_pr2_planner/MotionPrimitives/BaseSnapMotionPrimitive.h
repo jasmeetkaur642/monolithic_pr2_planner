@@ -44,6 +44,9 @@ class BaseSnapMotionPrimitive : public MotionPrimitive {
     RobotState m_goal_robot;
     std::vector<double> m_tolerances;
     std::vector<ContBaseState> m_interp_base_steps;
+
+    RobotState m_activationCenter;
+    RobotState m_activationRadius;
 };
 typedef boost::shared_ptr<BaseSnapMotionPrimitive> BaseSnapMotionPrimitivePtr;
 

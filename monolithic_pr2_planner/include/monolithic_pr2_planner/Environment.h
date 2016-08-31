@@ -93,6 +93,9 @@ namespace monolithic_pr2_planner {
 
             std::map<Edge, MotionPrimitivePtr> m_edges;
 
+            //Caches whether snapping is feasible from a graphstate to a snap island.
+            std::set<std::pair<int, int> > m_infeasibleSnaps;
+
             std::unordered_map<int, double> m_state_time_map;
     };
 }

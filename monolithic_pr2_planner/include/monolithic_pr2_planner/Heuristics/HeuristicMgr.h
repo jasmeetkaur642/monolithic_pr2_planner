@@ -129,6 +129,7 @@ namespace monolithic_pr2_planner {
             std::vector<unsigned char> m_grid_data;
 
             CSpaceMgrPtr m_cspace_mgr;
+
     };
     typedef boost::shared_ptr<HeuristicMgr> HeuristicMgrPtr;
 }

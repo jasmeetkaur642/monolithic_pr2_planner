@@ -16,6 +16,7 @@ bool ArmSnapMotionPrimitive::apply(const GraphState& source_state,
                           m_tolerances[Tolerances::PITCH],
                           m_tolerances[Tolerances::YAW]);
     DiscObjectState d_tol = c_tol.getDiscObjectState();
+    ROS_INFO("%f", c_tol.y());
     
     RobotState robot_pose = source_state.robot_pose();
     DiscObjectState obj = source_state.getObjectStateRelMap();
@@ -24,83 +25,78 @@ bool ArmSnapMotionPrimitive::apply(const GraphState& source_state,
 
     ContBaseState cont_goal_base_state = m_goal->getRobotState().getContBaseState();
 
-    bool within_xyz_tol = (abs(m_goal->getObjectState().x()-base.x()) < 15*d_tol.x() &&
-                           abs(m_goal->getObjectState().y()-base.y()) < 15*d_tol.y() &&
-                           abs(m_goal->getObjectState().z()-base.z()) < 15*d_tol.z());
+    bool within_xyz_tol = (abs(m_goal->getObjectState().x()-base.x()) < 25*d_tol.x() &&
+                           abs(m_goal->getObjectState().y()-base.y()) < 25*d_tol.y() &&
+                           abs(m_goal->getObjectState().z()-base.z()) < 25*d_tol.z());
 
     bool within_yaw_tol = abs(angles::shortest_angular_distance(cont_goal_base_state.theta(), robot_pose.getContBaseState().theta())) < 15*c_tol.yaw();
 
    // bool within_basexy_tol = (abs(m_goal->getRobotState().base_state().x()-base.x()) < 25*d_tol.x() &&
    //                           abs(m_goal->getRobotState().base_state().y()-base.y()) < 25*d_tol.y());
 
-    /*
-    bool ik_success = false;
-    RobotState temp_pose(robot_pose.base_state(), robot_pose.right_arm(), robot_pose.left_arm());
+    bool goal_facing_arm = false;
+
+    RobotState source_pose = source_state.robot_pose();
+    ContObjectState goal_rel_map = m_goal->getRobotState().getObjectStateRelMap();
+    ContObjectState goal_rel_body = m_goal->getRobotState().getObjectStateRelBody();
+    KDL::Frame F_torsolift_goal;
+
+
     if(within_xyz_tol) {
-        ROS_INFO("Inside arm tol");
-        RobotPosePtr new_robot_pose_ptr;
-        DiscObjectState disc_obj_state(m_goal->getRobotState().getObjectStateRelBody());
 
-        ik_success = temp_pose.computeRobotPose(disc_obj_state, temp_pose, new_robot_pose_ptr);
-
-        int c = 0;
-        RightContArmState r_arm = temp_pose.right_arm();
-        LeftContArmState l_arm = temp_pose.left_arm();
-        while (!ik_success && c < 10000) {
-            // ROS_ERROR("Failed to compute IK");
-            r_arm.setUpperArmRoll(temp_pose.randomDouble(-3.75, 0.65));
-            l_arm.setUpperArmRoll(temp_pose.randomDouble(-3.75, 0.65));
-            temp_pose.right_arm(r_arm);
-            temp_pose.left_arm(l_arm);
-            ik_success = temp_pose.computeRobotPose(disc_obj_state, temp_pose, new_robot_pose_ptr);
-            c++;
-        }
-    }
-
-    */
-    if(within_xyz_tol && within_yaw_tol)// && ik_success)
-    { 
-      RobotState source_pose = source_state.robot_pose();
-
-      ContObjectState goal_rel_map = m_goal->getRobotState().getObjectStateRelMap();
-      ContObjectState goal_rel_body = m_goal->getRobotState().getObjectStateRelBody();
-
-      //ROS_ERROR("Goal rel orig body");
-      //ROS_INFO("%f\t%f\t%f", goal_rel_body.x(), goal_rel_body.y(), goal_rel_body.z());
+      ROS_ERROR("Goal rel orig body");
+      ROS_INFO("%f\t%f\t%f", goal_rel_body.x(), goal_rel_body.y(), goal_rel_body.z());
 
       KDL::Rotation rot = KDL::Rotation::RPY(goal_rel_map.roll(), goal_rel_map.pitch(), goal_rel_map.yaw());
       KDL::Vector vec(goal_rel_map.x(), goal_rel_map.y(), goal_rel_map.z());
-      KDL::Frame wrt_map(rot, vec);
+      KDL::Frame F_map_goal(rot, vec); //Frame of goal wrt map.
 
       ContBaseState cont_base_state = source_pose.getContBaseState();
 
       rot = KDL::Rotation::RPY(0, 0, cont_base_state.theta());
       //vec = KDL::Vector(source_pose.base_state().x()*0.02 , source_pose.base_state().y()*0.02, 0.803 + source_pose.base_state().z()*0.02); //Is the Z values correct?
-      double base_shift = 0.501;
-      if(cont_base_state.theta() < 0)
-          base_shift * -1;
-      vec = KDL::Vector(cont_base_state.x() + base_shift, cont_base_state.y(), cont_base_state.z() + 0.803);
-      KDL::Frame source_frame(rot, vec);
+      KDL::Rotation r = KDL::Rotation::RPY(0, 0, 0);
+      vec = KDL::Vector(-0.05, 0, cont_base_state.z() + 0.803);
+      KDL::Frame F_base_torsolift(r, vec); // Torse lift wrt base foorprint.
+
+      r.DoRotZ(cont_base_state.theta());
+      vec = KDL::Vector(cont_base_state.x(), cont_base_state.y(), 0);
+      KDL::Frame F_map_base(r, vec); //Frame of base wrt map.
+
+      KDL::Frame F_map_torsolift = F_map_base * F_base_torsolift;
+
+      KDL::Frame F_torsolift_map = F_map_torsolift.Inverse();
+
+      KDL::Frame F_goal_map = F_map_goal.Inverse();
+
+      F_torsolift_goal = F_torsolift_map * F_map_goal;
+
+      double goal_wrt_body_x = F_torsolift_goal.p.x(); //Direction of the arm.
+      double goal_wrt_body_y = F_torsolift_goal.p.y();
+      //double goal_wrt_body_tan = abs(goal_wrt_body_x/(goal_wrt_body_y + 0.0001)) // Handle 0 case.
+
+      if(goal_wrt_body_x > 0 && (goal_wrt_body_y < 10*c_tol.y())) {
+          goal_facing_arm = true;
+          ROS_INFO("GOAL x = %f y = %f", goal_wrt_body_x, goal_wrt_body_y);
+      }
+    }
+
+
+    within_yaw_tol = true;
+    if(within_xyz_tol && within_yaw_tol && goal_facing_arm)// && ik_success)
+    { 
       //ROS_INFO("Yaw: %f", cont_base_state.theta());
       //ROS_ERROR("Robot base frame");
-      //ROS_INFO("%f\t%f\t%f", source_frame.p.x(), source_frame.p.y(), source_frame.p.z());
+      ROS_INFO("%f\t%f\t%f", F_torsolift_goal.p.x(), F_torsolift_goal.p.y(), F_torsolift_goal.p.z());
 
       //ROS_ERROR("Wrt map");
       //ROS_INFO("%f\t%f\t%f", wrt_map.p.x(), wrt_map.p.y(), wrt_map.p.z());
 
-      KDL::Frame wrt_body = source_frame.Inverse() * wrt_map;
-      //vec = KDL::Vector(wrt_body.p.x() + 0.051, wrt_body.p.y(), wrt_body.p.z());
-      //wrt_body = KDL::Frame(wrt_body.M, vec);
-      //ROS_ERROR("Goal Wrt body");
-      //ROS_INFO("%f\t%f\t%f", wrt_body.p.x(), wrt_body.p.y(), wrt_body.p.z());
-
-      wrt_map = source_frame * wrt_body;
-      ROS_INFO("%f\t%f\t%f", wrt_map.p.x(), wrt_map.p.y(), wrt_map.p.z());
 
       //RobotState rs(source_state.robot_pose().getContBaseState(), m_goal->getRobotState().right_arm(), m_goal->getRobotState().left_arm());
       double wr, wp, wy;
-      wrt_body.M.GetRPY(wr, wp, wy);
-      ContObjectState goal_obj_wrt_body(wrt_body.p.x(), wrt_body.p.y(), wrt_body.p.z(), wr, wp, wy);
+      F_torsolift_goal.M.GetRPY(wr, wp, wy);
+      ContObjectState goal_obj_wrt_body(F_torsolift_goal.p.x(), F_torsolift_goal.p.y(), F_torsolift_goal.p.z(), wr, wp, wy);
 
 
       RobotPosePtr new_robot_pose_ptr;
@@ -113,17 +109,15 @@ bool ArmSnapMotionPrimitive::apply(const GraphState& source_state,
         while (!ik_success && c < 10000) {
             // ROS_ERROR("Failed to compute IK");
             right_arm.setUpperArmRoll(temp.randomDouble(-3.75, 0.65));
-            //left_arm.setUpperArmRoll(temp.randomDouble(-3.75, 0.65));
             temp.right_arm(right_arm);
-            //temp.left_arm(left_arm);
             ik_success = temp.computeRobotPose(goal_obj_wrt_body, temp, new_robot_pose_ptr);
             c++;
         }
       if(ik_success) {
         ROS_INFO("Snapping to goal state");
-        //RobotState rs(source_pose.getContBaseState(), goal_obj_wrt_body);
         RobotState rs(source_pose.getContBaseState(), right_arm, left_arm);
-        //rs.visualize(200);
+        //RobotState rs(source_pose.getContBaseState(),goal_obj_wrt_body);
+        rs.visualize(200);
         //sleep(2);
         successor.reset(new GraphState(rs));
 

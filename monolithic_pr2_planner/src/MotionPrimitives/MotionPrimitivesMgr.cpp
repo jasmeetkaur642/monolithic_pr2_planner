@@ -8,7 +8,7 @@ using namespace boost;
 MotionPrimitivesMgr::MotionPrimitivesMgr(boost::shared_ptr<GoalState>& goal) : m_all_mprims(8){m_goal = goal; }
 
 // Pass island states to MotionPrimitiveMgs from Environment.
-MotionPrimitivesMgr::MotionPrimitivesMgr(boost::shared_ptr<GoalState>& goal, std::vector<RobotState> &islandStates, std::vector<RobotState> &activationCenters) : m_all_mprims(8){m_goal = goal; m_islandStates = islandStates, m_activationCenters = activationCenters;}
+MotionPrimitivesMgr::MotionPrimitivesMgr(boost::shared_ptr<GoalState>& goal, std::vector<RobotState> &islandStates, std::vector<RobotState> &activationCenters, boost::shared_ptr<std::set<std::pair<int, int> > > infeasibleSnaps) : m_all_mprims(8){m_goal = goal; m_islandStates = islandStates, m_activationCenters = activationCenters, m_infeasibleSnaps = infeasibleSnaps;}
 
 /*! \brief loads all mprims from configuration. also sets up amps. note that
  * these are not necessarily the exact mprims used during search, because
@@ -54,8 +54,25 @@ bool MotionPrimitivesMgr::loadMPrims(const MotionPrimitiveParams& params){
     // Base snap mprims.
     MPrimList base_snap_mprims;
     if(baseSnap) {
-        for(RobotState islandState : m_islandStates) {
-            BaseSnapMotionPrimitivePtr temp = make_shared<BaseSnapMotionPrimitive>(islandState);
+        for(int i=0;i<m_islandStates.size();i++) {
+            BaseSnapMotionPrimitivePtr temp = make_shared<BaseSnapMotionPrimitive>(m_islandStates[i]);
+            ContBaseState islandBase, activationBase;
+            islandBase = m_islandStates[i].getContBaseState();
+            activationBase = m_activationCenters[i].getContBaseState();
+            ContBaseState baseActivationRadius(abs(islandBase.x() - activationBase.x()), abs(islandBase.y() - activationBase.y()), abs(islandBase.z() - activationBase.z()), abs(islandBase.theta() - activationBase.theta()));
+
+            std::vector<double> armActivationRadius, islandArm, activationCenterArm;
+            m_islandStates[i].right_arm().getAngles(&islandArm);
+            m_activationCenters[i].right_arm().getAngles(&activationCenterArm);
+
+            for(int j=0;j<7;j++) {
+                armActivationRadius.push_back(abs(angles::shortest_angular_distance(islandArm[j], activationCenterArm[j])));
+            }
+
+            std::vector<double> l_arm = {0.038946, 1.214670, 1.396356, -1.197227, -4.616317, -0.988727, 1.175568};
+
+            RobotState activationRadius(baseActivationRadius, RightContArmState(armActivationRadius), LeftContArmState(l_arm));
+            temp->m_activationRadius = activationRadius;
             basesnap_mprim.push_back(temp);
             base_snap_mprims.push_back(temp);
         }
@@ -63,8 +80,26 @@ bool MotionPrimitivesMgr::loadMPrims(const MotionPrimitiveParams& params){
 
     MPrimList full_body_snap_mprims;
     if(fullBodySnap) {
-        for(RobotState islandState : m_islandStates) {
-            FullBodySnapMotionPrimitivePtr temp = make_shared<FullBodySnapMotionPrimitive>(islandState);
+        for(int i=0;i<m_islandStates.size();i++) {
+            FullBodySnapMotionPrimitivePtr temp = make_shared<FullBodySnapMotionPrimitive>(m_islandStates[i]);
+
+            ContBaseState islandBase, activationBase;
+            islandBase = m_islandStates[i].getContBaseState();
+            activationBase = m_activationCenters[i].getContBaseState();
+            ContBaseState baseActivationRadius(abs(islandBase.x() - activationBase.x()), abs(islandBase.y() - activationBase.y()), abs(islandBase.z() - activationBase.z()), abs(islandBase.theta() - activationBase.theta()));
+
+            std::vector<double> armActivationRadius, islandArm, activationCenterArm;
+            m_islandStates[i].right_arm().getAngles(&islandArm);
+            m_activationCenters[i].right_arm().getAngles(&activationCenterArm);
+
+            for(int j=0;j<7;j++) {
+                armActivationRadius.push_back(abs(angles::shortest_angular_distance(islandArm[j], activationCenterArm[j])));
+            }
+
+            std::vector<double> l_arm = {0.038946, 1.214670, 1.396356, -1.197227, -4.616317, -0.988727, 1.175568};
+
+            RobotState activationRadius(baseActivationRadius, RightContArmState(armActivationRadius), LeftContArmState(l_arm));
+            temp->m_activationRadius = activationRadius;
             fullbody_snap_mprim.push_back(temp);
             full_body_snap_mprims.push_back(temp);
         }
@@ -82,6 +117,7 @@ bool MotionPrimitivesMgr::loadMPrims(const MotionPrimitiveParams& params){
     m_all_mprims[MPrim_Types::TORSO] = torso_mprims;
     m_all_mprims[MPrim_Types::ARM_ADAPTIVE] = arm_amps;
     m_all_mprims[MPrim_Types::BASE_ADAPTIVE] = base_amps;
+    
     if(baseSnap)
         m_all_mprims[MPrim_Types::BASE_SNAP] = base_snap_mprims;
     if(fullBodySnap)
@@ -158,6 +194,7 @@ void MotionPrimitivesMgr::loadAllMPrims(){
     loadBaseOnlyMPrims();
     loadArmOnlyMPrims();
     loadTorsoMPrims();
+    
     if(baseSnap)
         loadBaseSnapMPrims();
     if(fullBodySnap)
