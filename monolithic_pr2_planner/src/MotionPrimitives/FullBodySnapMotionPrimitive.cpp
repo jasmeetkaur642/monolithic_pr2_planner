@@ -5,6 +5,7 @@
 #include <algorithm>
 
 using namespace monolithic_pr2_planner;
+#define METER_TO_MM_MULT 1000
 
 boost::shared_ptr<std::set<std::pair<int, int> > > FullBodySnapMotionPrimitive::m_infeasibleSnaps;
 
@@ -45,9 +46,9 @@ bool FullBodySnapMotionPrimitive::apply(const GraphState& source_state,
 
     //ROS_INFO("%f, %f", abs(angles::shortest_angular_distance(cont_base_state.theta(), robot_pose.getContBaseState().theta())), abs(angles::shortest_angular_distance(m_activationCenter.getContBaseState().theta(), cont_base_state.theta())));
     //ROS_INFO("%d, %d", abs(disc_base_state.x() - base.x()), abs(m_activationCenter.base_state().x() - disc_base_state.x()));
-    bool within_activation_radius = (abs(m_activationCenter.base_state().x() - base.x()) < max(4*d_tol.x(), baseActivationRadius.x()) &&
-                                    abs(m_activationCenter.base_state().y() - base.y()) < max(4*d_tol.y(), baseActivationRadius.y()) &&
-                                    abs(angles::shortest_angular_distance(m_activationCenter.getContBaseState().theta(), robot_pose.getContBaseState().theta())) < max(4*c_tol.yaw(), m_activationRadius.getContBaseState().theta()));
+    bool within_activation_radius = (abs(m_activationCenter.base_state().x() - base.x()) < max(2*d_tol.x(), baseActivationRadius.x()) &&
+                                    abs(m_activationCenter.base_state().y() - base.y()) < max(2*d_tol.y(), baseActivationRadius.y()) &&
+                                    abs(angles::shortest_angular_distance(m_activationCenter.getContBaseState().theta(), robot_pose.getContBaseState().theta())) < max(15*c_tol.yaw(), m_activationRadius.getContBaseState().theta()));
     /*
     bool temp;
     std::vector<double> r_arm_goal, r_arm_center, r_arm_source;
@@ -132,5 +133,5 @@ void FullBodySnapMotionPrimitive::print() const {
 
 void FullBodySnapMotionPrimitive::computeCost(const MotionPrimitiveParams& params){
     //TODO: Calculate actual cost 
-    m_cost = 50;
+    m_cost = 40;
 }

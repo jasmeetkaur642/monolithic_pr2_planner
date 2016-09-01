@@ -24,9 +24,9 @@ bool ArmSnapMotionPrimitive::apply(const GraphState& source_state,
 
     ContBaseState cont_goal_base_state = m_goal->getRobotState().getContBaseState();
 
-    bool within_xyz_tol = (abs(m_goal->getObjectState().x()-base.x()) < 22*d_tol.x() &&
-                           abs(m_goal->getObjectState().y()-base.y()) < 22*d_tol.y() &&
-                           abs(m_goal->getObjectState().z()-base.z()) < 22*d_tol.z());
+    bool within_xyz_tol = (abs(m_goal->getObjectState().x()-base.x()) < 25*d_tol.x() &&
+                           abs(m_goal->getObjectState().y()-base.y()) < 25*d_tol.y() &&
+                           abs(m_goal->getObjectState().z()-base.z()) < 25*d_tol.z());
 
     bool within_yaw_tol = abs(angles::shortest_angular_distance(cont_goal_base_state.theta(), robot_pose.getContBaseState().theta())) < 15*c_tol.yaw();
 
@@ -66,18 +66,19 @@ bool ArmSnapMotionPrimitive::apply(const GraphState& source_state,
       KDL::Frame F_map_torsolift = F_map_base * F_base_torsolift;
 
       KDL::Frame F_torsolift_map = F_map_torsolift.Inverse();
-      KDL::Frame r_obj_to_wrist_offset = source_pose.right_arm().getObjectOffset();
 
       //KDL::Frame F_goal_map = F_map_goal.Inverse();
 
-      //F_torsolift_goal = F_torsolift_map * F_map_goal;
-      goal_wrt_body = F_map_torsolift.Inverse() * goal_wrt_map;
-      goal_wrt_body_rpy = F_map_torsolift.M * goal_wrt_map_rpy;
+      F_torsolift_goal = F_torsolift_map * F_map_goal * source_pose.right_arm().getObjectOffset().Inverse();
+      //goal_wrt_body = F_map_torsolift.Inverse() * goal_wrt_map;
+      //goal_wrt_body_rpy = (F_map_torsolift).Inverse().M * goal_wrt_map_rpy;
 
-      double goal_wrt_body_x = goal_wrt_body.x(); //Direction of the arm.
-      double goal_wrt_body_y = goal_wrt_body.y();
+      double goal_wrt_body_x = F_torsolift_goal.p.x(); //Direction of the arm.
+      double goal_wrt_body_y = F_torsolift_goal.p.y();
+      
+      ROS_INFO("X = %f, Y= %f", goal_wrt_body_x, goal_wrt_body_y);
 
-      if(goal_wrt_body_x > 0 && (goal_wrt_body_y < 20*c_tol.y())) { //tol = 0.035
+      if(goal_wrt_body_x > 0.1 && (goal_wrt_body_y < 15*c_tol.y())) { //tol = 0.035
           goal_facing_arm = true;
       }
     }
@@ -93,9 +94,9 @@ bool ArmSnapMotionPrimitive::apply(const GraphState& source_state,
       //ROS_INFO("%f\t%f\t%f", wrt_map.p.x(), wrt_map.p.y(), wrt_map.p.z());
 
       double wr, wp, wy;
-      goal_wrt_body_rpy.GetRPY(wr, wp, wy);
+      F_torsolift_goal.M.GetRPY(wr, wp, wy);
       //ContObjectState goal_obj_wrt_body(F_torsolift_goal.p.x(), F_torsolift_goal.p.y(), F_torsolift_goal.p.z(), wr, wp, wy);
-      ContObjectState goal_obj_wrt_body(goal_wrt_body.x(), goal_wrt_body.y(), goal_wrt_body.z(), wr, wp, wy);
+      ContObjectState goal_obj_wrt_body(F_torsolift_goal.p.x(), F_torsolift_goal.p.y(), F_torsolift_goal.p.z(), wr, wp, wy);
 
 
       RobotPosePtr new_robot_pose_ptr;
@@ -175,5 +176,5 @@ void ArmSnapMotionPrimitive::print() const {
 
 void ArmSnapMotionPrimitive::computeCost(const MotionPrimitiveParams& params){
     //TODO: Calculate actual cost 
-    m_cost = 1;
+    m_cost = 0;
 }

@@ -196,7 +196,9 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
         case 18:
           return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot14") + w_armFold*inad_arm_heur);
         case 19:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*inad_arm_heur);
+          //return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*inad_arm_heur);
+          return static_cast<int>(inad_arm_heur);
+          
       }
       
       
@@ -399,9 +401,12 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
         GraphStatePtr successor;
         TransitionData t_data;
 
-        if((mprim->getID() == MPrim_Types::FULLBODY_SNAP || mprim->getID() == MPrim_Types::BASE_SNAP) && q_id != 0){
+        if(((mprim->getID() == MPrim_Types::FULLBODY_SNAP || mprim->getID() == MPrim_Types::BASE_SNAP ) && q_id != 0) || (mprim->getID() == MPrim_Types::ARM_SNAP && q_id != 19)){
             continue;
         }
+
+        //if(( mprim->getID() == MPrim_Types::BASE_SNAP) && q_id != 1)
+            //continue;
 
         if (!mprim->apply(*source_state, successor, t_data)) {
             ROS_DEBUG_NAMED(MPRIM_LOG, "couldn't apply mprim");
@@ -433,7 +438,7 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
                 successor->robot_pose().visualize(0);
             }
             if(t_data.motion_type() == MPrim_Types::ARM_SNAP) {
-                ROS_ERROR("FBS motion succeeded");
+                ROS_ERROR("Arm SNAP succeeded");
                 successor->robot_pose().visualize(100);
             }
             ROS_DEBUG_NAMED(SEARCH_LOG, "motion succeeded with cost %d", mprim->cost());
