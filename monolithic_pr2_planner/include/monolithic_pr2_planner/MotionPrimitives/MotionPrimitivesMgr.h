@@ -21,21 +21,25 @@ namespace monolithic_pr2_planner {
         public:
             MotionPrimitivesMgr(){};
             MotionPrimitivesMgr(GoalStatePtr&);
-            MotionPrimitivesMgr(GoalStatePtr& goal, std::vector<RobotState>&, std::vector<RobotState>&, boost::shared_ptr<std::set<std::pair<int, int> > > infeasibleSnaps);
+            MotionPrimitivesMgr(GoalStatePtr& goal, std::vector<RobotState>&, std::vector<RobotState>&);
             bool loadMPrims(const MotionPrimitiveParams& files);
             void addIslandSnapPrimitives();
             void loadMPrimSet(int planning_mode);
             std::vector<MotionPrimitivePtr> getMotionPrims() { return m_active_mprims; };
             void searchNearGoal();
+            void getUpdatedIslands(std::vector<RobotState> &islands, std::vector<RobotState> &activationCenters) {m_islandStates = islands, m_activationCenters = activationCenters;}
             void getUpdatedGoal(GoalStatePtr& goal) { m_goal = goal; }
             void getUpdatedGoalandTolerances(GoalStatePtr& goal, double xyz_tol, double roll_tol, double pitch_tol, double yaw_tol) {
+                ROS_ERROR("update 1 end %f", goal->getRobotState().base_state().x());
                 m_goal = goal;
                 if(baseSnap) {
                     GoalStatePtr islandState;
                     for(int i=0;i < m_islandStates.size();i++) {
+                    ROS_ERROR("update 2 end %f", goal->getRobotState().getContBaseState().x());
                         islandState = boost::make_shared<GoalState>(m_islandStates[i], xyz_tol, roll_tol, pitch_tol, yaw_tol);
                         basesnap_mprim[i]->getUpdatedGoalandTolerances(islandState, xyz_tol, roll_tol, pitch_tol, yaw_tol);
                         basesnap_mprim[i]->m_end = goal;
+                        ROS_ERROR("Updates end %f", goal->getRobotState().getContBaseState().x());
                         basesnap_mprim[i]->m_activationCenter = m_activationCenters[i];
                     }
                 }

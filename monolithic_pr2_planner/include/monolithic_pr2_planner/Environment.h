@@ -55,6 +55,7 @@ namespace monolithic_pr2_planner {
                               int& start_id, int& goal_id);
             int saveFakeGoalState(const GraphStatePtr& graph_state);
             void configurePlanningDomain();
+            void configureMotionPrimitives(SearchRequestPtr);
             void configureQuerySpecificParams(SearchRequestPtr search_request);
             void generateStartState(SearchRequestPtr search_request);
 
@@ -63,6 +64,7 @@ namespace monolithic_pr2_planner {
             HashManagerPtr m_hash_mgr;
             ros::NodeHandle m_nodehandle;
             GoalStatePtr m_goal;
+            RobotState m_start;
             bool m_using_lazy;
             MotionPrimitivesMgr m_mprims;
             HeuristicMgrPtr m_heur_mgr;
@@ -91,11 +93,22 @@ namespace monolithic_pr2_planner {
 
             void save_state_time(vector<int> soln_path);
 
+            //Read island states and activation centers corresponding to each
+            //start-goal pair from file.
+            void readIslands();
+
             std::map<Edge, MotionPrimitivePtr> m_edges;
 
             //Caches whether snapping is feasible from a graphstate to a snap island.
             std::set<std::pair<int, int> > m_infeasibleSnaps;
 
             std::unordered_map<int, double> m_state_time_map;
+
+            // Contains the start goal pairs that have been run to generate
+            // island states and activation centers. The indices of these three
+            // variable correspond to each other.
+            std::vector<std::pair<ContObjectState, ContObjectState> > m_startGoalPairs;
+            std::vector<std::vector<RobotState> > m_islandStates;
+            std::vector<std::vector<RobotState> > m_activationCenters;
     };
 }

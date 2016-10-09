@@ -8,7 +8,7 @@ using namespace boost;
 MotionPrimitivesMgr::MotionPrimitivesMgr(boost::shared_ptr<GoalState>& goal) : m_all_mprims(8){m_goal = goal; }
 
 // Pass island states to MotionPrimitiveMgs from Environment.
-MotionPrimitivesMgr::MotionPrimitivesMgr(boost::shared_ptr<GoalState>& goal, std::vector<RobotState> &islandStates, std::vector<RobotState> &activationCenters, boost::shared_ptr<std::set<std::pair<int, int> > > infeasibleSnaps) : m_all_mprims(8){m_goal = goal; m_islandStates = islandStates, m_activationCenters = activationCenters, m_infeasibleSnaps = infeasibleSnaps;}
+MotionPrimitivesMgr::MotionPrimitivesMgr(boost::shared_ptr<GoalState>& goal, std::vector<RobotState> &islandStates, std::vector<RobotState> &activationCenters) : m_all_mprims(8){m_goal = goal; m_islandStates = islandStates, m_activationCenters = activationCenters;}
 
 /*! \brief loads all mprims from configuration. also sets up amps. note that
  * these are not necessarily the exact mprims used during search, because
@@ -33,7 +33,8 @@ bool MotionPrimitivesMgr::loadMPrims(const MotionPrimitiveParams& params){
     MPrimList arm_amps;
     arm_amps.push_back(armAMP);
     arm_amps.push_back(tuckAMP);
-    arm_amps.push_back(untuckAMP);
+    //arm_amps.push_back(untuckAMP);
+    arm_amps.push_back(untuckPartialAMP);
 
     MPrimList base_amps;
     int NEG_TURN = -1;

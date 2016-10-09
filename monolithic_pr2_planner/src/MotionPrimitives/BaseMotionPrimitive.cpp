@@ -101,6 +101,8 @@ void BaseMotionPrimitive::computeCost(const MotionPrimitiveParams& params){
     ROS_INFO("Base cost %d", m_cost) ;
     //use any additional cost multiplier
     m_cost *= getAdditionalCostMult();
+    if(m_cost == 5)
+        m_cost += 1;
     assert(m_cost >= 0.0);
 }
 

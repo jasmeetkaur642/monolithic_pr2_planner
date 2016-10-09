@@ -39,12 +39,15 @@ bool BaseSnapMotionPrimitive::apply(const GraphState& source_state,
     //                       abs(m_goal->getObjectState().z()-obj.z()) < d_tol.z());
 
 
-    bool within_basexy_tol = (abs(baseActivationCenter.x()-base.x()) < 20*baseActivationRadius.x() &&
-                              abs(baseActivationCenter.y()-base.y()) < 20*baseActivationRadius.y() &&
-                              abs(angles::shortest_angular_distance(m_activationCenter.getContBaseState().theta(), robot_pose.getContBaseState().theta())) < max(15*c_tol.yaw(), m_activationRadius.getContBaseState().theta()));
+    bool within_basexy_tol = (abs(baseActivationCenter.x()-base.x()) < 25*baseActivationRadius.x() &&
+                              abs(baseActivationCenter.y()-base.y()) < 25*baseActivationRadius.y());// &&
+                              //abs(angles::shortest_angular_distance(m_activationCenter.getContBaseState().theta(), robot_pose.getContBaseState().theta())) < max(15*c_tol.yaw(), m_activationRadius.getContBaseState().theta()));
 
-    bool near_end = (abs(m_end->getRobotState().base_state().x()-base.x()) < 40*d_tol.x() &&
-                              abs(m_end->getRobotState().base_state().y()-base.y()) < 40*d_tol.y());
+    ROS_ERROR("%f", m_end->getRobotState().getContBaseState().x());
+    ROS_ERROR("1");
+    bool near_end = (int)(abs(m_end->getRobotState().getContBaseState().x()/0.02) - base.x() < 40*d_tol.x() &&
+                              (int)(abs(m_end->getRobotState().getContBaseState().y()/0.02)) - base.y()) < 40*d_tol.y();
+    ROS_ERROR("2");
 
     bool within_arm_tol = true;
     //int i =0;
@@ -55,8 +58,10 @@ bool BaseSnapMotionPrimitive::apply(const GraphState& source_state,
     //}
 
 
+      //ROS_ERROR("%f", m_goal->getRobotState().getContBaseState().x());
     if(within_basexy_tol && !near_end && within_arm_tol)
     {
+      ROS_ERROR("%f", m_goal->getRobotState().getContBaseState().x());
       RobotState rs(m_goal->getRobotState().getContBaseState(), source_state.robot_pose().right_arm(), source_state.robot_pose().left_arm());
       successor.reset(new GraphState(rs));
 
@@ -101,7 +106,7 @@ void BaseSnapMotionPrimitive::print() const {
 
 void BaseSnapMotionPrimitive::computeCost(const MotionPrimitiveParams& params){
     //TODO: Calculate actual cost
-    m_cost = 5;
+    m_cost = 6;
 /*
     if(!m_interp_base_steps.size()) {
         ROS_INFO("default cost");

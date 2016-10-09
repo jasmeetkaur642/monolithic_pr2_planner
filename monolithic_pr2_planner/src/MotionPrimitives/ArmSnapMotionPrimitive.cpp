@@ -176,5 +176,5 @@ void ArmSnapMotionPrimitive::print() const {
 
 void ArmSnapMotionPrimitive::computeCost(const MotionPrimitiveParams& params){
     //TODO: Calculate actual cost 
-    m_cost = 0;
+    m_cost = 5;
 }

@@ -60,6 +60,7 @@ bool Environment::configureRequest(SearchRequestParamsPtr search_request_params,
     SearchRequestPtr search_request = SearchRequestPtr(new SearchRequest(
         search_request_params));
     configureQuerySpecificParams(search_request);
+
     if(search_request->m_params->underspecified_start) {
         ROS_DEBUG_NAMED(CONFIG_LOG, "underspecified_start. Will generate start state.");
         generateStartState(search_request);
@@ -67,6 +68,8 @@ bool Environment::configureRequest(SearchRequestParamsPtr search_request_params,
     if (!setStartGoal(search_request, start_id, goal_id)) {
         return false;
     }
+    // This needs the goal state to be set for choosing islands.
+    configureMotionPrimitives(search_request);
 
     return true;
 }
@@ -594,6 +597,7 @@ bool Environment::setStartGoal(SearchRequestPtr search_request,
     RobotState start_pose(search_request->m_params->base_start, 
                          search_request->m_params->right_arm_start,
                          search_request->m_params->left_arm_start);
+    m_start = start_pose;
     ContObjectState obj_state = start_pose.getObjectStateRelMap();
     obj_state.printToInfo(SEARCH_LOG);
 
@@ -622,6 +626,7 @@ bool Environment::setStartGoal(SearchRequestPtr search_request,
 
 
     m_goal = search_request->createGoalState();
+    ROS_ERROR("goal: %f, %f", m_goal->getRobotState().getObjectStateRelMap().x());
 
     if (m_hash_mgr->size() < 2){
         goal_id = saveFakeGoalState(start_graph_state);
@@ -640,12 +645,6 @@ bool Environment::setStartGoal(SearchRequestPtr search_request,
 
     // informs the heuristic about the goal
     m_heur_mgr->setGoal(*m_goal);
-
-    m_mprims.getUpdatedGoalandTolerances(m_goal,
-            search_request->m_params->xyz_tolerance,
-            search_request->m_params->roll_tolerance,
-            search_request->m_params->pitch_tolerance,
-            search_request->m_params->yaw_tolerance);
 
     return true;
 }
@@ -696,16 +695,13 @@ void Environment::configurePlanningDomain(){
     LeftContArmState l_arm;
     RightContArmState r_arm;
 
-    std::vector<RobotState> islandStates, activationCenters;
-    getIslandStates(islandStates, activationCenters);
+    //std::vector<RobotState> islandStates, activationCenters;
+    //getIslandStates(islandStates, activationCenters);
+    readIslands();
 
-    // Add island states to the graph.
-    GraphStatePtr g_state;
-    for(GraphState state:islandStates) {
-        g_state = boost::make_shared<GraphState>(state);
-        m_hash_mgr->save(g_state);
-    }
-    m_mprims = MotionPrimitivesMgr(m_goal, islandStates, activationCenters, boost::make_shared<std::set<std::pair<int, int> > >(m_infeasibleSnaps));
+    //Currently passing dummy island and activation center values. They get update later.
+    std::vector<RobotState> islands, activationCenters;
+    m_mprims = MotionPrimitivesMgr(m_goal, islands, activationCenters);
 
     // Choosed the snap mprims from launch file.
     chooseSnapMprims();
@@ -714,7 +710,7 @@ void Environment::configurePlanningDomain(){
                                                   l_arm.getArmModel());
     m_heur_mgr->setCollisionSpaceMgr(m_cspace_mgr);
     // load up motion primitives
-    m_mprims.loadMPrims(m_param_catalog.m_motion_primitive_params);
+    //m_mprims.loadMPrims(m_param_catalog.m_motion_primitive_params);
 
     // load up static pviz instance for visualizations. 
     Visualizer::createPVizInstance();
@@ -723,6 +719,7 @@ void Environment::configurePlanningDomain(){
 
 // sets parameters for query specific things
 void Environment::configureQuerySpecificParams(SearchRequestPtr search_request){
+
     // sets the location of the object in the frame of the wrist
     // have to do this funny thing  of initializing an object because of static
     // variable + inheritance (see ContArmState for details)
@@ -733,6 +730,24 @@ void Environment::configureQuerySpecificParams(SearchRequestPtr search_request){
     ROS_DEBUG_NAMED(SEARCH_LOG, "Setting planning mode to : %d",
         search_request->m_params->planning_mode);
     RobotState::setPlanningMode(search_request->m_params->planning_mode);
+}
+
+void Environment::configureMotionPrimitives(SearchRequestPtr search_request) {
+    //XXX Moved here from configurePlanningDomain
+    std::vector<RobotState> islandStates, activationCenters;
+    getIslandStates(islandStates, activationCenters);
+    m_mprims.getUpdatedIslands(islandStates, activationCenters);
+
+    // load up motion primitives
+    m_mprims.loadMPrims(m_param_catalog.m_motion_primitive_params);
+
+    ROS_ERROR("before update %f", m_goal->getRobotState().getContBaseState().x());
+    m_mprims.getUpdatedGoalandTolerances(m_goal,
+            search_request->m_params->xyz_tolerance,
+            search_request->m_params->roll_tolerance,
+            search_request->m_params->pitch_tolerance,
+            search_request->m_params->yaw_tolerance);
+
 }
 
 /*! \brief Given the solution path containing state IDs, reconstruct the
@@ -787,47 +802,171 @@ void Environment::save_state_time(vector<int> soln_path) {
     ROS_INFO("File saved");
 }
 
-void Environment::getIslandStates(std::vector<RobotState> &islandStates, std::vector<RobotState> &activationCenters) {
+void Environment::readIslands() {
     std::string file_name;
     ROS_INFO("Loading bottleneck points");
     m_nodehandle.param("planner/island", file_name, std::string("Empty"));
     ROS_INFO("Base island file name %s", file_name.c_str());
 
     ifstream island_file(file_name);
-    std::string line;
 
-    LeftContArmState l_arm({0.038946, 1.214670, 1.396356, -1.197227, -4.616317, -0.988727, 1.175568});
+    std::string line;
+    std::string word;
+    double q_w, q_x, q_y, q_z;
+    double pitch, roll;
+    double x, y, yaw, z;
+    std::vector<double> rarm;
+    rarm.resize(7);
+    std::vector<double> larm = {0.038946, 1.214670, 1.396356, -1.197227, -4.616317, -0.988727, 1.175568};
+    LeftContArmState l_arm(larm);
+
+    KDL::Rotation startOrien, goalOrien;
+
+    std::getline(island_file, line);
     while(std::getline(island_file, line)) {
-        ROS_INFO("%s", line.c_str());
 
         std::istringstream ss(line);
-        double x, y, yaw, z;
-        std::vector<double> rarm;
-        rarm.resize(7);
+        ss >> x >> y >> z >> q_w >> q_x >> q_y >> q_z;
+        startOrien = KDL::Rotation::Quaternion(q_w, q_x, q_y, q_z);
+        startOrien.GetRPY(roll, pitch, yaw);
+        ContObjectState start(x, y, z, roll, pitch, yaw);
 
-        for(int i=0;i<2;i++) {
-            ROS_ERROR("DONE1");
-            for(int j=0;j<7;j++) {
-                ss >> rarm[j];
+        std::getline(island_file, line);
+        std::istringstream ss1(line);
+        ss1 >> x >> y >> z >> q_w >> q_x >> q_y >> q_z;
+        goalOrien = KDL::Rotation::Quaternion(q_w, q_x, q_y, q_z);
+        goalOrien.GetRPY(roll, pitch, yaw);
+        ContObjectState goal(x, y, z, roll, pitch, yaw);
+
+        m_startGoalPairs.push_back(std::make_pair(start, goal));
+
+        std::getline(island_file, line);
+        ROS_INFO("%s", line.c_str());
+        std::istringstream ss2(line);
+        ss2 >> word; 
+
+        std::vector<RobotState> islandStates, activationCenters;
+
+        //Start-goal points.
+        while(word[0] != 'I') {
+            std::istringstream ssData(line);
+
+            for(int i=0;i<2;i++) {
+
+                for(int j=0;j<7;j++) {
+                    ssData >> rarm[j];
+                }
+                ROS_ERROR("DONE2");
+                ssData >>yaw >> x >> y >> z;
+
+                double theta_res = m_param_catalog.m_robot_resolution_params.base_theta_resolution;
+                yaw = normalize_angle_positive(static_cast<double>(yaw)*theta_res);
+
+                const ContBaseState base(x, y, z, yaw);
+                RightContArmState r_arm(rarm);
+
+                if(i==0) {
+                    RobotState islandState(base, r_arm, l_arm);
+                    islandStates.push_back(islandState);
+                }
+                else {
+                    RobotState activationCenter(base, r_arm, l_arm);
+                    activationCenters.push_back(activationCenter);
+                }
             }
-            ROS_ERROR("DONE2");
-            ss >>yaw >> x >> y >> z;
-
-            double theta_res = m_param_catalog.m_robot_resolution_params.base_theta_resolution;
-            yaw = normalize_angle_positive(static_cast<double>(yaw)*theta_res);
-
-            const ContBaseState base(x, y, z, yaw);
-            RightContArmState r_arm(rarm);
-
-            if(i==0) {
-                RobotState islandState(base, r_arm, l_arm);
-                islandStates.push_back(islandState);
-            }
-            else {
-                RobotState activationCenter(base, r_arm, l_arm);
-                activationCenters.push_back(activationCenter);
-            }
+            if(!std::getline(island_file, line))
+                break;
+            ROS_INFO("%s", line.c_str());
+            std::istringstream ssa(line);
+            ssa >> word;
         }
+        m_islandStates.push_back(islandStates);
+        m_activationCenters.push_back(activationCenters);
+    }
+    ROS_INFO("DONE");
+}
+
+// Using euclidean distance, give a distance between two objectstates.
+double objectStateMetric( ContObjectState a,  ContObjectState b) {
+    double distance = 0;
+
+    std::vector<double> values_a, values_b;
+    a.getStateValues(&values_a);
+    b.getStateValues(&values_b);
+
+    // For x,y,z coordinates.
+    for(int i=0; i< 3; i++) {
+        distance += (values_a[i] - values_b[i])*(values_a[i] - values_b[i]);
+    }
+
+     // We don't want the orientation of the object to influence the metric
+     // much. The x, y, z coordinates are in meters the metric much 
+    float factor = 0;
+    // For roll, pitch, yaw.
+    for(int i=3; i<6; i++) {
+        distance += factor * abs(angles::shortest_angular_distance(values_a[i], values_b[i]));
+    }
+
+    return distance;
+}
+
+int findMaxIndex(std::vector<std::pair< int, double> > distances) {
+    int maxI = 0;
+    for(int i=0;i < distances.size();i++) {
+        if(distances[i].second > distances[maxI].second)
+            maxI = i;
+    }
+    return maxI;
+}
+
+//Return the islands and activation centers corresponding to the closest start-goal pairs that we trained on. This way we dont waste time in using unrelated island states.
+void Environment::getIslandStates(std::vector<RobotState> &islandStates, std::vector<RobotState> &activationCenters) {
+    ContObjectState startObj, goalObj;
+    startObj = m_start.getObjectStateRelMap();
+    goalObj = m_goal->getRobotState().getObjectStateRelMap();
+
+    std::vector<double> startGoalDistances;
+
+    double distance;
+    ROS_ERROR("Printing start goal pairs");
+    for(int i=0;i < m_startGoalPairs.size();i++) {
+        // Give more weightage to goal.
+        startGoalDistances.push_back(objectStateMetric(startObj, m_startGoalPairs[i].first) + objectStateMetric(goalObj, m_startGoalPairs[i].second));
+        //startGoalDistances.push_back(objectStateMetric(goalObj, m_startGoalPairs[i].second));
+        ROS_INFO("(%f, %f), (%f, %f), %f", m_startGoalPairs[i].second.x(), m_startGoalPairs[i].second.y(), goalObj.x(), goalObj.y(), startGoalDistances[i]);
+    }
+    //Training resulted in 62 successful start-goal pairs generating islands.
+    int numClosestPairs = 3; 
+    //Index-distance.
+    std::vector<std::pair<int, double> > closestPairIndices;
+
+    for(int i=0;i<numClosestPairs;i++) {
+        closestPairIndices.push_back(make_pair(i, startGoalDistances[i]));
+    }
+
+    int maxIndex=0;
+    for(int i=numClosestPairs;i<m_startGoalPairs.size(); i++) {
+        maxIndex = findMaxIndex(closestPairIndices);
+        if(startGoalDistances[i] < closestPairIndices[maxIndex].second) {
+            closestPairIndices[maxIndex] = make_pair(i, startGoalDistances[i]);
+        }
+    }
+    std::vector<RobotState> pairIslandStates;
+    std::vector<RobotState> pairActivationCenters;
+    ROS_ERROR("Closest islands");
+    for(int i=0;i < closestPairIndices.size();i++) {
+        ROS_INFO("%d, %f", closestPairIndices[i].first, closestPairIndices[i].second);
+
+        pairIslandStates = m_islandStates[closestPairIndices[i].first];
+        //Visualize chosen islands.
+        //for(auto state : pairIslandStates) {
+        //    state.visualize();
+        //    sleep(1);
+        //}
+        islandStates.insert(islandStates.end(), pairIslandStates.begin(), pairIslandStates.end());
+
+        pairActivationCenters = m_activationCenters[closestPairIndices[i].first];
+        activationCenters.insert(activationCenters.end(), pairActivationCenters.begin(), pairActivationCenters.end());
     }
 }
 
