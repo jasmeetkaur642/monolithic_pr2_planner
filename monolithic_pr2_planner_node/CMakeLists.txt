@@ -47,7 +47,7 @@ find_package(OpenCV REQUIRED)
 #  Release        : w/o debug symbols, w/ optimization
 #  RelWithDebInfo : w/ debug symbols, w/ optimization
 #  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-set(CATKIN_BUILD_TYPE Debug )
+set(CATKIN_BUILD_TYPE Release )
 
 # CATKIN_MIGRATION: removed during catkin migration
 # rosbuild_init()

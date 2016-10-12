@@ -23,7 +23,7 @@ namespace monolithic_pr2_planner {
       bool computeIntermSteps(const GraphState& source_state,
                         const GraphState& successor,
                         TransitionData& t_data);
-      void getUpdatedGoalandTolerances(GoalStatePtr& goal,double xyz_tol, double roll_tol, double pitch_tol, double yaw_tol)
+      void getUpdatedGoalandTolerances(const GoalStatePtr& goal, const double xyz_tol, const double roll_tol, const double pitch_tol, const double yaw_tol)
       {
          m_goal = goal;
          m_tolerances[Tolerances::XYZ] =  xyz_tol;

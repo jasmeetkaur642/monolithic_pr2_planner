@@ -8,7 +8,7 @@ using namespace boost;
 MotionPrimitivesMgr::MotionPrimitivesMgr(boost::shared_ptr<GoalState>& goal) : m_all_mprims(8){m_goal = goal; }
 
 // Pass island states to MotionPrimitiveMgs from Environment.
-MotionPrimitivesMgr::MotionPrimitivesMgr(boost::shared_ptr<GoalState>& goal, std::vector<RobotState> &islandStates, std::vector<RobotState> &activationCenters) : m_all_mprims(8){m_goal = goal; m_islandStates = islandStates, m_activationCenters = activationCenters;}
+MotionPrimitivesMgr::MotionPrimitivesMgr(const boost::shared_ptr<GoalState>& goal, const std::vector<RobotState> &islandStates, const std::vector<RobotState> &activationCenters) : m_all_mprims(8), m_goal(goal) {m_islandStates = islandStates, m_activationCenters = activationCenters;}
 
 /*! \brief loads all mprims from configuration. also sets up amps. note that
  * these are not necessarily the exact mprims used during search, because
@@ -157,6 +157,35 @@ void MotionPrimitivesMgr::loadMPrimSet(int planning_mode){
     }
 }
 
+void MotionPrimitivesMgr::getUpdatedGoalandTolerances(const GoalStatePtr& goal,
+        const double xyz_tol, const double roll_tol, const double pitch_tol,
+        const double yaw_tol) {
+    m_goal = goal;
+
+    if(baseSnap) {
+        GoalStatePtr islandState;
+        for(int i=0;i < m_islandStates.size();i++) {
+            islandState = boost::make_shared<GoalState>(m_islandStates[i], xyz_tol, roll_tol, pitch_tol, yaw_tol);
+            basesnap_mprim[i]->getUpdatedGoalandTolerances(islandState, xyz_tol, roll_tol, pitch_tol, yaw_tol);
+            basesnap_mprim[i]->m_end = goal;
+            basesnap_mprim[i]->m_activationCenter = m_activationCenters[i];
+        }
+    }
+
+    if(fullBodySnap) {
+        GoalStatePtr islandState;
+        for(int i=0;i < m_islandStates.size();i++) {
+            islandState = boost::make_shared<GoalState>(m_islandStates[i], xyz_tol, roll_tol, pitch_tol, yaw_tol);
+            fullbody_snap_mprim[i]->getUpdatedGoalandTolerances(islandState, xyz_tol, roll_tol, pitch_tol, yaw_tol);
+            fullbody_snap_mprim[i]->m_end = goal;
+            fullbody_snap_mprim[i]->m_activationCenter = m_activationCenters[i];
+        }
+    }
+
+    if(armSnap)
+        armsnap_mprim->getUpdatedGoalandTolerances(m_goal, xyz_tol, roll_tol, pitch_tol, yaw_tol);
+
+}
 void MotionPrimitivesMgr::combineVectors(const MPrimList& v1, MPrimList& v2){
     for (auto& mprim : v1){
         v2.push_back(mprim);

@@ -44,11 +44,19 @@ bool FullBodySnapMotionPrimitive::apply(const GraphState& source_state,
   //                            abs(m_goal->getRobotState().base_state().y()-base.y()) < 3*d_tol.y() &&
   //                            abs(angles::shortest_angular_distance(cont_base_state.theta(), robot_pose.getContBaseState().theta())) < 15*c_tol.yaw());
 
-    //ROS_INFO("%f, %f", abs(angles::shortest_angular_distance(cont_base_state.theta(), robot_pose.getContBaseState().theta())), abs(angles::shortest_angular_distance(m_activationCenter.getContBaseState().theta(), cont_base_state.theta())));
-    //ROS_INFO("%d, %d", abs(disc_base_state.x() - base.x()), abs(m_activationCenter.base_state().x() - disc_base_state.x()));
-    bool within_activation_radius = (abs(m_activationCenter.base_state().x() - base.x()) < max(5*d_tol.x(), baseActivationRadius.x()) &&
-                                    abs(m_activationCenter.base_state().y() - base.y()) < max(5*d_tol.y(), baseActivationRadius.y()) &&
-                                    abs(angles::shortest_angular_distance(m_activationCenter.getContBaseState().theta(), robot_pose.getContBaseState().theta())) < max(15*c_tol.yaw(), m_activationRadius.getContBaseState().theta()));
+    // XXX If a component in activationRadius is 0, it means that it is can be ignored, i.e, we can set a high threshold for it.
+    // However, if the component is  non-zero, we need to respect it.
+    int processedActivationRadiusX = 0, processedActivationRadiusY = 0;
+    float processedActivationRadiusTheta = 0;
+    if(baseActivationRadius.x() == 0)
+        processedActivationRadiusX = 3*d_tol.x();
+    if(baseActivationRadius.y() == 0)
+        processedActivationRadiusY = 3*d_tol.y();
+    if(processedActivationRadiusTheta == 0)
+        processedActivationRadiusTheta = 3*(c_tol.yaw());
+    bool within_activation_radius = (abs(m_activationCenter.base_state().x() - base.x()) < 3*processedActivationRadiusX &&
+                                    abs(m_activationCenter.base_state().y() - base.y()) < 3*processedActivationRadiusY &&
+                                    abs(angles::shortest_angular_distance(m_activationCenter.getContBaseState().theta(), robot_pose.getContBaseState().theta())) < 5*processedActivationRadiusTheta);
     /*
     bool temp;
     std::vector<double> r_arm_goal, r_arm_center, r_arm_source;
@@ -65,12 +73,13 @@ bool FullBodySnapMotionPrimitive::apply(const GraphState& source_state,
             }
         }
         */
-   // bool near_end = (abs(m_end->getRobotState().base_state().x()-base.x()) < 30*d_tol.x() &&
-   //                           abs(m_end->getRobotState().base_state().y()-base.y()) < 30*d_tol.y());
-   bool near_end = false;
+    //ROS_INFO("full bodysnap");
+    //bool near_end = (abs(m_end->getRobotState().base_state().x()-base.x()) < 30*d_tol.x() &&
+    //                          abs(m_end->getRobotState().base_state().y()-base.y()) < 30*d_tol.y());
+    bool near_end = false;
     if(within_activation_radius && !near_end)
     { 
-      //ROS_INFO("[FBS] Search near goal");      
+     ROS_INFO("Trying FBS");
 
       RobotState rs = m_goal->getRobotState();
       successor.reset(new GraphState(rs));
@@ -133,5 +142,5 @@ void FullBodySnapMotionPrimitive::print() const {
 
 void FullBodySnapMotionPrimitive::computeCost(const MotionPrimitiveParams& params){
     //TODO: Calculate actual cost 
-    m_cost = 40;
+    m_cost = 10;
 }

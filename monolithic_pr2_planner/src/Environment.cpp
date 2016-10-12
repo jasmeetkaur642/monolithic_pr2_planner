@@ -167,7 +167,8 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
           return static_cast<int>(0.1*(*values).at("base_with_rot_0") + 0.1*(*values).at("endeff_rot_goal"));
         case 3:  // Base1, Base2 heur
           //return static_cast<int>(1.0*(*values).at("base_with_rot_0") + 0.0*(*values).at("endeff_rot_goal"));
-          return static_cast<int>(0.1*(*values).at("base_with_rot_0"));// + 0.1*(*values).at("arm_angles_folded"));
+          //return static_cast<int>(0.1*(*values).at("base_with_rot_0"));// + 0.1*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*inad_arm_heur);
         case 4:
           return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot2") + w_armFold*inad_arm_heur);
         case 5:
@@ -198,9 +199,9 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
           return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot13") + w_armFold*inad_arm_heur);
         case 18:
           return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot14") + w_armFold*inad_arm_heur);
-        case 19:
-          //return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*inad_arm_heur);
-          return static_cast<int>(inad_arm_heur);
+        //case 19:
+         // return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*inad_arm_heur);
+          //return static_cast<int>(inad_arm_heur);
           
       }
       
@@ -404,12 +405,15 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
         GraphStatePtr successor;
         TransitionData t_data;
 
-        if(((mprim->getID() == MPrim_Types::FULLBODY_SNAP || mprim->getID() == MPrim_Types::BASE_SNAP ) && q_id != 0) || (mprim->getID() == MPrim_Types::ARM_SNAP && q_id != 19)){
+        if(((mprim->getID() == MPrim_Types::BASE_SNAP ) && q_id != 0) ||
+                ((mprim->getID() == MPrim_Types::ARM_SNAP ||  mprim->getID() ==
+                  MPrim_Types::FULLBODY_SNAP) && (q_id != 1 || q_id != 2))){
             continue;
         }
-
-        //if(( mprim->getID() == MPrim_Types::BASE_SNAP) && q_id != 1)
-            //continue;
+        //if((mprim->getID() == MPrim_Types::BASE_SNAP || mprim->getID() ==
+        //            MPrim_Types::ARM_SNAP || mprim->getID() ==
+        //            MPrim_Types::FULLBODY_SNAP) && q_id != 0)
+        //    continue;
 
         if (!mprim->apply(*source_state, successor, t_data)) {
             ROS_DEBUG_NAMED(MPRIM_LOG, "couldn't apply mprim");
@@ -626,7 +630,6 @@ bool Environment::setStartGoal(SearchRequestPtr search_request,
 
 
     m_goal = search_request->createGoalState();
-    ROS_ERROR("goal: %f, %f", m_goal->getRobotState().getObjectStateRelMap().x());
 
     if (m_hash_mgr->size() < 2){
         goal_id = saveFakeGoalState(start_graph_state);
@@ -701,11 +704,12 @@ void Environment::configurePlanningDomain(){
 
     //Currently passing dummy island and activation center values. They get update later.
     std::vector<RobotState> islands, activationCenters;
+    /* Moved to configureMotionPrimitive
     m_mprims = MotionPrimitivesMgr(m_goal, islands, activationCenters);
 
     // Choosed the snap mprims from launch file.
     chooseSnapMprims();
-
+    */
     m_cspace_mgr = make_shared<CollisionSpaceMgr>(r_arm.getArmModel(),
                                                   l_arm.getArmModel());
     m_heur_mgr->setCollisionSpaceMgr(m_cspace_mgr);
@@ -733,15 +737,19 @@ void Environment::configureQuerySpecificParams(SearchRequestPtr search_request){
 }
 
 void Environment::configureMotionPrimitives(SearchRequestPtr search_request) {
+    //Delete mprims from last iteration.
+    //m_mprims.clearMprims();
+
     //XXX Moved here from configurePlanningDomain
     std::vector<RobotState> islandStates, activationCenters;
     getIslandStates(islandStates, activationCenters);
-    m_mprims.getUpdatedIslands(islandStates, activationCenters);
+    m_mprims = MotionPrimitivesMgr(m_goal, islandStates, activationCenters);
+    chooseSnapMprims();
+    //m_mprims.getUpdatedIslands(islandStates, activationCenters);
 
     // load up motion primitives
     m_mprims.loadMPrims(m_param_catalog.m_motion_primitive_params);
 
-    ROS_ERROR("before update %f", m_goal->getRobotState().getContBaseState().x());
     m_mprims.getUpdatedGoalandTolerances(m_goal,
             search_request->m_params->xyz_tolerance,
             search_request->m_params->roll_tolerance,
@@ -856,7 +864,6 @@ void Environment::readIslands() {
                 for(int j=0;j<7;j++) {
                     ssData >> rarm[j];
                 }
-                ROS_ERROR("DONE2");
                 ssData >>yaw >> x >> y >> z;
 
                 double theta_res = m_param_catalog.m_robot_resolution_params.base_theta_resolution;
@@ -936,7 +943,8 @@ void Environment::getIslandStates(std::vector<RobotState> &islandStates, std::ve
         ROS_INFO("(%f, %f), (%f, %f), %f", m_startGoalPairs[i].second.x(), m_startGoalPairs[i].second.y(), goalObj.x(), goalObj.y(), startGoalDistances[i]);
     }
     //Training resulted in 62 successful start-goal pairs generating islands.
-    int numClosestPairs = 3; 
+    int numClosestPairs = 6; 
+    int numIslandsPerPair = 5; //Data file has 10.
     //Index-distance.
     std::vector<std::pair<int, double> > closestPairIndices;
 
@@ -963,10 +971,10 @@ void Environment::getIslandStates(std::vector<RobotState> &islandStates, std::ve
         //    state.visualize();
         //    sleep(1);
         //}
-        islandStates.insert(islandStates.end(), pairIslandStates.begin(), pairIslandStates.end());
+        islandStates.insert(islandStates.end(), pairIslandStates.begin(), pairIslandStates.begin() + numIslandsPerPair);
 
         pairActivationCenters = m_activationCenters[closestPairIndices[i].first];
-        activationCenters.insert(activationCenters.end(), pairActivationCenters.begin(), pairActivationCenters.end());
+        activationCenters.insert(activationCenters.end(), pairActivationCenters.begin(), pairActivationCenters.begin() + numIslandsPerPair);
     }
 }
 
