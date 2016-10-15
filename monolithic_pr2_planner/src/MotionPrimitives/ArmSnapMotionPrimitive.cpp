@@ -36,49 +36,17 @@ bool ArmSnapMotionPrimitive::apply(const GraphState& source_state,
     bool goal_facing_arm = false;
 
     RobotState source_pose = source_state.robot_pose();
-    ContObjectState goal_rel_map = m_goal->getRobotState().getObjectStateRelMap();
-    ContObjectState goal_rel_body = m_goal->getRobotState().getObjectStateRelBody();
     KDL::Frame F_torsolift_goal;
-
-    KDL::Vector goal_wrt_body;
-    KDL::Rotation goal_wrt_body_rpy;
-
 
     if(within_xyz_tol) {
 
-      KDL::Rotation goal_wrt_map_rpy = KDL::Rotation::RPY(goal_rel_map.roll(), goal_rel_map.pitch(), goal_rel_map.yaw());
-      KDL::Vector goal_wrt_map(goal_rel_map.x(), goal_rel_map.y(), goal_rel_map.z());
-      KDL::Frame F_map_goal(goal_wrt_map_rpy, goal_wrt_map); //Frame of goal wrt map.
+        F_torsolift_goal = source_pose.getTargetObjectFrameRelBody(m_goal->getRobotState());
+        double goal_wrt_body_x = F_torsolift_goal.p.x(); //Direction of the arm.
+        double goal_wrt_body_y = F_torsolift_goal.p.y();
 
-      KDL::Vector vec;
-
-      ContBaseState cont_base_state = source_pose.getContBaseState();
-
-      //vec = KDL::Vector(source_pose.base_state().x()*0.02 , source_pose.base_state().y()*0.02, 0.803 + source_pose.base_state().z()*0.02); //Is the Z values correct?
-      KDL::Rotation r = KDL::Rotation::RPY(0, 0, 0);
-      vec = KDL::Vector(-0.05, 0, cont_base_state.z() + 0.803);
-      KDL::Frame F_base_torsolift(r, vec); // Torse lift wrt base foorprint.
-
-      KDL::Rotation rot = KDL::Rotation::RPY(0, 0, cont_base_state.theta());
-      vec = KDL::Vector(cont_base_state.x(), cont_base_state.y(), 0);
-      KDL::Frame F_map_base(rot, vec); //Frame of base wrt map.
-
-      KDL::Frame F_map_torsolift = F_map_base * F_base_torsolift;
-
-      KDL::Frame F_torsolift_map = F_map_torsolift.Inverse();
-
-      //KDL::Frame F_goal_map = F_map_goal.Inverse();
-
-      F_torsolift_goal = (F_torsolift_map * F_map_goal) * (source_pose.right_arm().getObjectOffset().Inverse());
-      //goal_wrt_body = F_map_torsolift.Inverse() * goal_wrt_map;
-      //goal_wrt_body_rpy = (F_map_torsolift).Inverse().M * goal_wrt_map_rpy;
-
-      double goal_wrt_body_x = F_torsolift_goal.p.x(); //Direction of the arm.
-      double goal_wrt_body_y = F_torsolift_goal.p.y();
-
-      if(goal_wrt_body_x > 0.1 && (goal_wrt_body_y < 15*c_tol.y())) { //tol = 0.035
-          goal_facing_arm = true;
-      }
+        if(goal_wrt_body_x > 0.1 && (goal_wrt_body_y < 15*c_tol.y())) { //tol = 0.035
+        goal_facing_arm = true;
+        }
     }
 
 

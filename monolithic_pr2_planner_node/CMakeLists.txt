@@ -52,6 +52,8 @@ set(CATKIN_BUILD_TYPE Release )
 # CATKIN_MIGRATION: removed during catkin migration
 # rosbuild_init()
 SET(CMAKE_CXX_FLAGS "-std=c++0x")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
+
 # set(CMAKE_CXX_COMPILER "/usr/bin/g++-4.8")
 
 # find_package(Boost 1.46.0 COMPONENTS thread system filesystem REQUIRED)

@@ -337,6 +337,39 @@ DiscObjectState RobotState::getObjectStateRelBody() const {
     return m_obj_state;
 }
 
+KDL::Frame RobotState::getTargetObjectFrameRelBody(RobotState targetState) {
+    ContObjectState target_rel_map = targetState.getObjectStateRelMap();
+    ContObjectState target_rel_body = targetState.getObjectStateRelBody();
+    KDL::Frame F_torsolift_target;
+
+    KDL::Vector target_wrt_body;
+    KDL::Rotation target_wrt_body_rpy;
+
+    KDL::Rotation target_wrt_map_rpy = KDL::Rotation::RPY(target_rel_map.roll(), target_rel_map.pitch(), target_rel_map.yaw());
+    KDL::Vector target_wrt_map(target_rel_map.x(), target_rel_map.y(), target_rel_map.z());
+    KDL::Frame F_map_target(target_wrt_map_rpy, target_wrt_map); //Frame of target wrt map.
+
+    KDL::Vector vec;
+
+    ContBaseState cont_base_state = m_base_state;
+
+    KDL::Rotation r = KDL::Rotation::RPY(0, 0, 0);
+    vec = KDL::Vector(-0.05, 0, cont_base_state.z() + 0.803);
+    KDL::Frame F_base_torsolift(r, vec); // Torse lift wrt base foorprint.
+
+    KDL::Rotation rot = KDL::Rotation::RPY(0, 0, cont_base_state.theta());
+    vec = KDL::Vector(cont_base_state.x(), cont_base_state.y(), 0);
+    KDL::Frame F_map_base(rot, vec); //Frame of base wrt map.
+
+    KDL::Frame F_map_torsolift = F_map_base * F_base_torsolift;
+
+    KDL::Frame F_torsolift_map = F_map_torsolift.Inverse();
+
+    F_torsolift_target = (F_torsolift_map * F_map_target) * (right_arm().getObjectOffset().Inverse());
+
+    return F_torsolift_target;
+}
+
 /*! \brief Given two robot states, determine how many interpolation steps there
  * should be. The delta step size is based on the RPY resolution of the object
  * pose and the XYZ spatial resolution. 
