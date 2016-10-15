@@ -103,7 +103,8 @@ bool GoalState::isSatisfiedBy(const GraphStatePtr& graph_state){
 
     double diff = quat_state.angleShortestPath(quat_goal);
 
-    within_quat_tol = diff < d_tol.roll();      //should be another parameter d_tol.quat()
+    //within_quat_tol = diff < d_tol.roll();      //should be another parameter d_tol.quat()
+    within_quat_tol = true;
 
 
      if (within_xyz_tol && within_quat_tol){

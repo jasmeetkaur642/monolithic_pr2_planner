@@ -321,7 +321,7 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
   if (!use_new_heuristics) {
     planner_queues = 4;
   } else {
-    planner_queues = 19;
+    planner_queues = 20;
   }
 
   printf("\n");

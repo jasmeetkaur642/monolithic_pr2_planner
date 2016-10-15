@@ -44,11 +44,8 @@ bool BaseSnapMotionPrimitive::apply(const GraphState& source_state,
                               //abs(angles::shortest_angular_distance(m_activationCenter.getContBaseState().theta(), robot_pose.getContBaseState().theta())) < max(15*c_tol.yaw(), m_activationRadius.getContBaseState().theta()));
 
     //ROS_ERROR("%f", m_end->getRobotState().getContBaseState().x());
-    //ROS_ERROR("1");
-    //bool near_end = (int)(abs(m_end->getRobotState().getContBaseState().x()/0.02) - base.x() < 40*d_tol.x() &&
-    //                          (int)(abs(m_end->getRobotState().getContBaseState().y()/0.02)) - base.y()) < 40*d_tol.y();
-    //ROS_ERROR("2");
-    bool near_end = false;
+    bool near_end = abs(m_end->getRobotState().base_state().x() - base.x()) < 40*d_tol.x() &&
+                              abs(m_end->getRobotState().base_state().y() - base.y()) < 40*d_tol.y();
 
     bool within_arm_tol = true;
     //int i =0;
@@ -62,14 +59,18 @@ bool BaseSnapMotionPrimitive::apply(const GraphState& source_state,
     //
     if(within_basexy_tol && !near_end && within_arm_tol)
     {
-      ROS_INFO("Trying base snap");
+      //ROS_INFO("Trying base snap");
       RobotState rs(m_goal->getRobotState().getContBaseState(), source_state.robot_pose().right_arm(), source_state.robot_pose().left_arm());
       successor.reset(new GraphState(rs));
 
       t_data.motion_type(motion_type());
       t_data.cost(cost());
 
-     return computeIntermSteps(source_state, *successor, t_data);
+      auto intermSteps = computeIntermSteps(source_state, *successor, t_data);
+
+      //Cost is calculated on run time.
+      computeCost();
+      return intermSteps;
     }
     else{
         return false;
@@ -106,53 +107,33 @@ void BaseSnapMotionPrimitive::print() const {
 }
 
 void BaseSnapMotionPrimitive::computeCost(const MotionPrimitiveParams& params){
-    //TODO: Calculate actual cost
-    m_cost = 2;
-/*
-    if(!m_interp_base_steps.size()) {
-        ROS_INFO("default cost");
-        m_cost = 3;
-        m_params = params;
-    }
-
-    else {
-        double linear_distance = 0;
-        std::vector<ContBaseState> steps = m_interp_base_steps;
-
-        ROS_ERROR("Size is %d", steps.size());
-        for (size_t i=1; i < steps.size(); i++){
-            double x0 = steps[i-1].x(); //[GraphStateElement::BASE_X];
-            double y0 = steps[i-1].y(); //[GraphStateElement::BASE_Y];
-            double x1 = steps[i].x(); //[GraphStateElement::BASE_X];
-            double y1 = steps[i].y(); //[GraphStateElement::BASE_Y];
-            double dx = x1-x0;
-            double dy = y1-y0;
-            linear_distance += sqrt(dx*dx + dy*dy);
-        }
-        std::cerr<<"vel "<<params.nominal_vel<<"\n";
-        double linear_time = linear_distance/static_cast<double>(params.nominal_vel);
-        double first_angle = steps[0].theta(); //[GraphStateElement::BASE_THETA];
-        double final_angle = steps.back().theta(); //[GraphStateElement::BASE_THETA];
-        double angular_distance = fabs(shortest_angular_distance(first_angle, 
-                                                                final_angle));
-        //assert((linear_time > 0) || (angular_distance > 0));
-
-        double angular_time = angular_distance/params.angular_vel;
-
-        //make the cost the max of the two times
-        //m_cost = ceil(static_cast<double>(METER_TO_MM_MULT)*(max(linear_time, angular_time)));
-        m_cost = ceil(static_cast<double>(max(linear_time, angular_time))); //Multiplying makes the cost too high.
-        //use any additional cost multiplier
-        //m_cost *= getAdditionalCostMult();
-        ROS_INFO("base snap cost: %d", m_cost);
-
-        assert(m_cost >= 0.0);
-    }
-    */
+    updateParams(params);
+    m_cost = 10;
 }
 
 void BaseSnapMotionPrimitive::computeCost() {
-    computeCost(m_params);
+    double linear_distance = 0;
+    for(int i=1; i < m_interp_base_steps.size(); i++) {
+        double x0 = m_interp_base_steps[i-1].x();
+        double y0 = m_interp_base_steps[i-1].y();
+        double x1 = m_interp_base_steps[i].x();
+        double y1 = m_interp_base_steps[i].y();
+
+        double dx = x1-x0;
+        double dy = y1-y0;
+        linear_distance += sqrt(dx*dx + dy*dy);
+    }
+
+    double linear_time = linear_distance/static_cast<double>(m_params.nominal_vel);
+    double first_angle = m_interp_base_steps[0].theta();
+    double final_angle = m_interp_base_steps.back().theta();
+    double angular_distance = fabs(shortest_angular_distance(first_angle, 
+                                                             final_angle));
+
+    double angular_time = angular_distance/m_params.angular_vel;
+
+    //make the cost the max of the two times
+    m_cost = ceil(static_cast<double>(METER_TO_MM_MULT)*(max(linear_time, angular_time)));
 }
 
 int BaseSnapMotionPrimitive::numInterpSteps(const RobotState& start, const RobotState& end){

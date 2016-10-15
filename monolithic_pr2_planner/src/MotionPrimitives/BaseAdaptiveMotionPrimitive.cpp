@@ -121,7 +121,7 @@ bool BaseAdaptiveMotionPrimitive::apply(const GraphState& source_state,
     ContObjectState c_goal = m_goal.getObjectState();
     ContObjectState cur_obj_state = source_state.getObjectStateRelMap();
 
-    bool isWithinAMPDistance = (dist(cur_obj_state, d_goal) > 2);
+    bool isWithinAMPDistance = (dist(cur_obj_state, d_goal) > 1);
     if (isWithinAMPDistance){
         return false;
     }

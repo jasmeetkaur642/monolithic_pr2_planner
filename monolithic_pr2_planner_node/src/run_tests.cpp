@@ -110,8 +110,8 @@ int main(int argc, char** argv){
   }
 
   //planner parameters
-  req.initial_eps = 50.0;
-  req.final_eps = 50.0;
+  req.initial_eps = 20.0;
+  req.final_eps = 20.0;
   req.dec_eps = 0.2;
 
   req.rarm_object.pose.position.x = 0;
@@ -129,7 +129,7 @@ int main(int argc, char** argv){
   req.larm_object.pose.orientation.z = 0;
   req.larm_object.pose.orientation.w = 1;
 
-  req.xyz_tolerance = .04;
+  req.xyz_tolerance = .05;
   req.roll_tolerance = .1;
   req.pitch_tolerance = .1;
   req.yaw_tolerance = .1;

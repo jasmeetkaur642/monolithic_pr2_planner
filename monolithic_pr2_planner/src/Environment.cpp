@@ -83,7 +83,7 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
     // Update params in snap primitives.
     //m_param_catalog.fetch(m_nodehandle);
     //m_mprims.updateParams(m_param_catalog.m_motion_primitive_params);
-    
+
     //Code to calculate node expansion time.
     m_state_time_map.emplace(stateID, double(clock()) / CLOCKS_PER_SEC);
 
@@ -94,7 +94,7 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
 
     std::unique_ptr<stringintmap> values;
     m_heur_mgr->getGoalHeuristic(successor, values);
-    
+
     for (auto& heur : (*values)) {
         ROS_DEBUG_NAMED(HEUR_LOG, "%s : %d", heur.first.c_str(), heur.second);
     }
@@ -104,7 +104,7 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
       switch (heuristic_id) {
         case 0:  // Anchor
           return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
-        case 1:  // ARA Heur 
+        case 1:  // ARA Heur
           return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
         case 2:  // Base1, Base2 heur
           return static_cast<int>(0.5f*(*values).at("base_with_rot_0") + 0.5f*(*values).at("endeff_rot_goal"));
@@ -122,7 +122,7 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
 
       int inad_arm_heur = static_cast<int>(0.1*(*values).at("endeff_rot_goal") + 0.1*ad_endeff);
       if (ad_base > 1000) //TODO: check multiplier
-      { 
+      {
         inad_arm_heur = (*values).at("arm_angles_folded");
       }
       /*
@@ -167,8 +167,8 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
           return static_cast<int>(0.1*(*values).at("base_with_rot_0") + 0.1*(*values).at("endeff_rot_goal"));
         case 3:  // Base1, Base2 heur
           //return static_cast<int>(1.0*(*values).at("base_with_rot_0") + 0.0*(*values).at("endeff_rot_goal"));
-          //return static_cast<int>(0.1*(*values).at("base_with_rot_0"));// + 0.1*(*values).at("arm_angles_folded"));
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*inad_arm_heur);
+          return static_cast<int>(0.1*(*values).at("base_with_rot_0") + 0.1*(*values).at("arm_angles_folded"));
+          //return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*inad_arm_heur);
         case 4:
           return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot2") + w_armFold*inad_arm_heur);
         case 5:
@@ -199,19 +199,17 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
           return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot13") + w_armFold*inad_arm_heur);
         case 18:
           return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot14") + w_armFold*inad_arm_heur);
-        //case 19:
-         // return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*inad_arm_heur);
-          //return static_cast<int>(inad_arm_heur);
-          
+        case 19:
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*inad_arm_heur);
       }
-      
-      
+
+
       // switch (heuristic_id) {
       //   case 0:  // Anchor
       //     return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
       //   case 1:  // Anchor
       //     return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
-      //   //case 1:  // ARA Heur 
+      //   //case 1:  // ARA Heur
       //     //return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
       //   case 2:  // Base1, Base2 heur
       //     return static_cast<int>(0.5*(*values).at("base_with_rot_0") + 0.5*(*values).at("endeff_rot_goal"));
@@ -289,7 +287,7 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
     switch (heuristic_id) {
       case 0:  // Anchor
         return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
-      case 1:  // ARA Heur 
+      case 1:  // ARA Heur
         return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
       case 2:  // Base1, Base2 heur
         return static_cast<int>(0.5f*(*values).at("base_with_rot_0") + 0.5f*(*values).at("endeff_rot_goal"));
@@ -371,17 +369,17 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
     return std::max((*values).at("admissible_base"), (*values).at("admissible_endeff"));
 }
 
-void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs, 
+void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
                            vector<int>* costs){
     GetSuccs(0, sourceStateID, succIDs, costs);
 }
 
-void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs, 
+void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
                            vector<int>* costs){
     assert(sourceStateID != GOAL_STATE);
 
-    ROS_DEBUG_NAMED(SEARCH_LOG, 
-            "==================Expanding state %d==================", 
+    ROS_DEBUG_NAMED(SEARCH_LOG,
+            "==================Expanding state %d==================",
                     sourceStateID);
     succIDs->clear();
     succIDs->reserve(m_mprims.getMotionPrims().size());
@@ -406,7 +404,7 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
         TransitionData t_data;
 
         if(((mprim->getID() == MPrim_Types::BASE_SNAP ) && q_id != 0) ||
-                ((mprim->getID() == MPrim_Types::ARM_SNAP ||  mprim->getID() ==
+                ((mprim->getID() == MPrim_Types::ARM_SNAP) ||  (mprim->getID() ==
                   MPrim_Types::FULLBODY_SNAP) && (q_id != 1 || q_id != 2))){
             continue;
         }
@@ -422,11 +420,16 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
 
         if (m_cspace_mgr->isValidSuccessor(*successor,t_data) &&
             m_cspace_mgr->isValidTransitionStates(t_data)){
+                if(mprim->getID() == MPrim_Types::ARM_SNAP) {
+                    ROS_ERROR("Arm SNAP succeeded");
+                    successor->robot_pose().visualize(140);
+                    }
             ROS_DEBUG_NAMED(SEARCH_LOG, "Source state is:");
             source_state->printToDebug(SEARCH_LOG);
             m_hash_mgr->save(successor);
-            ROS_DEBUG_NAMED(MPRIM_LOG, "successor state with id %d is:", 
+            ROS_DEBUG_NAMED(MPRIM_LOG, "successor state with id %d is:",
                             successor->id());
+            //ROS_DEBUG_COND(mprim->getID() == MPrim_Types::ARM_SNAP, "Valid successor %f, %f",
             successor->printToDebug(MPRIM_LOG);
             //if(mprim)
             //ROS_INFO()
@@ -444,23 +447,20 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
                 ROS_ERROR("FBS motion succeeded");
                 successor->robot_pose().visualize(0);
             }
-            if(t_data.motion_type() == MPrim_Types::ARM_SNAP) {
-                ROS_ERROR("Arm SNAP succeeded");
-                successor->robot_pose().visualize(100);
-            }
             ROS_DEBUG_NAMED(SEARCH_LOG, "motion succeeded with cost %d", mprim->cost());
         } else {
             if(t_data.motion_type() == MPrim_Types::FULLBODY_SNAP) {
                 ROS_ERROR("FBS failed collision checking");
-
-                //m_infeasibleSnaps.emplace(sourceStateID, successor->id());
+            }
+            if(t_data.motion_type() == MPrim_Types::ARM_SNAP) {
+                ROS_ERROR("Arm snap failed collision checking");
             }
             ROS_DEBUG_NAMED(SEARCH_LOG, "successor failed collision checking");
         }
     }
 }
 
-void Environment::GetLazySuccs(int sourceStateID, vector<int>* succIDs, 
+void Environment::GetLazySuccs(int sourceStateID, vector<int>* succIDs,
                            vector<int>* costs, std::vector<bool>* isTrueCost)
 {
   if (!m_using_lazy)
@@ -473,9 +473,9 @@ void Environment::GetLazySuccs(int sourceStateID, vector<int>* succIDs,
   GetLazySuccs(0, sourceStateID, succIDs, costs, isTrueCost);
 }
 
-void Environment::GetLazySuccs(int q_id, int sourceStateID, vector<int>* succIDs, 
+void Environment::GetLazySuccs(int q_id, int sourceStateID, vector<int>* succIDs,
                            vector<int>* costs, std::vector<bool>* isTrueCost){
-    
+
   if (!m_using_lazy)
   {
     GetSuccs(q_id, sourceStateID, succIDs, costs);
@@ -486,7 +486,7 @@ void Environment::GetLazySuccs(int q_id, int sourceStateID, vector<int>* succIDs
 
   double expansion_color = 250/NUM_SMHA_HEUR*q_id;
   vector<MotionPrimitivePtr> all_mprims = m_mprims.getMotionPrims();
-    ROS_DEBUG_NAMED(SEARCH_LOG, "==================Expanding state %d==================", 
+    ROS_DEBUG_NAMED(SEARCH_LOG, "==================Expanding state %d==================",
                     sourceStateID);
 
     succIDs->clear();
@@ -527,7 +527,7 @@ void Environment::GetLazySuccs(int q_id, int sourceStateID, vector<int>* succIDs
             ROS_DEBUG_NAMED(SEARCH_LOG, "done");
         }
         m_hash_mgr->save(successor);
-        Edge key; 
+        Edge key;
 
         if (m_goal->isSatisfiedBy(successor)){
           m_goal->storeAsSolnState(successor);
@@ -588,7 +588,7 @@ int Environment::GetTrueCost(int parentID, int childID){
     bool matchesEndID = (successor->id() == childID) || (childID == GOAL_STATE);
     assert(matchesEndID);
 
-    bool valid_successor = (m_cspace_mgr->isValidSuccessor(*successor, t_data) && 
+    bool valid_successor = (m_cspace_mgr->isValidSuccessor(*successor, t_data) &&
                             m_cspace_mgr->isValidTransitionStates(t_data));
     if (!valid_successor){
         return -1;
@@ -598,7 +598,7 @@ int Environment::GetTrueCost(int parentID, int childID){
 
 bool Environment::setStartGoal(SearchRequestPtr search_request,
                                int& start_id, int& goal_id){
-    RobotState start_pose(search_request->m_params->base_start, 
+    RobotState start_pose(search_request->m_params->base_start,
                          search_request->m_params->right_arm_start,
                          search_request->m_params->left_arm_start);
     m_start = start_pose;
@@ -669,10 +669,10 @@ int Environment::saveFakeGoalState(const GraphStatePtr& start_graph_state){
 
 // this sets up the environment for things that are query independent.
 void Environment::configurePlanningDomain(){
-    // used for collision space and discretizing plain xyz into grid world 
+    // used for collision space and discretizing plain xyz into grid world
     OccupancyGridUser::init(m_param_catalog.m_occupancy_grid_params,
                         m_param_catalog.m_robot_resolution_params);
-    
+
 
     // used for discretization of robot movements
     ContArmState::setRobotResolutionParams(m_param_catalog.m_robot_resolution_params);
@@ -716,7 +716,7 @@ void Environment::configurePlanningDomain(){
     // load up motion primitives
     //m_mprims.loadMPrims(m_param_catalog.m_motion_primitive_params);
 
-    // load up static pviz instance for visualizations. 
+    // load up static pviz instance for visualizations.
     Visualizer::createPVizInstance();
     Visualizer::setReferenceFrame(std::string("/map"));
 }
@@ -851,7 +851,7 @@ void Environment::readIslands() {
         std::getline(island_file, line);
         ROS_INFO("%s", line.c_str());
         std::istringstream ss2(line);
-        ss2 >> word; 
+        ss2 >> word;
 
         std::vector<RobotState> islandStates, activationCenters;
 
@@ -907,7 +907,7 @@ double objectStateMetric( ContObjectState a,  ContObjectState b) {
     }
 
      // We don't want the orientation of the object to influence the metric
-     // much. The x, y, z coordinates are in meters the metric much 
+     // much. The x, y, z coordinates are in meters the metric much
     float factor = 0;
     // For roll, pitch, yaw.
     for(int i=3; i<6; i++) {
@@ -935,15 +935,15 @@ void Environment::getIslandStates(std::vector<RobotState> &islandStates, std::ve
     std::vector<double> startGoalDistances;
 
     double distance;
-    ROS_ERROR("Printing start goal pairs");
+    //ROS_ERROR("Printing start goal pairs");
     for(int i=0;i < m_startGoalPairs.size();i++) {
         // Give more weightage to goal.
         startGoalDistances.push_back(objectStateMetric(startObj, m_startGoalPairs[i].first) + objectStateMetric(goalObj, m_startGoalPairs[i].second));
         //startGoalDistances.push_back(objectStateMetric(goalObj, m_startGoalPairs[i].second));
-        ROS_INFO("(%f, %f), (%f, %f), %f", m_startGoalPairs[i].second.x(), m_startGoalPairs[i].second.y(), goalObj.x(), goalObj.y(), startGoalDistances[i]);
+        //ROS_INFO("(%f, %f), (%f, %f), %f", m_startGoalPairs[i].second.x(), m_startGoalPairs[i].second.y(), goalObj.x(), goalObj.y(), startGoalDistances[i]);
     }
     //Training resulted in 62 successful start-goal pairs generating islands.
-    int numClosestPairs = 6; 
+    int numClosestPairs = 4;
     int numIslandsPerPair = 5; //Data file has 10.
     //Index-distance.
     std::vector<std::pair<int, double> > closestPairIndices;

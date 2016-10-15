@@ -69,14 +69,12 @@ bool ArmSnapMotionPrimitive::apply(const GraphState& source_state,
 
       //KDL::Frame F_goal_map = F_map_goal.Inverse();
 
-      F_torsolift_goal = F_torsolift_map * F_map_goal * source_pose.right_arm().getObjectOffset().Inverse();
+      F_torsolift_goal = (F_torsolift_map * F_map_goal) * (source_pose.right_arm().getObjectOffset().Inverse());
       //goal_wrt_body = F_map_torsolift.Inverse() * goal_wrt_map;
       //goal_wrt_body_rpy = (F_map_torsolift).Inverse().M * goal_wrt_map_rpy;
 
       double goal_wrt_body_x = F_torsolift_goal.p.x(); //Direction of the arm.
       double goal_wrt_body_y = F_torsolift_goal.p.y();
-      
-      ROS_INFO("X = %f, Y= %f", goal_wrt_body_x, goal_wrt_body_y);
 
       if(goal_wrt_body_x > 0.1 && (goal_wrt_body_y < 15*c_tol.y())) { //tol = 0.035
           goal_facing_arm = true;
@@ -113,10 +111,13 @@ bool ArmSnapMotionPrimitive::apply(const GraphState& source_state,
             c++;
         }
       if(ik_success) {
-        ROS_INFO("Snapping to goal state");
-        RobotState rs(new_robot_pose_ptr->getContBaseState(), new_robot_pose_ptr->right_arm(), new_robot_pose_ptr->left_arm());
+        ROS_INFO("Arm snap ik succeeded");
+        //RobotState rs(new_robot_pose_ptr->getContBaseState(), new_robot_pose_ptr->right_arm(), new_robot_pose_ptr->left_arm());
+        RobotState rs(source_pose.getContBaseState(), new_robot_pose_ptr->right_arm(), new_robot_pose_ptr->left_arm());
         //RobotState rs(source_pose.getContBaseState(),goal_obj_wrt_body);
-        rs.visualize(140);
+        ContObjectState calculatedGoal = rs.getObjectStateRelMap();
+        //ROS_ERROR("Diff from goal: %f, %f, %f", (calculatedGoal.x()- goal_rel_map.x()), (calculatedGoal.y()- goal_rel_map.y()), (calculatedGoal.roll() - goal_rel_map.roll()));
+        //rs.visualize(140);
         successor.reset(new GraphState(rs));
 
         t_data.motion_type(motion_type());
@@ -140,16 +141,17 @@ bool ArmSnapMotionPrimitive::computeIntermSteps(const GraphState& source_state,
 
     ROS_DEBUG_NAMED(MPRIM_LOG, "interpolation for arm snap primitive");
     std::vector<RobotState> interp_steps;
-    bool interpolate = RobotState::workspaceInterpolate(source_state.robot_pose(), 
-                                     successor.robot_pose(),
-                                     &interp_steps);
+    //bool interpolate = RobotState::workspaceInterpolate(source_state.robot_pose(), 
+    //                                 successor.robot_pose(),
+    //                                 &interp_steps);
+    bool interpolate = false;
     bool j_interpolate;
 
-    if (!interpolate) {
-        interp_steps.clear();
+    //if (!interpolate) {
+        //interp_steps.clear();
         j_interpolate = RobotState::jointSpaceInterpolate(source_state.robot_pose(),
                                     successor.robot_pose(), &interp_steps);
-    }
+    //}
 
     for (auto robot_state: interp_steps){
         robot_state.printToDebug(MPRIM_LOG);

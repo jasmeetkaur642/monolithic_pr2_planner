@@ -55,8 +55,8 @@ bool FullBodySnapMotionPrimitive::apply(const GraphState& source_state,
     if(processedActivationRadiusTheta == 0)
         processedActivationRadiusTheta = 3*(c_tol.yaw());
     bool within_activation_radius = (abs(m_activationCenter.base_state().x() - base.x()) < 3*processedActivationRadiusX &&
-                                    abs(m_activationCenter.base_state().y() - base.y()) < 3*processedActivationRadiusY &&
-                                    abs(angles::shortest_angular_distance(m_activationCenter.getContBaseState().theta(), robot_pose.getContBaseState().theta())) < 5*processedActivationRadiusTheta);
+                                    abs(m_activationCenter.base_state().y() - base.y()) < 3*processedActivationRadiusY);//&&
+                                    //abs(angles::shortest_angular_distance(m_activationCenter.getContBaseState().theta(), robot_pose.getContBaseState().theta())) < 5*processedActivationRadiusTheta);
     /*
     bool temp;
     std::vector<double> r_arm_goal, r_arm_center, r_arm_source;
@@ -142,5 +142,5 @@ void FullBodySnapMotionPrimitive::print() const {
 
 void FullBodySnapMotionPrimitive::computeCost(const MotionPrimitiveParams& params){
     //TODO: Calculate actual cost 
-    m_cost = 10;
+    m_cost = 1;
 }
