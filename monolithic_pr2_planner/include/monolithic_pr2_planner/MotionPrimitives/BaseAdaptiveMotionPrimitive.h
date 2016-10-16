@@ -28,6 +28,8 @@ namespace monolithic_pr2_planner {
                                                              const GraphState& successor);
             void rotateObjToGoalYawUsingBase(const GraphState& source_state,
                                              RobotState& rotated_state);
+            void rotateBaseTowardsGoal(const GraphState& source_state,
+                                             RobotState& rotated_state);
             bool moveObjToGoalPositionUsingBase(const GraphState& source_state,
                                                 const RobotState& rotated_state,
                                                 RobotPosePtr& final_state);

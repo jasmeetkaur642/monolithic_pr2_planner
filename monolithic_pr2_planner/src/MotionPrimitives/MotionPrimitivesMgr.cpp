@@ -116,8 +116,8 @@ bool MotionPrimitivesMgr::loadMPrims(const MotionPrimitiveParams& params){
     m_all_mprims[MPrim_Types::ARM] = arm_mprims;
     m_all_mprims[MPrim_Types::BASE] = base_mprims;
     m_all_mprims[MPrim_Types::TORSO] = torso_mprims;
-    //m_all_mprims[MPrim_Types::ARM_ADAPTIVE] = arm_amps;
-    //m_all_mprims[MPrim_Types::BASE_ADAPTIVE] = base_amps;
+    m_all_mprims[MPrim_Types::ARM_ADAPTIVE] = arm_amps;
+    m_all_mprims[MPrim_Types::BASE_ADAPTIVE] = base_amps;
     
     if(baseSnap)
         m_all_mprims[MPrim_Types::BASE_SNAP] = base_snap_mprims;
@@ -194,7 +194,7 @@ void MotionPrimitivesMgr::combineVectors(const MPrimList& v1, MPrimList& v2){
 
 void MotionPrimitivesMgr::loadBaseOnlyMPrims(){
     combineVectors(m_all_mprims[MPrim_Types::BASE], m_active_mprims);
-    //combineVectors(m_all_mprims[MPrim_Types::BASE_ADAPTIVE], m_active_mprims);
+    combineVectors(m_all_mprims[MPrim_Types::BASE_ADAPTIVE], m_active_mprims);
 }
 
 void MotionPrimitivesMgr::loadTorsoMPrims(){
@@ -205,7 +205,7 @@ void MotionPrimitivesMgr::loadTorsoMPrims(){
 // are in cartesian space
 void MotionPrimitivesMgr::loadArmOnlyMPrims(){
     combineVectors(m_all_mprims[MPrim_Types::ARM], m_active_mprims);
-    //combineVectors(m_all_mprims[MPrim_Types::ARM_ADAPTIVE], m_active_mprims);
+    combineVectors(m_all_mprims[MPrim_Types::ARM_ADAPTIVE], m_active_mprims);
 }
 
 void MotionPrimitivesMgr::loadBaseSnapMPrims(){
