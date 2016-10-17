@@ -110,8 +110,8 @@ int main(int argc, char** argv){
   }
 
   //planner parameters
-  req.initial_eps = 20.0;
-  req.final_eps = 20.0;
+  req.initial_eps = 10.0;
+  req.final_eps = 10.0;
   req.dec_eps = 0.2;
 
   req.rarm_object.pose.position.x = 0;

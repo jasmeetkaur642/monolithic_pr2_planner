@@ -18,6 +18,7 @@ bool ArmAdaptiveMotionPrimitive::apply(const GraphState& source_state,
     if (dist(source_state.getObjectStateRelMap(), goal) > 2){
         return false;
     }
+    ROS_ERROR("Trying arm adaptive");
 
     DiscBaseState base_state = source_state.robot_pose().base_state();
 

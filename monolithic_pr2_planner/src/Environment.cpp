@@ -816,6 +816,11 @@ void Environment::readIslands() {
     m_nodehandle.param("planner/island", file_name, std::string("Empty"));
     ROS_INFO("Base island file name %s", file_name.c_str());
 
+    bool visualizeIslands;
+    m_nodehandle.param("planner/visualizeIslands", visualizeIslands, 0);
+    m_visualizeIslands = int(visualizeIslands);
+    ROS_INFO("Visualize islands option set to: %d", m_visualizeIslands);
+
     ifstream island_file(file_name);
 
     std::string line;
@@ -976,7 +981,21 @@ void Environment::getIslandStates(std::vector<RobotState> &islandStates, std::ve
         pairActivationCenters = m_activationCenters[closestPairIndices[i].first];
         activationCenters.insert(activationCenters.end(), pairActivationCenters.begin(), pairActivationCenters.begin() + numIslandsPerPair);
     }
+    if(m_visualizeIslands) {
+        PViz pviz;
+        for(int j=0;j<islandStates.size();j++) {
+                RobotState state = islandStates[j];
+                std::vector<double> base({state.getContBaseState().x(), state.getContBaseState().y(), state.getContBaseState().theta()});
+                std::vector<double> rarm, larm;
+                state.right_arm().getAngles(&rarm);
+                state.left_arm().getAngles(&larm);
+                string ns = "wee" + string("%d", j);
+
+                pviz.visualizeRobot(rarm, larm, base, 0.1, 140, ns, 0, false);
+        }
+    }
 }
+
 
 void Environment::chooseSnapMprims() {
     int baseSnap, fullBodySnap, armSnap;

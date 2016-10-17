@@ -180,7 +180,7 @@ bool BaseAdaptiveMotionPrimitive::apply(const GraphState& source_state,
     RobotState rotated_state;
     //rotateObjToGoalYawUsingBase(source_state, rotated_state);
     rotateBaseTowardsGoal(source_state, rotated_state);
-    rotated_state.visualize(140);
+    //rotated_state.visualize(140);
 
     RobotPosePtr final_state;
     //bool mprim_success = moveObjToGoalPositionUsingBase(source_state, rotated_state,

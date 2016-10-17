@@ -72,6 +72,8 @@ namespace monolithic_pr2_planner {
             int m_planner_type;
             bool m_use_new_heuristics;
 
+            bool m_visualizeIslands;
+
             //std::vector<RobotState> m_island_base_states;
 
         // SBPL interface stuff
