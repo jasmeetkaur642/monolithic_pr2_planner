@@ -314,21 +314,24 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
 
 
   ros::NodeHandle ph("~");
-  bool use_new_heuristics;
-  ph.param("use_new_heuristics", use_new_heuristics, false);
+  int heuristic_set_type;
+  ph.param("heuristic_set_type", heuristic_set_type, 2);
   int planner_queues;
 
-  if (!use_new_heuristics) {
+  if (heuristic_set_type == 0) {
     planner_queues = 4;
-  } else {
-    planner_queues = 20;
+  } else if(heuristic_set_type == 1) {
+    planner_queues = 10;
+  }
+  else {
+      planner_queues = 20;
   }
 
   printf("\n");
   ROS_INFO("Initialize environment");
   m_env->reset();
   m_env->setPlannerType(planner_type);
-  m_env->setUseNewHeuristics(use_new_heuristics);
+  m_env->setHeuristicSetType(heuristic_set_type);
   m_mha_planner.reset(new MHAPlanner(m_env.get(), planner_queues,
                                      forward_search));
   total_planning_time = clock();

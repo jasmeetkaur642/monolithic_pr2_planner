@@ -618,10 +618,10 @@ void HeuristicMgr::initializeMHAHeuristics(const int cost_multiplier){
         ContBaseState c_base = base;
         body[0] = c_base.x();
         body[1] = c_base.y();
-        body[2] = -1*c_base.theta();
+        body[2] = c_base.theta();
         PViz pviz;
-        pviz.visualizeRobot(rarm, larm, body, 0.1, 140, "weee", 0, false);
-        sleep(5);
+        //pviz.visualizeRobot(rarm, larm, body, 0.1, 140, "weee", 0, false);
+        //sleep(5);
         // Initialize with the desired orientation.
         initNewMHABaseHeur(ss.str(), selected_points[num_base_heur].first,
             selected_points[num_base_heur].second,

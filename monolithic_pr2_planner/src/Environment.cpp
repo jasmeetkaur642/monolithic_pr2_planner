@@ -100,7 +100,7 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
     }
 
 
-    if(!m_use_new_heuristics){
+    if(m_heuristic_set_type == 0){
       switch (heuristic_id) {
         case 0:  // Anchor
           return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
@@ -112,7 +112,7 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
           return static_cast<int>(0.5f*(*values).at("base_with_rot_door") + 0.5f*(*values).at("endeff_rot_vert"));
       }
     }
-    else{
+    else if(m_heuristic_set_type == 1){
       double w_bfsRot = 0.2;
       double w_armFold = 0.2;
       int ad_base = (*values).at("admissible_base");
@@ -125,7 +125,7 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
       {
         inad_arm_heur = (*values).at("arm_angles_folded");
       }
-      /*
+      
       switch (heuristic_id) {
         case 0:  // Anchor
           return anchor_h;
@@ -136,7 +136,7 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
           return static_cast<int>(0.1*(*values).at("base_with_rot_0") + 0.1*(*values).at("endeff_rot_goal"));
         case 3:  // Base1, Base2 heur
           //return static_cast<int>(1.0*(*values).at("base_with_rot_0") + 0.0*(*values).at("endeff_rot_goal"));
-          return static_cast<int>(0.1*(*values).at("base_with_rot_0"));// + 0.1*(*values).at("arm_angles_folded"));
+          return static_cast<int>(0.1*(*values).at("base_with_rot_0") + 0.1*(*values).at("arm_angles_folded"));
         case 4:
           //return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot0") + w_armFold*inad_arm_heur);
           return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot2") + w_armFold*inad_arm_heur);
@@ -156,51 +156,62 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
           //return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot5") + w_armFold*inad_arm_heur);
           return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*inad_arm_heur);
         }
-         */
-      switch (heuristic_id) {
-        case 0:  // Anchor
-          return anchor_h;
-        case 1:  // Anchor
-          return int(0.1*ad_base) + int(0.1*ad_endeff) + int(0.2*endeff_rot_goal);
-          //return ad_base;
-        case 2:  // Base1, Base2 heur
-          return static_cast<int>(0.1*(*values).at("base_with_rot_0") + 0.1*(*values).at("endeff_rot_goal"));
-        case 3:  // Base1, Base2 heur
-          //return static_cast<int>(1.0*(*values).at("base_with_rot_0") + 0.0*(*values).at("endeff_rot_goal"));
-          return static_cast<int>(0.1*(*values).at("base_with_rot_0") + 0.1*(*values).at("arm_angles_folded"));
-          //return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*inad_arm_heur);
-        case 4:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot2") + w_armFold*inad_arm_heur);
-        case 5:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot1") + w_armFold*inad_arm_heur);
-        case 6:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot2") + w_armFold*inad_arm_heur);
-        case 7:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot3") + w_armFold*inad_arm_heur);
-        case 8:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot4") + w_armFold*inad_arm_heur);
-        case 9:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot5") + w_armFold*inad_arm_heur);
-        case 10:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot6") + w_armFold*inad_arm_heur);
-        case 11:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot7") + w_armFold*inad_arm_heur);
-        case 12:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot8") + w_armFold*inad_arm_heur);
-        case 13:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot9") + w_armFold*inad_arm_heur);
-        case 14:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot10") + w_armFold*inad_arm_heur);
-        case 15:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot11") + w_armFold*inad_arm_heur);
-        case 16:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot12") + w_armFold*inad_arm_heur);
-        case 17:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot13") + w_armFold*inad_arm_heur);
-        case 18:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot14") + w_armFold*inad_arm_heur);
-        case 19:
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*inad_arm_heur);
+    }
+
+      else {
+        double w_bfsRot = 0.2;
+        double w_armFold = 0.2;
+        int ad_base = (*values).at("admissible_base");
+        int ad_endeff = (*values).at("admissible_endeff");
+        int anchor_h = std::max(ad_base, ad_endeff);
+        int endeff_rot_goal = (*values).at("endeff_rot_goal");
+
+        int inad_arm_heur = static_cast<int>(0.1*(*values).at("endeff_rot_goal") + 0.1*ad_endeff);
+        switch (heuristic_id) {
+            case 0:  // Anchor
+            return anchor_h;
+            case 1:  // Anchor
+            return int(0.1*ad_base) + int(0.1*ad_endeff) + int(0.2*endeff_rot_goal);
+            //return ad_base;
+            case 2:  // Base1, Base2 heur
+            return static_cast<int>(0.1*(*values).at("base_with_rot_0") + 0.1*(*values).at("endeff_rot_goal"));
+            case 3:  // Base1, Base2 heur
+            //return static_cast<int>(1.0*(*values).at("base_with_rot_0") + 0.0*(*values).at("endeff_rot_goal"));
+            return static_cast<int>(0.1*(*values).at("base_with_rot_0") + 0.1*(*values).at("arm_angles_folded"));
+            //return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*inad_arm_heur);
+            case 4:
+            return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot2") + w_armFold*inad_arm_heur);
+            case 5:
+            return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot1") + w_armFold*inad_arm_heur);
+            case 6:
+            return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot2") + w_armFold*inad_arm_heur);
+            case 7:
+            return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot3") + w_armFold*inad_arm_heur);
+            case 8:
+            return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot4") + w_armFold*inad_arm_heur);
+            case 9:
+            return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot5") + w_armFold*inad_arm_heur);
+            case 10:
+            return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot6") + w_armFold*inad_arm_heur);
+            case 11:
+            return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot7") + w_armFold*inad_arm_heur);
+            case 12:
+            return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot8") + w_armFold*inad_arm_heur);
+            case 13:
+            return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot9") + w_armFold*inad_arm_heur);
+            case 14:
+            return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot10") + w_armFold*inad_arm_heur);
+            case 15:
+            return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot11") + w_armFold*inad_arm_heur);
+            case 16:
+            return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot12") + w_armFold*inad_arm_heur);
+            case 17:
+            return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot13") + w_armFold*inad_arm_heur);
+            case 18:
+            return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot14") + w_armFold*inad_arm_heur);
+            case 19:
+            return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*inad_arm_heur);
+        }
       }
 
 
@@ -281,7 +292,7 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
       //       return 0;
       //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*(*values).at("arm_angles_folded"));
       // }
-    }
+
 
     /*
     switch (heuristic_id) {
@@ -817,8 +828,7 @@ void Environment::readIslands() {
     ROS_INFO("Base island file name %s", file_name.c_str());
 
     bool visualizeIslands;
-    m_nodehandle.param("planner/visualizeIslands", visualizeIslands, 0);
-    m_visualizeIslands = int(visualizeIslands);
+    m_nodehandle.param("planner/visualizeIslands", m_visualizeIslands, false);
     ROS_INFO("Visualize islands option set to: %d", m_visualizeIslands);
 
     ifstream island_file(file_name);
@@ -888,14 +898,14 @@ void Environment::readIslands() {
             }
             if(!std::getline(island_file, line))
                 break;
-            ROS_INFO("%s", line.c_str());
+            //ROS_INFO("%s", line.c_str());
             std::istringstream ssa(line);
             ssa >> word;
         }
         m_islandStates.push_back(islandStates);
         m_activationCenters.push_back(activationCenters);
     }
-    ROS_INFO("DONE");
+    //ROS_INFO("DONE");
 }
 
 // Using euclidean distance, give a distance between two objectstates.
@@ -929,6 +939,25 @@ int findMaxIndex(std::vector<std::pair< int, double> > distances) {
             maxI = i;
     }
     return maxI;
+}
+
+void visualizeCircle(std::pair<double, double> center, double radius, std::string ns) {
+    int numPoints = int(100*radius);
+    float resolution = 2*3.14 / numPoints;
+
+    std::vector<std::vector<double> > circlePoints;
+    double x=0, y=0;
+    double theta = 0;
+
+    for(int i=0;i<numPoints;i++) {
+        theta += resolution;
+        x = center.first +  radius * cos(theta);
+        y = center.second +  radius * sin(theta);
+        circlePoints.push_back(std::vector<double>({x, y, 0}));
+    }
+    PViz pviz;
+    pviz.visualize3DPath(circlePoints, ns);
+
 }
 
 //Return the islands and activation centers corresponding to the closest start-goal pairs that we trained on. This way we dont waste time in using unrelated island states.
@@ -966,16 +995,11 @@ void Environment::getIslandStates(std::vector<RobotState> &islandStates, std::ve
     }
     std::vector<RobotState> pairIslandStates;
     std::vector<RobotState> pairActivationCenters;
-    ROS_ERROR("Closest islands");
+    //ROS_ERROR("Closest islands");
     for(int i=0;i < closestPairIndices.size();i++) {
-        ROS_INFO("%d, %f", closestPairIndices[i].first, closestPairIndices[i].second);
+        //ROS_INFO("%d, %f", closestPairIndices[i].first, closestPairIndices[i].second);
 
         pairIslandStates = m_islandStates[closestPairIndices[i].first];
-        //Visualize chosen islands.
-        //for(auto state : pairIslandStates) {
-        //    state.visualize();
-        //    sleep(1);
-        //}
         islandStates.insert(islandStates.end(), pairIslandStates.begin(), pairIslandStates.begin() + numIslandsPerPair);
 
         pairActivationCenters = m_activationCenters[closestPairIndices[i].first];
@@ -992,6 +1016,7 @@ void Environment::getIslandStates(std::vector<RobotState> &islandStates, std::ve
                 string ns = "wee" + string("%d", j);
 
                 pviz.visualizeRobot(rarm, larm, base, 0.1, 140, ns, 0, false);
+                visualizeCircle(std::make_pair(base[0], base[1]), 0.7, ns);
         }
     }
 }

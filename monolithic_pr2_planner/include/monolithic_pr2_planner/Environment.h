@@ -47,7 +47,9 @@ namespace monolithic_pr2_planner {
                 state_ids);
             void reset();
             void setPlannerType(int planner_type);
-            void setUseNewHeuristics(bool use_new_heuristics){m_use_new_heuristics = use_new_heuristics;};
+            //void setUseNewHeuristics(bool use_new_heuristics){m_use_new_heuristics = use_new_heuristics;};
+            void setHeuristicSetType(int heuristicSetType){m_heuristic_set_type = heuristicSetType;};
+            
             void chooseSnapMprims();
 
         protected:
@@ -70,7 +72,7 @@ namespace monolithic_pr2_planner {
             HeuristicMgrPtr m_heur_mgr;
 
             int m_planner_type;
-            bool m_use_new_heuristics;
+            int m_heuristic_set_type;
 
             bool m_visualizeIslands;
 

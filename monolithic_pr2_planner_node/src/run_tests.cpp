@@ -110,8 +110,13 @@ int main(int argc, char** argv){
   }
 
   //planner parameters
-  req.initial_eps = 10.0;
-  req.final_eps = 10.0;
+  float eps = 100;
+  if(nh.getParam("/monolithic_experiment/eps", eps))
+      ROS_INFO("Got param inflation factor = %f", eps);
+  else
+      ROS_ERROR("Could not get inflation factor param");
+  req.initial_eps = eps;
+  req.final_eps = eps;
   req.dec_eps = 0.2;
 
   req.rarm_object.pose.position.x = 0;
