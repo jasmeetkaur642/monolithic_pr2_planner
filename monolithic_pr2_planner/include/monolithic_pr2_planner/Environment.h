@@ -111,8 +111,6 @@ namespace monolithic_pr2_planner {
             std::unordered_map<int, double> m_state_time_map;
             std::vector<std::vector<std::pair<int, double> > > m_heuristic_state_time_map;
 
-            std::vector<double> m_heuristicClock;
-
             // Contains the start goal pairs that have been run to generate
             // island states and activation centers. The indices of these three
             // variable correspond to each other.

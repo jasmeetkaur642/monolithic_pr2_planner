@@ -346,9 +346,6 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
   m_env->reset();
   m_env->setPlannerType(planner_type);
   m_env->setHeuristicSetType(heuristic_set_type);
-  //Initialize clock.
-  m_env->m_previousClockTime = double(clock()) / CLOCKS_PER_SEC;
-  m_env->m_previous_q_id = 0;
   m_mha_planner.reset(new MHAPlanner(m_env.get(), planner_queues,
                                      forward_search));
   total_planning_time = clock();

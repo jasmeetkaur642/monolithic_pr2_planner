@@ -783,7 +783,7 @@ vector<FullBodyState> Environment::reconstructPath(vector<int> soln_path){
     //Save state time stats.
     save_state_time(soln_path);
 
-    save_heuristic_state_time(soln_path);
+    //save_heuristic_state_time(soln_path);
 
     PathPostProcessor postprocessor(m_hash_mgr, m_cspace_mgr);
     std::vector<FullBodyState> final_path = postprocessor.reconstructPath(soln_path, *m_goal, m_mprims.getMotionPrims());
