@@ -328,16 +328,13 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
 
   if (heuristic_set_type == 0) {
     planner_queues = 4;
-    m_env->m_heuristicClock.resize(4, 0);
     m_env->m_heuristic_state_time_map.resize(4);
   } else if(heuristic_set_type == 1) {
     planner_queues = 10;
-    m_env->m_heuristicClock.resize(10, 0);
     m_env->m_heuristic_state_time_map.resize(10);
   }
   else {
     planner_queues = 20;
-    m_env->m_heuristicClock.resize(20, 0);
     m_env->m_heuristic_state_time_map.resize(20);
   }
 

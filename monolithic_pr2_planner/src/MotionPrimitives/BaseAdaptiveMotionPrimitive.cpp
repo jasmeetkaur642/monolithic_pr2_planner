@@ -5,7 +5,6 @@
 #include <monolithic_pr2_planner/StateReps/ContObjectState.h>
 #include <monolithic_pr2_planner/LoggerNames.h>
 #include <cmath>
-#include <math.h>
 #include <vector>
 #include <angles/angles.h>
 #include <assert.h>
@@ -54,41 +53,6 @@ void BaseAdaptiveMotionPrimitive::rotateObjToGoalYawUsingBase(const GraphState& 
     ROS_DEBUG_NAMED(MPRIM_LOG, "\tNew base theta: %f", new_base.theta());
 }
 
-void BaseAdaptiveMotionPrimitive::rotateBaseTowardsGoal(const GraphState& source_state,
-                                                              RobotState& rotated_state){
-    ROS_DEBUG_NAMED(MPRIM_LOG, "\t Rotate robot base to face the goal object");
-    ContObjectState cont_goal = m_goal.getObjectState();
-    ContBaseState orig_base_state = source_state.robot_pose().base_state();
-    ContObjectState cur_obj_state = source_state.getObjectStateRelMap();
-
-    KDL::Frame F_goal_wrt_body = source_state.robot_pose().getTargetObjectFrameRelBody(m_goal.getRobotState());
-    double goal_wrt_body_x = F_goal_wrt_body.p.x();
-    double goal_wrt_body_y = F_goal_wrt_body.p.y();
-    ROS_DEBUG_NAMED(MPRIM_LOG, "\toriginal continuous base: %f %f %f %f", 
-                               orig_base_state.x(),
-                               orig_base_state.y(),
-                               orig_base_state.z(),
-                               orig_base_state.theta());
-    double delta_cont_theta = shortest_angular_distance(orig_base_state.theta(), orig_base_state.theta() + atan2(goal_wrt_body_y, goal_wrt_body_x));
-    int sign = static_cast<int>(delta_cont_theta/fabs(delta_cont_theta));
-    assert(abs(sign) == 1);
-    int del_disc_theta = DiscBaseState::convertContTheta(fabs(delta_cont_theta));
-    ROS_DEBUG_NAMED(MPRIM_LOG, "\tTurned the base by %f (or %d theta steps).", 
-                    delta_cont_theta, del_disc_theta);
-
-    DiscBaseState d_base_state = source_state.robot_pose().base_state();
-    d_base_state.theta(d_base_state.theta() + sign*del_disc_theta);
-    ROS_DEBUG_NAMED(MPRIM_LOG, "\tThe new base theta is now %d", d_base_state.theta());
-    RobotState base_turned_pose(d_base_state, 
-                                source_state.robot_pose().right_arm(), 
-                                source_state.robot_pose().left_arm());
-    ROS_DEBUG_NAMED(MPRIM_LOG, "\t The robot should be facing the goal object now.");
-    ContObjectState c_unadjusted_obj = base_turned_pose.getObjectStateRelMap();
-    c_unadjusted_obj.printToDebug(MPRIM_LOG);
-    ContBaseState new_base = base_turned_pose.base_state();
-    rotated_state = base_turned_pose;
-    ROS_DEBUG_NAMED(MPRIM_LOG, "\tNew base theta: %f", new_base.theta());
-}
 bool BaseAdaptiveMotionPrimitive::moveObjToGoalPositionUsingBase(const GraphState& source_state,
                                                                  const RobotState& rotated_state,
                                                                  RobotPosePtr& final_state){
@@ -157,16 +121,16 @@ bool BaseAdaptiveMotionPrimitive::apply(const GraphState& source_state,
     ContObjectState c_goal = m_goal.getObjectState();
     ContObjectState cur_obj_state = source_state.getObjectStateRelMap();
 
-    bool isWithinAMPDistance = (dist(cur_obj_state, d_goal) < 10);
+    bool isWithinAMPDistance = (dist(cur_obj_state, d_goal) > 2);
     if (isWithinAMPDistance){
         return false;
     }
 
-    //if (fabs(cur_obj_state.yaw()-c_goal.yaw()) < ContBaseState::getThetaResolution()){
-    //    ROS_DEBUG_NAMED(MPRIM_LOG, "Object is already aligned in yaw to goal. "
-    //                               "Skipping base AMP.");
-    //    return false;
-    //}
+    if (fabs(cur_obj_state.yaw()-c_goal.yaw()) < ContBaseState::getThetaResolution()){
+        ROS_DEBUG_NAMED(MPRIM_LOG, "Object is already aligned in yaw to goal. "
+                                   "Skipping base AMP.");
+        return false;
+    }
 
     ROS_DEBUG_NAMED(MPRIM_LOG, "====== applying base AMP ======");
     ROS_DEBUG_NAMED(MPRIM_LOG, "Source state (with visualization):");
@@ -178,15 +142,11 @@ bool BaseAdaptiveMotionPrimitive::apply(const GraphState& source_state,
     c_goal.printToDebug(MPRIM_LOG);
 
     RobotState rotated_state;
-    //rotateObjToGoalYawUsingBase(source_state, rotated_state);
-    rotateBaseTowardsGoal(source_state, rotated_state);
-    //rotated_state.visualize(140);
+    rotateObjToGoalYawUsingBase(source_state, rotated_state);
 
     RobotPosePtr final_state;
-    //bool mprim_success = moveObjToGoalPositionUsingBase(source_state, rotated_state,
-    //                                                    final_state);
-    final_state = boost::make_shared<RobotState>(rotated_state);
-    bool mprim_success = true;
+    bool mprim_success = moveObjToGoalPositionUsingBase(source_state, rotated_state,
+                                                        final_state);
     if (!mprim_success){
         return false;
     }
