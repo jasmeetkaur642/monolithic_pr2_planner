@@ -95,7 +95,9 @@ namespace monolithic_pr2_planner {
 
             void getIslandStates(std::vector<RobotState>&, std::vector<RobotState>&);
 
+            void normalize_heuristic_times();
             void save_state_time(vector<int> soln_path);
+            void save_heuristic_state_time(vector<int> soln_path);
 
             //Read island states and activation centers corresponding to each
             //start-goal pair from file.
@@ -107,6 +109,9 @@ namespace monolithic_pr2_planner {
             std::set<std::pair<int, int> > m_infeasibleSnaps;
 
             std::unordered_map<int, double> m_state_time_map;
+            std::vector<std::vector<std::pair<int, double> > > m_heuristic_state_time_map;
+
+            std::vector<double> m_heuristicClock;
 
             // Contains the start goal pairs that have been run to generate
             // island states and activation centers. The indices of these three

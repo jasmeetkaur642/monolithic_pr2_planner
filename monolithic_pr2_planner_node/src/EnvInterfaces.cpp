@@ -315,16 +315,30 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
 
   ros::NodeHandle ph("~");
   int heuristic_set_type;
-  ph.param("heuristic_set_type", heuristic_set_type, 2);
+  bool got;
+  got = ph.getParam("/heuristic_set_type", heuristic_set_type);
+  if(got)
+      ROS_INFO("Heuristic set type receiver %d", heuristic_set_type);
+  else {
+      ROS_ERROR("Heuristic set type not received.");
+      heuristic_set_type = 2;
+  }
+
   int planner_queues;
 
   if (heuristic_set_type == 0) {
     planner_queues = 4;
+    m_env->m_heuristicClock.resize(4, 0);
+    m_env->m_heuristic_state_time_map.resize(4);
   } else if(heuristic_set_type == 1) {
     planner_queues = 10;
+    m_env->m_heuristicClock.resize(10, 0);
+    m_env->m_heuristic_state_time_map.resize(10);
   }
   else {
-      planner_queues = 20;
+    planner_queues = 20;
+    m_env->m_heuristicClock.resize(20, 0);
+    m_env->m_heuristic_state_time_map.resize(20);
   }
 
   printf("\n");
@@ -332,6 +346,9 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
   m_env->reset();
   m_env->setPlannerType(planner_type);
   m_env->setHeuristicSetType(heuristic_set_type);
+  //Initialize clock.
+  m_env->m_previousClockTime = double(clock()) / CLOCKS_PER_SEC;
+  m_env->m_previous_q_id = 0;
   m_mha_planner.reset(new MHAPlanner(m_env.get(), planner_queues,
                                      forward_search));
   total_planning_time = clock();
