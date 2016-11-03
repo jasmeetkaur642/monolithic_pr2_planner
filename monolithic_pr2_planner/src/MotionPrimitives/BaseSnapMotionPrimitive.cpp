@@ -44,25 +44,25 @@ bool BaseSnapMotionPrimitive::apply(const GraphState& source_state,
     int processedActivationRadiusX = 0, processedActivationRadiusY = 0;
     float processedActivationRadiusTheta = 0;
     if(baseActivationRadius.x() < d_tol.x())
-        processedActivationRadiusX = 3*d_tol.x();
+        processedActivationRadiusX = 2*d_tol.x();
     else
         processedActivationRadiusX = baseActivationRadius.x();
 
     if(baseActivationRadius.y() < d_tol.y())
-        processedActivationRadiusY = 3*d_tol.y();
+        processedActivationRadiusY = 2*d_tol.y();
     else
         processedActivationRadiusY = baseActivationRadius.y();
     
     if(robot_pose.getContBaseState().theta() < c_tol.yaw())
-        processedActivationRadiusTheta = 3*(c_tol.yaw());
+        processedActivationRadiusTheta = 2*(c_tol.yaw());
     else
         processedActivationRadiusTheta = robot_pose.getContBaseState().theta();
 
     int xDistance = abs(m_activationCenter.base_state().x() - base.x());
     int yDistance =  abs(m_activationCenter.base_state().y() - base.y());
 
-    bool within_basexy_tol = (xDistance < 10*baseActivationRadius.x() &&
-                              yDistance < 10*baseActivationRadius.y());// &&
+    bool within_basexy_tol = (xDistance < 25*baseActivationRadius.x() &&
+                              yDistance < 25*baseActivationRadius.y());// &&
                               //abs(angles::shortest_angular_distance(m_activationCenter.getContBaseState().theta(), robot_pose.getContBaseState().theta())) < max(15*c_tol.yaw(), m_activationRadius.getContBaseState().theta()));
 
     bool near_end = abs(m_end->getRobotState().base_state().x() - base.x()) < 40*d_tol.x() &&

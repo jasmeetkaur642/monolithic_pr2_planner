@@ -1073,8 +1073,8 @@ void Environment::getIslandStates(std::vector<RobotState> &islandStates, std::ve
         //ROS_INFO("(%f, %f), (%f, %f), %f", m_startGoalPairs[i].second.x(), m_startGoalPairs[i].second.y(), goalObj.x(), goalObj.y(), startGoalDistances[i]);
     }
     //Training resulted in 62 successful start-goal pairs generating islands.
-    int numClosestPairs = 6;
-    int numIslandsPerPair = 4; //Data file has 10.
+    int numClosestPairs = 4;
+    int numIslandsPerPair = 5; //Data file has 10.
     //Index-distance.
     std::vector<std::pair<int, double> > closestPairIndices;
 
