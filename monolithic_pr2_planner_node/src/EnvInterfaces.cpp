@@ -413,21 +413,21 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
     replan_params.mha_type = static_cast<mha_planner::MHAType>(req.mha_type);
 
     if (replan_params.mha_type == mha_planner::MHAType::ORIGINAL) {
-      if (EPS >= 2.0) {
-        replan_params.inflation_eps = EPS / 2.0;
+      if (req.initial_eps >= 2.0) {
+        replan_params.inflation_eps = req.initial_eps / 2.0;
         replan_params.anchor_eps = 2.0;
       } else {
-        replan_params.inflation_eps = sqrt(EPS);
-        replan_params.anchor_eps = sqrt(EPS);
+        replan_params.inflation_eps = sqrt(req.initial_eps);
+        replan_params.anchor_eps = sqrt(req.initial_eps);
       }
     } else {
-      replan_params.inflation_eps = EPS;
+      replan_params.inflation_eps = req.initial_eps;
       replan_params.anchor_eps = 1.0;
     }
 
     replan_params.use_anchor = true;
     replan_params.return_first_solution = false;
-    replan_params.final_eps = EPS;
+    replan_params.final_eps = req.initial_eps;
 
     //isPlanFound = m_mha_planner->replan(req.allocated_planning_time,
     //                                     &soln, &soln_cost);
@@ -625,7 +625,7 @@ void EnvInterfaces::packageStats(vector<string> &stat_names,
   // Take stats only for the first solution, since this is not anytime currently
   stats[0] = planner_stats[0].time;
   stats[1] = stats[0];
-  stats[2] = EPS;
+  stats[2] = -1;
   stats[3] = planner_stats[0].expands;
   stats[4] = stats[0];
   stats[5] = stats[2];
@@ -671,7 +671,7 @@ void EnvInterfaces::packageMHAStats(vector<string> &stat_names,
     // Take stats only for the first solution, since this is not anytime currently
     stats[0] = planner_stats[0].time;
     stats[1] = stats[0];
-    stats[2] = EPS;
+    stats[2] = -1; //We don't really need this value.
     stats[3] = planner_stats[0].expands;
     stats[4] = stats[0];
     stats[5] = stats[2];
