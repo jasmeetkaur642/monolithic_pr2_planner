@@ -1062,7 +1062,7 @@ void Environment::getIslandStates(std::vector<RobotState> &islandStates, std::ve
         //ROS_INFO("(%f, %f), (%f, %f), %f", m_startGoalPairs[i].second.x(), m_startGoalPairs[i].second.y(), goalObj.x(), goalObj.y(), startGoalDistances[i]);
     }
     //Training resulted in 62 successful start-goal pairs generating islands.
-    int numClosestPairs = 4;
+    int numClosestPairs = 3;
     int numIslandsPerPair = 5; //Data file has 10.
     //Index-distance.
     std::vector<std::pair<int, double> > closestPairIndices;
@@ -1090,6 +1090,8 @@ void Environment::getIslandStates(std::vector<RobotState> &islandStates, std::ve
         pairActivationCenters = m_activationCenters[closestPairIndices[i].first];
         activationCenters.insert(activationCenters.end(), pairActivationCenters.begin(), pairActivationCenters.begin() + numIslandsPerPair);
     }
+
+
     if(m_visualizeIslands) {
         PViz pviz;
         for(int j=0;j<islandStates.size();j++) {
@@ -1101,7 +1103,7 @@ void Environment::getIslandStates(std::vector<RobotState> &islandStates, std::ve
                 string ns = "wee" + string("%d", j);
 
                 pviz.visualizeRobot(rarm, larm, base, 0.1, 140, ns, 0, false);
-                visualizeCircle(std::make_pair(base[0], base[1]), 0.7, ns);
+                //visualizeCircle(std::make_pair(base[0], base[1]), 0.7, ns);
         }
     }
 }

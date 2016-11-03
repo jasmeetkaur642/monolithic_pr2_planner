@@ -35,27 +35,34 @@ bool FullBodySnapMotionPrimitive::apply(const GraphState& source_state,
     //DiscBaseState disc_base_state = m_goal->getRobotState().base_state();
     DiscBaseState baseActivationRadius = m_activationRadius.base_state();
 
-//    bool within_xyz_tol = (abs(m_goal->getObjectState().x()-obj.x()) < d_tol.x() &&
-//                           abs(m_goal->getObjectState().y()-obj.y()) < d_tol.y() &&
-//                           abs(m_goal->getObjectState().z()-obj.z()) < d_tol.z());
-//
-
-  //  bool within_basexy_tol = (abs(m_goal->getRobotState().base_state().x()-base.x()) < 3*d_tol.x() &&
-  //                            abs(m_goal->getRobotState().base_state().y()-base.y()) < 3*d_tol.y() &&
-  //                            abs(angles::shortest_angular_distance(cont_base_state.theta(), robot_pose.getContBaseState().theta())) < 15*c_tol.yaw());
-
     // XXX If a component in activationRadius is 0, it means that it is can be ignored, i.e, we can set a high threshold for it.
     // However, if the component is  non-zero, we need to respect it.
     int processedActivationRadiusX = 0, processedActivationRadiusY = 0;
     float processedActivationRadiusTheta = 0;
-    if(baseActivationRadius.x() == 0)
-        processedActivationRadiusX = 3*d_tol.x();
-    if(baseActivationRadius.y() == 0)
-        processedActivationRadiusY = 3*d_tol.y();
-    if(processedActivationRadiusTheta == 0)
-        processedActivationRadiusTheta = 3*(c_tol.yaw());
-    bool within_activation_radius = (abs(m_activationCenter.base_state().x() - base.x()) < 3*processedActivationRadiusX &&
-                                    abs(m_activationCenter.base_state().y() - base.y()) < 3*processedActivationRadiusY);//&&
+    if(baseActivationRadius.x() < d_tol.x())
+        processedActivationRadiusX = 2*d_tol.x();
+    else
+        processedActivationRadiusX = baseActivationRadius.x();
+
+    if(baseActivationRadius.y() < d_tol.y())
+        processedActivationRadiusY = 2*d_tol.y();
+    else
+        processedActivationRadiusY = baseActivationRadius.y();
+    
+    if(robot_pose.getContBaseState().theta() < c_tol.yaw())
+        processedActivationRadiusTheta = 2*(c_tol.yaw());
+    else
+        processedActivationRadiusTheta = robot_pose.getContBaseState().theta();
+
+    setActivationRadiusInflation(12);
+
+    int xDistance = abs(m_activationCenter.base_state().x() - base.x());
+    int yDistance =  abs(m_activationCenter.base_state().y() - base.y());
+    //ROS_ERROR("Distance to island= (%d, %d) and radius = (%d, %d)", xDistance, yDistance, m_inflationFactor*processedActivationRadiusX, m_inflationFactor*processedActivationRadiusY);
+
+    bool within_activation_radius = (xDistance <
+            m_inflationFactor*processedActivationRadiusX && yDistance <
+            m_inflationFactor*processedActivationRadiusY);//&&
                                     //abs(angles::shortest_angular_distance(m_activationCenter.getContBaseState().theta(), robot_pose.getContBaseState().theta())) < 5*processedActivationRadiusTheta);
     /*
     bool temp;

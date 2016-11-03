@@ -11,6 +11,7 @@ namespace monolithic_pr2_planner {
     public:
       // Caches snap feasibility bw graph states.
       static boost::shared_ptr<std::set<std::pair<int, int> > > m_infeasibleSnaps;
+      int m_inflationFactor;
 
       FullBodySnapMotionPrimitive():m_tolerances(4,0)
       {
@@ -35,6 +36,7 @@ namespace monolithic_pr2_planner {
          m_tolerances[Tolerances::PITCH] =  pitch_tol;
          m_tolerances[Tolerances::YAW] =  yaw_tol;
       }
+      void setActivationRadiusInflation(int inflation) {m_inflationFactor = inflation;}
       GoalStatePtr m_goal;
       GoalStatePtr m_end;
       RobotState m_activationCenter;

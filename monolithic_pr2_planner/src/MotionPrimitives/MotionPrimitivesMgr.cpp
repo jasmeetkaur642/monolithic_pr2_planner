@@ -87,7 +87,8 @@ bool MotionPrimitivesMgr::loadMPrims(const MotionPrimitiveParams& params){
             ContBaseState islandBase, activationBase;
             islandBase = m_islandStates[i].getContBaseState();
             activationBase = m_activationCenters[i].getContBaseState();
-            ContBaseState baseActivationRadius(abs(islandBase.x() - activationBase.x()), abs(islandBase.y() - activationBase.y()), abs(islandBase.z() - activationBase.z()), abs(islandBase.theta() - activationBase.theta()));
+            //ROS_ERROR("Base(island, activation): (%f, %f)", islandBase.x(), activationBase.x());
+            ContBaseState baseActivationRadius(abs(islandBase.x() - activationBase.x()), abs(islandBase.y() - activationBase.y()), abs(islandBase.z() - activationBase.z()), abs(angles::shortest_angular_distance(islandBase.theta(), activationBase.theta())));
 
             std::vector<double> armActivationRadius, islandArm, activationCenterArm;
             m_islandStates[i].right_arm().getAngles(&islandArm);
@@ -100,6 +101,7 @@ bool MotionPrimitivesMgr::loadMPrims(const MotionPrimitiveParams& params){
             std::vector<double> l_arm = {0.038946, 1.214670, 1.396356, -1.197227, -4.616317, -0.988727, 1.175568};
 
             RobotState activationRadius(baseActivationRadius, RightContArmState(armActivationRadius), LeftContArmState(l_arm));
+            DiscBaseState db = activationRadius.base_state();
             temp->m_activationRadius = activationRadius;
             fullbody_snap_mprim.push_back(temp);
             full_body_snap_mprims.push_back(temp);
