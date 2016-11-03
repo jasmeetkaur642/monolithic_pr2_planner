@@ -102,6 +102,7 @@ namespace monolithic_pr2_planner {
             //Read island states and activation centers corresponding to each
             //start-goal pair from file.
             void readIslands();
+            int countMprimSkipped;
 
             std::map<Edge, MotionPrimitivePtr> m_edges;
 

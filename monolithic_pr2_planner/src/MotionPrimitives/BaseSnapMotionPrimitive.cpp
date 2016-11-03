@@ -46,6 +46,7 @@ bool BaseSnapMotionPrimitive::apply(const GraphState& source_state,
     //ROS_ERROR("%f", m_end->getRobotState().getContBaseState().x());
     bool near_end = abs(m_end->getRobotState().base_state().x() - base.x()) < 40*d_tol.x() &&
                               abs(m_end->getRobotState().base_state().y() - base.y()) < 40*d_tol.y();
+    near_end = false;
 
     bool within_arm_tol = true;
     //int i =0;

@@ -413,21 +413,32 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
         // m_cspace_mgr->visualizeCollisionModel(expansion_pose);
         usleep(5000);
     }
+    //srand(time(NULL));
+    //std::vector<int> mPrimID(7);
+    //for(int m=0;m<5;m++){
+    //    mPrimID.push_back( rand() % m_mprims.getMotionPrims().size());
+    //}
     for (auto mprim : m_mprims.getMotionPrims()) {
         ROS_DEBUG_NAMED(SEARCH_LOG, "Applying motion:");
         // mprim->printEndCoord();
         GraphStatePtr successor;
         TransitionData t_data;
 
-        if(((mprim->getID() == MPrim_Types::BASE_SNAP ) && q_id != 0) ||
-                ((mprim->getID() == MPrim_Types::ARM_SNAP) ||  (mprim->getID() ==
-                  MPrim_Types::FULLBODY_SNAP) && (q_id != 1 || q_id != 2))){
-            continue;
-        }
+        //if(((mprim->getID() == MPrim_Types::BASE_SNAP ) && q_id != 0) ||
+        //        ((mprim->getID() == MPrim_Types::ARM_SNAP) ||  (mprim->getID() ==
+        //          MPrim_Types::FULLBODY_SNAP) && (q_id != 1 || q_id != 2))){
+        //    continue;
+        //}
         //if((mprim->getID() == MPrim_Types::BASE_SNAP || mprim->getID() ==
         //            MPrim_Types::ARM_SNAP || mprim->getID() ==
         //            MPrim_Types::FULLBODY_SNAP) && q_id != 0)
         //    continue;
+
+
+        //if(std::find(mPrimID.begin(), mPrimID.end(), mprim->getID()) != mPrimID.end()) {
+        //    countMprimSkipped ++;
+        //    continue;
+        //}
 
         if (!mprim->apply(*source_state, successor, t_data)) {
             ROS_DEBUG_NAMED(MPRIM_LOG, "couldn't apply mprim");
@@ -436,7 +447,7 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
 
         if (m_cspace_mgr->isValidSuccessor(*successor,t_data) &&
             m_cspace_mgr->isValidTransitionStates(t_data)){
-                if(mprim->getID() == MPrim_Types::ARM_SNAP) {
+                if(mprim->motion_type() == MPrim_Types::ARM_SNAP) {
                     ROS_ERROR("Arm SNAP succeeded");
                     successor->robot_pose().visualize(140);
                     }
@@ -750,6 +761,7 @@ void Environment::configureQuerySpecificParams(SearchRequestPtr search_request){
     ROS_DEBUG_NAMED(SEARCH_LOG, "Setting planning mode to : %d",
         search_request->m_params->planning_mode);
     RobotState::setPlanningMode(search_request->m_params->planning_mode);
+    countMprimSkipped = 0;
 }
 
 void Environment::configureMotionPrimitives(SearchRequestPtr search_request) {

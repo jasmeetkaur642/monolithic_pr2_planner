@@ -458,6 +458,7 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
       ROS_INFO("Running trajectory!");
       //runTrajectory(states); Commented out to compile without driver.
     }
+    ROS_ERROR("Number of mprims skipped = %d", m_env->countMprimSkipped);
 
     return true;
   }
