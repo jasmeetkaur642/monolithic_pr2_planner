@@ -419,22 +419,21 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
     //    mPrimID.push_back( rand() % m_mprims.getMotionPrims().size());
     //}
     for (auto mprim : m_mprims.getMotionPrims()) {
+        //ROS_ERROR("mprid id: %d, motion type %d", mprim->getID(), mprim->motion_type());
         ROS_DEBUG_NAMED(SEARCH_LOG, "Applying motion:");
         // mprim->printEndCoord();
         GraphStatePtr successor;
         TransitionData t_data;
 
-        //if(((mprim->getID() == MPrim_Types::BASE_SNAP ) && q_id != 0) ||
-        //        ((mprim->getID() == MPrim_Types::ARM_SNAP) ||  (mprim->getID() ==
-        //          MPrim_Types::FULLBODY_SNAP) && (q_id != 1 || q_id != 2))){
+        //if((mprim->getID() == 5 || mprim->getID() == 6 || mprim->getID() == 7) && q_id > 3) {
         //    continue;
         //}
-        //if((mprim->getID() == MPrim_Types::BASE_SNAP || mprim->getID() ==
-        //            MPrim_Types::ARM_SNAP || mprim->getID() ==
-        //            MPrim_Types::FULLBODY_SNAP) && q_id != 0)
-        //    continue;
 
-
+        //if((mprim->motion_type() == MPrim_Types::BASE_SNAP) && q_id > 3)
+        //        continue;
+//        if((mprim->motion_type() == MPrim_Types::FULLBODY_SNAP) && (q_id > 3 && q_id%4 != 0))
+//            continue;
+//
         //if(std::find(mPrimID.begin(), mPrimID.end(), mprim->getID()) != mPrimID.end()) {
         //    countMprimSkipped ++;
         //    continue;
@@ -444,13 +443,17 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
             ROS_DEBUG_NAMED(MPRIM_LOG, "couldn't apply mprim");
             continue;
         }
+        if(mprim->motion_type() == MPrim_Types::BASE_SNAP)
+            countSnapMprimsApplied[0] ++;
+        if(mprim->motion_type() == MPrim_Types::FULLBODY_SNAP)
+            countSnapMprimsApplied[1] ++;
 
         if (m_cspace_mgr->isValidSuccessor(*successor,t_data) &&
             m_cspace_mgr->isValidTransitionStates(t_data)){
-                if(mprim->motion_type() == MPrim_Types::ARM_SNAP) {
-                    ROS_ERROR("Arm SNAP succeeded");
-                    successor->robot_pose().visualize(140);
-                    }
+
+            if(mprim->motion_type() == MPrim_Types::ARM_SNAP) {
+                ROS_ERROR("Arm SNAP succeeded");
+            }
             ROS_DEBUG_NAMED(SEARCH_LOG, "Source state is:");
             source_state->printToDebug(SEARCH_LOG);
             m_hash_mgr->save(successor);
@@ -471,8 +474,12 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
             }
             costs->push_back(mprim->cost());
             if(t_data.motion_type() == MPrim_Types::FULLBODY_SNAP) {
-                ROS_ERROR("FBS motion succeeded");
-                successor->robot_pose().visualize(0);
+                countSnapMprimsSucceeded[1]++;
+
+            }
+            if(t_data.motion_type() == MPrim_Types::BASE_SNAP) {
+                ROS_ERROR("Base snap motion succeeded");
+                countSnapMprimsSucceeded[0]++;
             }
             ROS_DEBUG_NAMED(SEARCH_LOG, "motion succeeded with cost %d", mprim->cost());
         } else {
@@ -761,7 +768,11 @@ void Environment::configureQuerySpecificParams(SearchRequestPtr search_request){
     ROS_DEBUG_NAMED(SEARCH_LOG, "Setting planning mode to : %d",
         search_request->m_params->planning_mode);
     RobotState::setPlanningMode(search_request->m_params->planning_mode);
-    countMprimSkipped = 0;
+
+    countSnapMprimsApplied.clear();
+    countSnapMprimsSucceeded.clear();
+    countSnapMprimsApplied.resize(3, 0);
+    countSnapMprimsSucceeded.resize(3, 0);
 }
 
 void Environment::configureMotionPrimitives(SearchRequestPtr search_request) {
@@ -1062,8 +1073,8 @@ void Environment::getIslandStates(std::vector<RobotState> &islandStates, std::ve
         //ROS_INFO("(%f, %f), (%f, %f), %f", m_startGoalPairs[i].second.x(), m_startGoalPairs[i].second.y(), goalObj.x(), goalObj.y(), startGoalDistances[i]);
     }
     //Training resulted in 62 successful start-goal pairs generating islands.
-    int numClosestPairs = 3;
-    int numIslandsPerPair = 5; //Data file has 10.
+    int numClosestPairs = 6;
+    int numIslandsPerPair = 4; //Data file has 10.
     //Index-distance.
     std::vector<std::pair<int, double> > closestPairIndices;
 

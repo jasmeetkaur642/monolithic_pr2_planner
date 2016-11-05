@@ -17,7 +17,7 @@ int main(int argc, char** argv){
   ROS_ERROR("\n\nwait for node to initialize!\n");
   sleep(5); //WHAT A HACK!
   ROS_ERROR("\n\nwait for node to initialize!\n");
-  sleep(5); //WHAT A HACK!
+  sleep(50); //WHAT A HACK!
   ros::service::waitForService("/sbpl_planning/generate_experiments_file",10);
   ros::ServiceClient genExp = ros::NodeHandle().serviceClient<std_srvs::Empty>("/sbpl_planning/generate_experiments_file", true);
   sleep(1);

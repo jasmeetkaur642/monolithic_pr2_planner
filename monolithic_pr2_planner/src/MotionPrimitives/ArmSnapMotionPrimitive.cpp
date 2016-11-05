@@ -79,7 +79,6 @@ bool ArmSnapMotionPrimitive::apply(const GraphState& source_state,
             c++;
         }
       if(ik_success) {
-        ROS_INFO("Arm snap ik succeeded");
         //RobotState rs(new_robot_pose_ptr->getContBaseState(), new_robot_pose_ptr->right_arm(), new_robot_pose_ptr->left_arm());
         RobotState rs(source_pose.getContBaseState(), new_robot_pose_ptr->right_arm(), new_robot_pose_ptr->left_arm());
         //RobotState rs(source_pose.getContBaseState(),goal_obj_wrt_body);
@@ -93,7 +92,6 @@ bool ArmSnapMotionPrimitive::apply(const GraphState& source_state,
         return computeIntermSteps(source_state, *successor, t_data);
       }
       else {
-          ROS_INFO("IK failed");
           return false;
       }
     

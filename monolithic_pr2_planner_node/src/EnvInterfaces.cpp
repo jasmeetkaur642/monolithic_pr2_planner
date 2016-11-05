@@ -110,7 +110,7 @@ bool EnvInterfaces::GenerateExperimentFile(std_srvs::Empty::Request &req,
   ROS_INFO("generating trials!");
   vector<pair<RobotState, RobotState>> start_goal_pairs;
   RobotState::setPlanningMode(PlanningModes::RIGHT_ARM_MOBILE);
-  int number_of_trials = 10;
+  int number_of_trials = 300;
   m_generator->initializeRegions();//reads from ros params set by stlToOctomap
   m_generator->generateUniformPairs(number_of_trials, start_goal_pairs);
 
@@ -458,7 +458,12 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
       ROS_INFO("Running trajectory!");
       //runTrajectory(states); Commented out to compile without driver.
     }
-    ROS_ERROR("Number of mprims skipped = %d", m_env->countMprimSkipped);
+
+    fstream debug_file;
+    debug_file.open("/home/aries/ROS/catkin_ws/src/monolithic_pr2_planner/monolithic_pr2_planner_node/snapMprimStats.txt", ios::out | ios::app);
+    debug_file<<"Base   "<<m_env->countSnapMprimsApplied[0]<<"  ,  "<<m_env->countSnapMprimsSucceeded[0]<<"\n";
+    debug_file<<"FBS    "<<m_env->countSnapMprimsApplied[1]<<"  ,  "<<m_env->countSnapMprimsSucceeded[1]<<"\n\n";
+    debug_file.close();
 
     return true;
   }
