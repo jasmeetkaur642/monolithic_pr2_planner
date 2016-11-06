@@ -389,7 +389,7 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
     assert(sourceStateID != GOAL_STATE);
 
     //Code to calculate node expansion time.
-    m_state_time_map.emplace(sourceStateID, double(clock()) / CLOCKS_PER_SEC);
+    m_state_time_map.emplace(sourceStateID, std::make_pair(q_id, double(clock()) / CLOCKS_PER_SEC));
 
     m_heuristic_state_time_map[q_id].push_back(std::make_pair(sourceStateID, (double)(clock()) / CLOCKS_PER_SEC));
 
@@ -861,7 +861,7 @@ void Environment::save_state_time(vector<int> soln_path) {
             file<<state_id;
             for(int j=0;j<right_arm.size();j++)
                 file<<"\t"<<right_arm[j];
-            file<<"\t"<<state->base_theta()<<"\t"<<state->base_x()<<"\t"<<state->base_y()<<"\t"<<state->base_z()<<"\t"<<m_state_time_map[state_id] - m_state_time_map[soln_path[i-1]]<<"\n";
+            file<<"\t"<<state->base_theta()<<"\t"<<state->base_x()<<"\t"<<state->base_y()<<"\t"<<state->base_z()<<"\t"<<m_state_time_map[state_id].second - m_state_time_map[soln_path[i-1]].second<<"\t"<<m_state_time_map[state_id].first<<"\n";
         }
     }
     file.close();

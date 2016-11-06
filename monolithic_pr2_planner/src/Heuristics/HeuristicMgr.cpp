@@ -601,7 +601,7 @@ void HeuristicMgr::initializeMHAHeuristics(const int cost_multiplier){
         ss << "base_with_rot_" << num_base_heur;
 
         // Compute the desired orientation.
-        double orientation = (std::atan2(//normalize_angle_positive(std::atan2(
+        double orientation = normalize_angle_positive(std::atan2(
             static_cast<double>(m_goal.getObjectState().y() -
                 selected_points[num_base_heur].second),
             static_cast<double>(m_goal.getObjectState().x() -

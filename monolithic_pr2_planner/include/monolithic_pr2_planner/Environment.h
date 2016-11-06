@@ -110,7 +110,7 @@ namespace monolithic_pr2_planner {
             //Caches whether snapping is feasible from a graphstate to a snap island.
             std::set<std::pair<int, int> > m_infeasibleSnaps;
 
-            std::unordered_map<int, double> m_state_time_map;
+            std::unordered_map<int, std::pair<int, double> > m_state_time_map;
             std::vector<std::vector<std::pair<int, double> > > m_heuristic_state_time_map;
 
             // Contains the start goal pairs that have been run to generate
