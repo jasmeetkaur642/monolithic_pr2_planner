@@ -429,8 +429,10 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
         //    continue;
         //}
 
-        //if((mprim->motion_type() == MPrim_Types::BASE_SNAP) && q_id > 3)
-        //        continue;
+        if((mprim->motion_type() == MPrim_Types::BASE_SNAP) && q_id != 0)
+            continue;
+        if(mprim->motion_type() == MPrim_Types::FULLBODY_SNAP && q_id<4)
+            continue;
 //        if((mprim->motion_type() == MPrim_Types::FULLBODY_SNAP) && (q_id > 3 && q_id%4 != 0))
 //            continue;
 //
@@ -452,7 +454,10 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
             m_cspace_mgr->isValidTransitionStates(t_data)){
 
             if(mprim->motion_type() == MPrim_Types::ARM_SNAP) {
-                ROS_ERROR("Arm SNAP succeeded");
+                ROS_ERROR("Queue: %d, Arm SNAP succeeded", q_id);
+            }
+            if(mprim->motion_type() == MPrim_Types::FULLBODY_SNAP) {
+                ROS_ERROR("Queue: %d, FBS succeeded", q_id);
             }
             ROS_DEBUG_NAMED(SEARCH_LOG, "Source state is:");
             source_state->printToDebug(SEARCH_LOG);
@@ -478,17 +483,17 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
 
             }
             if(t_data.motion_type() == MPrim_Types::BASE_SNAP) {
-                ROS_ERROR("Base snap motion succeeded");
+                ROS_ERROR("Queue: %d; Base snap motion succeeded", q_id);
                 countSnapMprimsSucceeded[0]++;
             }
             ROS_DEBUG_NAMED(SEARCH_LOG, "motion succeeded with cost %d", mprim->cost());
         } else {
-            if(t_data.motion_type() == MPrim_Types::FULLBODY_SNAP) {
-                ROS_ERROR("FBS failed collision checking");
-            }
-            if(t_data.motion_type() == MPrim_Types::ARM_SNAP) {
-                ROS_ERROR("Arm snap failed collision checking");
-            }
+            //if(t_data.motion_type() == MPrim_Types::FULLBODY_SNAP) {
+            //    ROS_ERROR("FBS failed collision checking");
+            //}
+            //if(t_data.motion_type() == MPrim_Types::ARM_SNAP) {
+            //    ROS_ERROR("Arm snap failed collision checking");
+            //}
             ROS_DEBUG_NAMED(SEARCH_LOG, "successor failed collision checking");
         }
     }
@@ -839,17 +844,26 @@ void Environment::save_state_time(vector<int> soln_path) {
     ofstream file;
     file.open("state_time.csv", std::fstream::app);
 
-    for(int i=0;i<soln_path.size() - 1;i++) {
+    for(int i=0;i<soln_path.size();i++) {
         int state_id = soln_path[i];
         GraphStatePtr state = m_hash_mgr->getGraphState(state_id);
+        std::vector<double> right_arm;
+        state->robot_pose().right_arm().getAngles(&right_arm);
 
         if(i==0) {
-            file<<state_id<<"\t"<<state->obj_x()<<"\t"<<state->obj_y()<<"\t"<<state->obj_z()<<"\t"<<state->obj_roll()<<"\t"<<state->obj_pitch()<<"\t"<<state->obj_yaw()<<"\t"<< state->base_theta()<<"\t"<<state->base_x()<<"\t"<<state->base_y()<<"\t"<<0<<"\n";
+            file<<state_id;
+            for(int j=0;j<right_arm.size();j++)
+                file<<"\t"<<right_arm[j];
+            file<<"\t"<<state->base_theta()<<"\t"<<state->base_x()<<"\t"<<state->base_y()<<"\t"<<state->base_z()<<"\t"<<0;
+            file<<"\n";
         }
-        else
-            file<<state_id<<"\t"<<state->obj_x()<<"\t"<<state->obj_y()<<"\t"<<state->obj_z()<<"\t"<<state->obj_roll()<<"\t"<<state->obj_pitch()<<"\t"<<state->obj_yaw()<<"\t"<< state->base_theta()<<"\t"<<state->base_x()<<"\t"<<state->base_y()<<"\t"<<m_state_time_map[state_id] - m_state_time_map[soln_path[i-1]]<<"\n";
+        else{
+            file<<state_id;
+            for(int j=0;j<right_arm.size();j++)
+                file<<"\t"<<right_arm[j];
+            file<<"\t"<<state->base_theta()<<"\t"<<state->base_x()<<"\t"<<state->base_y()<<"\t"<<state->base_z()<<"\t"<<m_state_time_map[state_id] - m_state_time_map[soln_path[i-1]]<<"\n";
+        }
     }
-
     file.close();
 
     ROS_INFO("File saved");
@@ -1073,8 +1087,8 @@ void Environment::getIslandStates(std::vector<RobotState> &islandStates, std::ve
         //ROS_INFO("(%f, %f), (%f, %f), %f", m_startGoalPairs[i].second.x(), m_startGoalPairs[i].second.y(), goalObj.x(), goalObj.y(), startGoalDistances[i]);
     }
     //Training resulted in 62 successful start-goal pairs generating islands.
-    int numClosestPairs = 4;
-    int numIslandsPerPair = 5; //Data file has 10.
+    int numClosestPairs = 1;
+    int numIslandsPerPair = 10; //Data file has 10.
     //Index-distance.
     std::vector<std::pair<int, double> > closestPairIndices;
 

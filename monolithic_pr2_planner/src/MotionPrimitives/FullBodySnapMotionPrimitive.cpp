@@ -54,7 +54,7 @@ bool FullBodySnapMotionPrimitive::apply(const GraphState& source_state,
     else
         processedActivationRadiusTheta = robot_pose.getContBaseState().theta();
 
-    setActivationRadiusInflation(12);
+    setActivationRadiusInflation(2);
 
     int xDistance = abs(m_activationCenter.base_state().x() - base.x());
     int yDistance =  abs(m_activationCenter.base_state().y() - base.y());
@@ -86,8 +86,6 @@ bool FullBodySnapMotionPrimitive::apply(const GraphState& source_state,
     bool near_end = false;
     if(within_activation_radius && !near_end)
     { 
-     ROS_INFO("Trying FBS");
-
       RobotState rs = m_goal->getRobotState();
       successor.reset(new GraphState(rs));
       //sleep(2);
