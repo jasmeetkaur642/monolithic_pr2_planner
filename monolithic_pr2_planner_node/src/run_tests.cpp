@@ -134,7 +134,7 @@ int main(int argc, char** argv){
   req.larm_object.pose.orientation.z = 0;
   req.larm_object.pose.orientation.w = 1;
 
-  req.xyz_tolerance = .05;
+  req.xyz_tolerance = .04;
   req.roll_tolerance = .1;
   req.pitch_tolerance = .1;
   req.yaw_tolerance = .1;

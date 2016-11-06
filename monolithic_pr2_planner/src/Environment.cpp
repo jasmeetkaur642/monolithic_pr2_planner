@@ -429,10 +429,10 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
         //    continue;
         //}
 
-        if((mprim->motion_type() == MPrim_Types::BASE_SNAP) && q_id != 0)
-            continue;
-        if(mprim->motion_type() == MPrim_Types::FULLBODY_SNAP && q_id<4)
-            continue;
+        //if((mprim->motion_type() == MPrim_Types::BASE_SNAP) && q_id != 0)
+        //    continue;
+        //if(mprim->motion_type() == MPrim_Types::FULLBODY_SNAP && q_id<4)
+        //    continue;
 //        if((mprim->motion_type() == MPrim_Types::FULLBODY_SNAP) && (q_id > 3 && q_id%4 != 0))
 //            continue;
 //
@@ -445,20 +445,20 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
             ROS_DEBUG_NAMED(MPRIM_LOG, "couldn't apply mprim");
             continue;
         }
-        if(mprim->motion_type() == MPrim_Types::BASE_SNAP)
-            countSnapMprimsApplied[0] ++;
-        if(mprim->motion_type() == MPrim_Types::FULLBODY_SNAP)
-            countSnapMprimsApplied[1] ++;
+        //if(mprim->motion_type() == MPrim_Types::BASE_SNAP)
+        //    countSnapMprimsApplied[0] ++;
+        //if(mprim->motion_type() == MPrim_Types::FULLBODY_SNAP)
+        //    countSnapMprimsApplied[1] ++;
 
         if (m_cspace_mgr->isValidSuccessor(*successor,t_data) &&
             m_cspace_mgr->isValidTransitionStates(t_data)){
 
-            if(mprim->motion_type() == MPrim_Types::ARM_SNAP) {
-                ROS_ERROR("Queue: %d, Arm SNAP succeeded", q_id);
-            }
-            if(mprim->motion_type() == MPrim_Types::FULLBODY_SNAP) {
-                ROS_ERROR("Queue: %d, FBS succeeded", q_id);
-            }
+        //    if(mprim->motion_type() == MPrim_Types::ARM_SNAP) {
+        //        ROS_ERROR("Queue: %d, Arm SNAP succeeded", q_id);
+        //    }
+        //    if(mprim->motion_type() == MPrim_Types::FULLBODY_SNAP) {
+        //        ROS_ERROR("Queue: %d, FBS succeeded", q_id);
+        //    }
             ROS_DEBUG_NAMED(SEARCH_LOG, "Source state is:");
             source_state->printToDebug(SEARCH_LOG);
             m_hash_mgr->save(successor);
@@ -478,14 +478,14 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
                 succIDs->push_back(successor->id());
             }
             costs->push_back(mprim->cost());
-            if(t_data.motion_type() == MPrim_Types::FULLBODY_SNAP) {
-                countSnapMprimsSucceeded[1]++;
+        //    if(t_data.motion_type() == MPrim_Types::FULLBODY_SNAP) {
+        //        countSnapMprimsSucceeded[1]++;
 
-            }
-            if(t_data.motion_type() == MPrim_Types::BASE_SNAP) {
-                ROS_ERROR("Queue: %d; Base snap motion succeeded", q_id);
-                countSnapMprimsSucceeded[0]++;
-            }
+        //    }
+        //    if(t_data.motion_type() == MPrim_Types::BASE_SNAP) {
+        //        ROS_ERROR("Queue: %d; Base snap motion succeeded", q_id);
+        //        countSnapMprimsSucceeded[0]++;
+        //    }
             ROS_DEBUG_NAMED(SEARCH_LOG, "motion succeeded with cost %d", mprim->cost());
         } else {
             //if(t_data.motion_type() == MPrim_Types::FULLBODY_SNAP) {
@@ -1074,7 +1074,7 @@ void visualizeCircle(std::pair<double, double> center, double radius, std::strin
 void Environment::getIslandStates(std::vector<RobotState> &islandStates, std::vector<RobotState> &activationCenters) {
     ContObjectState startObj, goalObj;
     startObj = m_start.getObjectStateRelMap();
-    goalObj = m_goal->getRobotState().getObjectStateRelMap();
+    goalObj = m_goal->getObjectState();
 
     std::vector<double> startGoalDistances;
 

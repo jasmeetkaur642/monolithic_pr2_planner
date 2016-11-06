@@ -14,7 +14,7 @@ class BaseSnapMotionPrimitive : public MotionPrimitive {
     //Quickly hardcoded. Should be read from SearchReqParam
 
     }
-    BaseSnapMotionPrimitive(RobotState& goal): m_goal_robot(goal), m_tolerances(4,0) {}
+    BaseSnapMotionPrimitive(RobotState& goal): m_tolerances(4,0) {m_goal = boost::make_shared<RobotState>(goal);}
     virtual bool apply(const GraphState& graph_state,
         GraphStatePtr& successor,
         TransitionData& t_data);
@@ -28,7 +28,7 @@ class BaseSnapMotionPrimitive : public MotionPrimitive {
                         TransitionData& t_data);
     // Update the goal and tolerances.
     // Called primarily by the MotionPrimitiveMgr.
-    void getUpdatedGoalandTolerances(const GoalStatePtr& goal, const  double xyz_tol, const  double roll_tol, const double pitch_tol, const double yaw_tol)
+    void getUpdatedGoalandTolerances(const RobotPosePtr& goal, const  double xyz_tol, const  double roll_tol, const double pitch_tol, const double yaw_tol)
     {
         m_goal = goal;
         m_tolerances[Tolerances::XYZ] =  xyz_tol;
@@ -38,10 +38,9 @@ class BaseSnapMotionPrimitive : public MotionPrimitive {
     }
     void updateParams(MotionPrimitiveParams params) {m_params = params;}
 
-    GoalStatePtr m_goal;
+    RobotPosePtr m_goal;
     GoalStatePtr m_end; // m_end is actually the of search. We want to deactivate base snap near goal.
     MotionPrimitiveParams m_params;
-    RobotState m_goal_robot;
     std::vector<double> m_tolerances;
     std::vector<ContBaseState> m_interp_base_steps;
 

@@ -18,7 +18,7 @@ namespace monolithic_pr2_planner {
        //Quickly hardcoded. Should be read from SearchReqParam
 
      }
-      FullBodySnapMotionPrimitive(RobotState& goal): m_goal_robot(goal), m_tolerances(4, 0) {}
+      FullBodySnapMotionPrimitive(RobotState& goal): m_tolerances(4, 0) {m_goal = boost::make_shared<RobotState>(goal);}
       virtual bool apply(const GraphState& graph_state, 
           GraphStatePtr& successor,
           TransitionData& t_data);
@@ -28,7 +28,7 @@ namespace monolithic_pr2_planner {
       bool computeIntermSteps(const GraphState& source_state, 
                         const GraphState& successor, 
                         TransitionData& t_data);
-      void getUpdatedGoalandTolerances(GoalStatePtr& goal,double xyz_tol, double roll_tol, double pitch_tol, double yaw_tol)
+      void getUpdatedGoalandTolerances(RobotPosePtr& goal,double xyz_tol, double roll_tol, double pitch_tol, double yaw_tol)
       {      
          m_goal = goal;
          m_tolerances[Tolerances::XYZ] =  xyz_tol;
@@ -37,7 +37,7 @@ namespace monolithic_pr2_planner {
          m_tolerances[Tolerances::YAW] =  yaw_tol;
       }
       void setActivationRadiusInflation(int inflation) {m_inflationFactor = inflation;}
-      GoalStatePtr m_goal;
+      RobotPosePtr m_goal;
       GoalStatePtr m_end;
       RobotState m_activationCenter;
       RobotState m_goal_robot;

@@ -44,7 +44,7 @@ namespace monolithic_pr2_planner {
             DiscObjectState getObjectStateRelBody() const;
 
             //Returns the frame of a robot state relative to the torsolilft.
-            KDL::Frame getTargetObjectFrameRelBody(RobotState targetState);
+            KDL::Frame getTargetObjectFrameRelBody(DiscObjectState targetState);
 
             static bool computeRobotPose(const DiscObjectState& disc_obj_state,
                                          const RobotState& robot_pose,

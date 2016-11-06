@@ -65,9 +65,7 @@ bool BaseSnapMotionPrimitive::apply(const GraphState& source_state,
                               yDistance < 15*baseActivationRadius.y());// &&
                               //abs(angles::shortest_angular_distance(m_activationCenter.getContBaseState().theta(), robot_pose.getContBaseState().theta())) < max(15*c_tol.yaw(), m_activationRadius.getContBaseState().theta()));
 
-    bool near_end = abs(m_end->getRobotState().base_state().x() - base.x()) < 40*d_tol.x() &&
-                              abs(m_end->getRobotState().base_state().y() - base.y()) < 40*d_tol.y();
-    near_end = false;
+    bool near_end = false;
 
     bool within_arm_tol = true;
     //int i =0;
@@ -82,7 +80,7 @@ bool BaseSnapMotionPrimitive::apply(const GraphState& source_state,
     if(within_basexy_tol && !near_end && within_arm_tol)
     {
       //ROS_INFO("Trying base snap");
-      ContBaseState goalBase(m_goal->getRobotState().getContBaseState().x(), m_goal->getRobotState().getContBaseState().y(), base.z(), base.theta());
+      ContBaseState goalBase(m_goal->getContBaseState().x(), m_goal->getContBaseState().y(), base.z(), base.theta());
       RobotState rs(goalBase, source_state.robot_pose().right_arm(), source_state.robot_pose().left_arm());
       successor.reset(new GraphState(rs));
 

@@ -22,13 +22,10 @@ bool ArmSnapMotionPrimitive::apply(const GraphState& source_state,
     DiscBaseState base = robot_pose.base_state();
     unsigned int r_free_angle = robot_pose.right_free_angle();
 
-    ContBaseState cont_goal_base_state = m_goal->getRobotState().getContBaseState();
-
     bool within_xyz_tol = (abs(m_goal->getObjectState().x()-base.x()) < 25*d_tol.x() &&
                            abs(m_goal->getObjectState().y()-base.y()) < 25*d_tol.y() &&
                            abs(m_goal->getObjectState().z()-base.z()) < 25*d_tol.z());
 
-    bool within_yaw_tol = abs(angles::shortest_angular_distance(cont_goal_base_state.theta(), robot_pose.getContBaseState().theta())) < 15*c_tol.yaw();
 
    // bool within_basexy_tol = (abs(m_goal->getRobotState().base_state().x()-base.x()) < 25*d_tol.x() &&
    //                           abs(m_goal->getRobotState().base_state().y()-base.y()) < 25*d_tol.y());
@@ -40,18 +37,17 @@ bool ArmSnapMotionPrimitive::apply(const GraphState& source_state,
 
     if(within_xyz_tol) {
 
-        F_torsolift_goal = source_pose.getTargetObjectFrameRelBody(m_goal->getRobotState());
+        F_torsolift_goal = source_pose.getTargetObjectFrameRelBody(m_goal->getObjectState());
         double goal_wrt_body_x = F_torsolift_goal.p.x(); //Direction of the arm.
         double goal_wrt_body_y = F_torsolift_goal.p.y();
 
         if(goal_wrt_body_x > 0.1 && (goal_wrt_body_y < 15*c_tol.y())) { //tol = 0.035
-        goal_facing_arm = true;
+            goal_facing_arm = true;
         }
     }
 
 
-    within_yaw_tol = true;
-    if(within_xyz_tol && within_yaw_tol && goal_facing_arm)// && ik_success)
+    if(within_xyz_tol && goal_facing_arm)
     { 
       //ROS_INFO("Yaw: %f", cont_base_state.theta());
       //ROS_ERROR("Robot base frame");

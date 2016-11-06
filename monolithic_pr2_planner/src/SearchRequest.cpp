@@ -39,11 +39,7 @@ bool SearchRequest::isValid(CSpaceMgrPtr& cspace){
 }
 
 GoalStatePtr SearchRequest::createGoalState(){
-    RobotState robot_goal_pose(m_params->base_goal,
-                       m_params->right_arm_goal,
-                       m_params->left_arm_goal);
-
-    return boost::make_shared<GoalState>(robot_goal_pose,
+    return boost::make_shared<GoalState>(m_params->obj_goal,
                                          m_params->xyz_tolerance,
                                          m_params->roll_tolerance,
                                          m_params->pitch_tolerance,

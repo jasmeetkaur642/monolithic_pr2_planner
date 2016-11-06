@@ -86,7 +86,7 @@ bool FullBodySnapMotionPrimitive::apply(const GraphState& source_state,
     bool near_end = false;
     if(within_activation_radius && !near_end)
     { 
-      RobotState rs = m_goal->getRobotState();
+      RobotState rs = *m_goal;
       successor.reset(new GraphState(rs));
       //sleep(2);
 

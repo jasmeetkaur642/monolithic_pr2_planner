@@ -164,20 +164,15 @@ void MotionPrimitivesMgr::getUpdatedGoalandTolerances(const GoalStatePtr& goal,
         const double yaw_tol) {
     m_goal = goal;
 
-    if(baseSnap) {
-        GoalStatePtr islandState;
-        for(int i=0;i < m_islandStates.size();i++) {
-            islandState = boost::make_shared<GoalState>(m_islandStates[i], xyz_tol, roll_tol, pitch_tol, yaw_tol);
+    RobotPosePtr islandState;
+    for(int i=0;i < m_islandStates.size();i++) {
+        islandState = boost::make_shared<RobotState>(m_islandStates[i]);
+        if(baseSnap) {
             basesnap_mprim[i]->getUpdatedGoalandTolerances(islandState, xyz_tol, roll_tol, pitch_tol, yaw_tol);
             basesnap_mprim[i]->m_end = goal;
             basesnap_mprim[i]->m_activationCenter = m_activationCenters[i];
         }
-    }
-
-    if(fullBodySnap) {
-        GoalStatePtr islandState;
-        for(int i=0;i < m_islandStates.size();i++) {
-            islandState = boost::make_shared<GoalState>(m_islandStates[i], xyz_tol, roll_tol, pitch_tol, yaw_tol);
+        if(fullBodySnap) {
             fullbody_snap_mprim[i]->getUpdatedGoalandTolerances(islandState, xyz_tol, roll_tol, pitch_tol, yaw_tol);
             fullbody_snap_mprim[i]->m_end = goal;
             fullbody_snap_mprim[i]->m_activationCenter = m_activationCenters[i];

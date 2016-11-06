@@ -337,9 +337,8 @@ DiscObjectState RobotState::getObjectStateRelBody() const {
     return m_obj_state;
 }
 
-KDL::Frame RobotState::getTargetObjectFrameRelBody(RobotState targetState) {
-    ContObjectState target_rel_map = targetState.getObjectStateRelMap();
-    ContObjectState target_rel_body = targetState.getObjectStateRelBody();
+KDL::Frame RobotState::getTargetObjectFrameRelBody(DiscObjectState targetState) {
+    ContObjectState target_rel_map = targetState;
     KDL::Frame F_torsolift_target;
 
     KDL::Vector target_wrt_body;
