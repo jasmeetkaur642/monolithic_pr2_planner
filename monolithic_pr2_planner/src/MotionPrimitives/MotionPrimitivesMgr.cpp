@@ -33,8 +33,8 @@ bool MotionPrimitivesMgr::loadMPrims(const MotionPrimitiveParams& params){
     MPrimList arm_amps;
     arm_amps.push_back(armAMP);
     arm_amps.push_back(tuckAMP);
-    //arm_amps.push_back(untuckAMP);
-    arm_amps.push_back(untuckPartialAMP);
+    arm_amps.push_back(untuckAMP);
+    //arm_amps.push_back(untuckPartialAMP);
 
     MPrimList base_amps;
     int NEG_TURN = -1;
@@ -57,6 +57,7 @@ bool MotionPrimitivesMgr::loadMPrims(const MotionPrimitiveParams& params){
     if(baseSnap) {
         for(int i=0;i<m_islandStates.size();i++) {
             BaseSnapMotionPrimitivePtr temp = make_shared<BaseSnapMotionPrimitive>(m_islandStates[i]);
+            temp->setID(i);
             ContBaseState islandBase, activationBase;
             islandBase = m_islandStates[i].getContBaseState();
             activationBase = m_activationCenters[i].getContBaseState();
@@ -83,6 +84,7 @@ bool MotionPrimitivesMgr::loadMPrims(const MotionPrimitiveParams& params){
     if(fullBodySnap) {
         for(int i=0;i<m_islandStates.size();i++) {
             FullBodySnapMotionPrimitivePtr temp = make_shared<FullBodySnapMotionPrimitive>(m_islandStates[i]);
+            temp->setID(i);
 
             ContBaseState islandBase, activationBase;
             islandBase = m_islandStates[i].getContBaseState();
@@ -245,4 +247,15 @@ void MotionPrimitivesMgr::updateParams(MotionPrimitiveParams params) {
 
 void MotionPrimitivesMgr::addIslandSnapPrimitives() {
     loadBaseSnapMPrims();
+}
+
+void MotionPrimitivesMgr::deleteMPrim(int id, int type) {
+    //Assumes that id is the index of the mprim in m_all_mprims.
+    for(int i=0;i<m_active_mprims.size();i++) {
+        auto mprim = m_active_mprims[i];
+        if(mprim->motion_type() == type && mprim->getID() == id) {
+            m_active_mprims.erase(std::remove(m_active_mprims.begin(), m_active_mprims.end(), mprim), m_active_mprims.end());
+            break;
+        }
+    }
 }

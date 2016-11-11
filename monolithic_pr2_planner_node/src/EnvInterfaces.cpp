@@ -328,14 +328,14 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
 
   if (heuristic_set_type == 0) {
     planner_queues = 4;
-    m_env->m_heuristic_state_time_map.resize(4);
+    //m_env->m_heuristic_state_time_map.resize(4);
   } else if(heuristic_set_type == 1) {
     planner_queues = 10;
-    m_env->m_heuristic_state_time_map.resize(10);
+    //m_env->m_heuristic_state_time_map.resize(10);
   }
   else {
     planner_queues = 20;
-    m_env->m_heuristic_state_time_map.resize(20);
+    //m_env->m_heuristic_state_time_map.resize(20);
   }
 
   printf("\n");
@@ -411,6 +411,7 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
     replan_params.planner_type = static_cast<mha_planner::PlannerType>
                                  (req.planner_type);
     replan_params.mha_type = static_cast<mha_planner::MHAType>(req.mha_type);
+    replan_params.use_lazy = false;
 
     if (replan_params.mha_type == mha_planner::MHAType::ORIGINAL) {
       if (req.initial_eps >= 2.0) {

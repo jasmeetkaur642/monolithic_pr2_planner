@@ -37,6 +37,7 @@ namespace monolithic_pr2_planner {
                 m_all_mprims = std::vector<std::vector<MotionPrimitivePtr> >(8);
                 m_active_mprims.clear();
             }
+            void deleteMPrim(int id, int type);
 
             bool fullBodySnap;
             bool baseSnap;

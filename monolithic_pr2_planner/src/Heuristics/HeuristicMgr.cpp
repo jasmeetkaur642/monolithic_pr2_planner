@@ -511,6 +511,7 @@ void HeuristicMgr::initNewMHABaseHeur(std::string name, int g_x, int g_y, const 
     state.x(g_x);
     state.y(g_y);
     GoalState new_goal_state(m_goal);
+    new_goal_state.setGoal(state);
 
     // Create the new heuristic
     addBaseWithRotationHeur(name, cost_multiplier);
@@ -604,20 +605,20 @@ void HeuristicMgr::initializeMHAHeuristics(const int cost_multiplier){
                 selected_points[num_base_heur].second),
             static_cast<double>(m_goal.getObjectState().x() -
                 selected_points[num_base_heur].first)));
-        ContObjectState goal(m_goal.getObjectState());
-        ROS_ERROR("Printing orientation info");
-        ROS_ERROR("goal: %f, %f| selected point %f, %f", goal.x(),goal.y(), selected_points[num_base_heur].first*0.02, selected_points[num_base_heur].second*0.02);
-        ROS_ERROR("Angles %f, %f",goal.yaw(), orientation);
-        
-        vector<double> rarm({-0.2, 1.1072800, -1.5566882, -2.124408, 0.0, -1.57, 0.0});
-        vector<double> larm({0.038946, 1.214670, 1.396356, -1.197227, -4.616317, -0.988727, 1.175568});
-        vector<double> body({selected_points[num_base_heur].first, selected_points[num_base_heur].second, orientation});
-        DiscBaseState base(body[0], body[1], 0.1, body[2]);
-        ContBaseState c_base = base;
-        body[0] = c_base.x();
-        body[1] = c_base.y();
-        body[2] = c_base.theta();
-        PViz pviz;
+        //ContObjectState goal(m_goal.getObjectState());
+        //ROS_ERROR("Printing orientation info");
+        //ROS_ERROR("goal: %f, %f| selected point %f, %f", goal.x(),goal.y(), selected_points[num_base_heur].first*0.02, selected_points[num_base_heur].second*0.02);
+        //ROS_ERROR("Angles %f, %f",goal.yaw(), orientation);
+        //
+        //vector<double> rarm({-0.2, 1.1072800, -1.5566882, -2.124408, 0.0, -1.57, 0.0});
+        //vector<double> larm({0.038946, 1.214670, 1.396356, -1.197227, -4.616317, -0.988727, 1.175568});
+        //vector<double> body({selected_points[num_base_heur].first, selected_points[num_base_heur].second, orientation});
+        //DiscBaseState base(body[0], body[1], 0.1, body[2]);
+        //ContBaseState c_base = base;
+        //body[0] = c_base.x();
+        //body[1] = c_base.y();
+        //body[2] = c_base.theta();
+        //PViz pviz;
         //pviz.visualizeRobot(rarm, larm, body, 0.1, 140, "weee", 0, false);
         //sleep(5);
         // Initialize with the desired orientation.

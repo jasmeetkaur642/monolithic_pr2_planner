@@ -3,6 +3,7 @@
 #include <boost/shared_ptr.hpp>
 #include <angles/angles.h>
 #include <algorithm>
+#include <unistd.h>
 
 using namespace monolithic_pr2_planner;
 #define METER_TO_MM_MULT 1000
@@ -49,10 +50,10 @@ bool FullBodySnapMotionPrimitive::apply(const GraphState& source_state,
     else
         processedActivationRadiusY = baseActivationRadius.y();
     
-    if(robot_pose.getContBaseState().theta() < c_tol.yaw())
+    if(baseActivationRadius.getContBaseState().theta() < c_tol.yaw())
         processedActivationRadiusTheta = 2*(c_tol.yaw());
     else
-        processedActivationRadiusTheta = robot_pose.getContBaseState().theta();
+        processedActivationRadiusTheta = baseActivationRadius.getContBaseState().theta();
 
     setActivationRadiusInflation(2);
 
@@ -62,8 +63,10 @@ bool FullBodySnapMotionPrimitive::apply(const GraphState& source_state,
 
     bool within_activation_radius = (xDistance <
             m_inflationFactor*processedActivationRadiusX && yDistance <
-            m_inflationFactor*processedActivationRadiusY);//&&
-                                    //abs(angles::shortest_angular_distance(m_activationCenter.getContBaseState().theta(), robot_pose.getContBaseState().theta())) < 5*processedActivationRadiusTheta);
+            m_inflationFactor*processedActivationRadiusY);// &&
+            //abs(angles::shortest_angular_distance(m_activationCenter.getContBaseState().theta(),
+            //        robot_pose.getContBaseState().theta())) <
+            //6*processedActivationRadiusTheta);
     /*
     bool temp;
     std::vector<double> r_arm_goal, r_arm_center, r_arm_source;
@@ -120,8 +123,12 @@ bool FullBodySnapMotionPrimitive::computeIntermSteps(const GraphState& source_st
     //                                successor.robot_pose(), &interp_steps);
     //}
 
+    if(j_interpolate)
+        ROS_INFO("fbs interpolated");
     for (auto robot_state: interp_steps){
         robot_state.printToDebug(MPRIM_LOG);
+        //robot_state.visualize(100);
+        //usleep(10000);
     }
     t_data.interm_robot_steps(interp_steps);
 
