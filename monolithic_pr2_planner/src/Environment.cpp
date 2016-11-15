@@ -384,6 +384,17 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
     GetSuccs(0, sourceStateID, succIDs, costs);
 }
 
+void deleteMPrim(std::vector<MotionPrimitivePtr> &active_mprims, int id, int type) {
+    //Assumes that id is the index of the mprim in m_all_mprims.
+    for(int i=0;i<active_mprims.size();i++) {
+        auto mprim = active_mprims[i];
+        if(mprim->motion_type() == type && mprim->getID() == id) {
+            active_mprims.erase(std::remove(active_mprims.begin(), active_mprims.end(), mprim), active_mprims.end());
+            break;
+        }
+    }
+}
+
 void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
                            vector<int>* costs){
     assert(sourceStateID != GOAL_STATE);
@@ -420,9 +431,18 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
     //for(int m=0;m<5;m++){
     //    mPrimID.push_back( rand() % m_mprims.getMotionPrims().size());
     //}
-    std::vector<std::pair<int, int> > fbsDeleteMprims;
-    std::vector<std::pair<int, int> > baseDeleteMprims;
-    for (auto mprim : m_mprims.getMotionPrims()) {
+
+    //std::vector<std::pair<int, int> > fbsDeleteMprims;
+    //std::vector<std::pair<int, int> > baseDeleteMprims;
+    std::vector<std::pair<int, int> > deleteMprims;
+
+    std::vector<MotionPrimitivePtr> active_mprims;
+    if(q_id == 0)
+        active_mprims = m_mprims_anchor;
+    else
+        active_mprims = m_mprims_inadmissible;
+    //for (auto mprim : m_mprims.getMotionPrims()) {
+    for(auto mprim : active_mprims) {
         //Keep separate list of snap mprims for each heuristic so that we don't
         //keep collision checking once an activation center has been expanded.
 
@@ -437,26 +457,15 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
         //        m_heuristic_base_mprimid[q_id].end())
         //    continue;
 
+
         ROS_DEBUG_NAMED(SEARCH_LOG, "Applying motion:");
         // mprim->printEndCoord();
         GraphStatePtr successor;
         TransitionData t_data;
 
-        //if((mprim->getID() == 5 || mprim->getID() == 6 || mprim->getID() == 7) && q_id > 3) {
-        //    continue;
-        //}
 
         //if((mprim->motion_type() == MPrim_Types::BASE_SNAP) && q_id != 0)
         //    continue;
-        //if(mprim->motion_type() == MPrim_Types::FULLBODY_SNAP && q_id<4)
-        //    continue;
-//        if((mprim->motion_type() == MPrim_Types::FULLBODY_SNAP) && (q_id > 3 && q_id%4 != 0))
-//            continue;
-//
-        //if(std::find(mPrimID.begin(), mPrimID.end(), mprim->getID()) != mPrimID.end()) {
-        //    countMprimSkipped ++;
-        //    continue;
-        //}
 
         if (!mprim->apply(*source_state, successor, t_data)) {
             ROS_DEBUG_NAMED(MPRIM_LOG, "couldn't apply mprim");
@@ -475,7 +484,6 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
             m_hash_mgr->save(successor);
             ROS_DEBUG_NAMED(MPRIM_LOG, "successor state with id %d is:",
                             successor->id());
-            //ROS_DEBUG_COND(mprim->getID() == MPrim_Types::ARM_SNAP, "Valid successor %f, %f",
             successor->printToDebug(MPRIM_LOG);
 
             if (m_goal->isSatisfiedBy(successor)){
@@ -492,35 +500,42 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
             if(t_data.motion_type() == MPrim_Types::BASE_SNAP) {
                 ROS_ERROR("Queue: %d; Base snap motion succeeded", q_id);
                 countSnapMprimsSucceeded[0]++;
-                baseDeleteMprims.push_back(std::make_pair(mprim->getID(), mprim->motion_type()));
-                m_heuristic_base_mprimid[q_id].erase(std::remove(m_heuristic_base_mprimid[q_id].begin(), m_heuristic_base_mprimid[q_id].end(), mprim->getID()), m_heuristic_base_mprimid[q_id].end());
+                deleteMprims.push_back(std::make_pair(mprim->getID(), mprim->motion_type()));
+                //m_heuristic_base_mprimid[q_id].erase(std::remove(m_heuristic_base_mprimid[q_id].begin(), m_heuristic_base_mprimid[q_id].end(), mprim->getID()), m_heuristic_base_mprimid[q_id].end());
             }
             if(mprim->motion_type() == MPrim_Types::FULLBODY_SNAP) {
                 ROS_ERROR("Queue: %d, FBS succeeded, state-id is %d", q_id, successor->id());
                 countSnapMprimsSucceeded[1]++;
-                fbsDeleteMprims.push_back(std::make_pair(mprim->getID(), mprim->motion_type()));
-                m_heuristic_fbs_mprimid[q_id].erase(std::remove(m_heuristic_fbs_mprimid[q_id].begin(), m_heuristic_fbs_mprimid[q_id].end(), mprim->getID()), m_heuristic_fbs_mprimid[q_id].end());
+                deleteMprims.push_back(std::make_pair(mprim->getID(), mprim->motion_type()));
+                //m_heuristic_fbs_mprimid[q_id].erase(std::remove(m_heuristic_fbs_mprimid[q_id].begin(), m_heuristic_fbs_mprimid[q_id].end(), mprim->getID()), m_heuristic_fbs_mprimid[q_id].end());
             }
             if(mprim->motion_type() == MPrim_Types::ARM_SNAP) {
                 ROS_ERROR("Queue: %d, Arm SNAP succeeded", q_id);
             }
         } else {
-            //if(t_data.motion_type() == MPrim_Types::FULLBODY_SNAP) {
-            //    ROS_ERROR("FBS failed collision checking");
-            //}
-            //if(t_data.motion_type() == MPrim_Types::ARM_SNAP) {
-            //    ROS_ERROR("Arm snap failed collision checking");
-            //}
             ROS_DEBUG_NAMED(SEARCH_LOG, "successor failed collision checking");
         }
     }
-    for(auto idPair : fbsDeleteMprims){
-        m_mprims.deleteMPrim(idPair.first, idPair.second);
-        ROS_ERROR("Mprim id= %d, type= %d deleted", idPair.first, idPair.second);
+    //for(auto idPair : fbsDeleteMprims){
+    //    m_mprims.deleteMPrim(idPair.first, idPair.second);
+    //    ROS_ERROR("Mprim id= %d, type= %d deleted", idPair.first, idPair.second);
+    //}
+    //for(auto idPair : baseDeleteMprims){
+    //    m_mprims.deleteMPrim(idPair.first, idPair.second);
+    //    ROS_ERROR("Mprim id= %d, type= %d deleted", idPair.first, idPair.second);
+    //}
+
+    if(q_id == 0) {
+        for(auto idPair : deleteMprims){
+            deleteMPrim(m_mprims_anchor, idPair.first, idPair.second);
+            ROS_ERROR("Mprim id= %d, type= %d deleted", idPair.first, idPair.second);
+        }
     }
-    for(auto idPair : baseDeleteMprims){
-        m_mprims.deleteMPrim(idPair.first, idPair.second);
-        ROS_ERROR("Mprim id= %d, type= %d deleted", idPair.first, idPair.second);
+    else {
+        for(auto idPair : deleteMprims){
+            deleteMPrim(m_mprims_inadmissible, idPair.first, idPair.second);
+            ROS_ERROR("Mprim id= %d, type= %d deleted", idPair.first, idPair.second);
+        }
     }
 }
 
@@ -826,23 +841,31 @@ void Environment::configureMotionPrimitives(SearchRequestPtr search_request) {
             search_request->m_params->pitch_tolerance,
             search_request->m_params->yaw_tolerance);
 
-    m_heuristic_fbs_mprimid.clear();
-    m_heuristic_base_mprimid.clear();
-    m_heuristic_fbs_mprimid.resize(20);
-    m_heuristic_base_mprimid.resize(20);
-
-    for(int i=0;i<20;i++) {
-        for(auto mprim : m_mprims.getMotionPrims()) {
-            if(mprim->motion_type() == MPrim_Types::FULLBODY_SNAP) {
-                m_heuristic_fbs_mprimid[i].push_back(mprim->getID());
-                ROS_INFO("fbs Snap mprim ids  = %d", mprim->getID());
-            }
-            if(mprim->motion_type() == MPrim_Types::BASE_SNAP) {
-                m_heuristic_base_mprimid[i].push_back(mprim->getID());
-                ROS_INFO("base Snap mprim ids  = %d", mprim->getID());
-            }
-        }
+    //We want two lists of mprims- one for anchor and another for inadmissible
+    //heuristics and MHA* expands each state  twice, at max.
+    m_mprims_inadmissible.clear();
+    m_mprims_anchor.clear();
+    for(auto mprim : m_mprims.getMotionPrims()) {
+        m_mprims_inadmissible.push_back(mprim);
+        m_mprims_anchor.push_back(mprim);
     }
+
+    // This simulates giving each heuristic its own separate mprim list.
+    //m_heuristic_fbs_mprimid.clear();
+    //m_heuristic_base_mprimid.clear();
+    //m_heuristic_fbs_mprimid.resize(20);
+    //m_heuristic_base_mprimid.resize(20);
+
+    //for(int i=0;i<20;i++) {
+    //    for(auto mprim : m_mprims.getMotionPrims()) {
+    //        if(mprim->motion_type() == MPrim_Types::FULLBODY_SNAP) {
+    //            m_heuristic_fbs_mprimid[i].push_back(mprim->getID());
+    //        }
+    //        if(mprim->motion_type() == MPrim_Types::BASE_SNAP) {
+    //            m_heuristic_base_mprimid[i].push_back(mprim->getID());
+    //        }
+    //    }
+    //}
 }
 
 /*! \brief Given the solution path containing state IDs, reconstruct the
