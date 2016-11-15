@@ -110,7 +110,7 @@ bool EnvInterfaces::GenerateExperimentFile(std_srvs::Empty::Request &req,
   ROS_INFO("generating trials!");
   vector<pair<RobotState, RobotState>> start_goal_pairs;
   RobotState::setPlanningMode(PlanningModes::RIGHT_ARM_MOBILE);
-  int number_of_trials = 300;
+  int number_of_trials = 150;
   m_generator->initializeRegions();//reads from ros params set by stlToOctomap
   m_generator->generateUniformPairs(number_of_trials, start_goal_pairs);
 

@@ -60,6 +60,8 @@ collision_space:
     origin_z: 0.0   # -0.05 - ditto
     size_x: 10.0
     size_y: 6.0
+    #size_x: 16.0
+    #size_y: 11.0
     size_z: 2.0
 
 reference_frame: map

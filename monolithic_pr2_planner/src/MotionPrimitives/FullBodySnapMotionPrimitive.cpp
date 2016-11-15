@@ -63,7 +63,7 @@ bool FullBodySnapMotionPrimitive::apply(const GraphState& source_state,
 
     bool within_activation_radius = (xDistance <
             m_inflationFactor*processedActivationRadiusX && yDistance <
-            m_inflationFactor*processedActivationRadiusY);// &&
+            m_inflationFactor*processedActivationRadiusY); // &&
             //abs(angles::shortest_angular_distance(m_activationCenter.getContBaseState().theta(),
             //        robot_pose.getContBaseState().theta())) <
             //6*processedActivationRadiusTheta);

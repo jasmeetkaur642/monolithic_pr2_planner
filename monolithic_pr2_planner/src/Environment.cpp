@@ -413,7 +413,7 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
         // source_state->robot_pose().visualize(250/NUM_SMHA_HEUR*q_id);
         m_cspace_mgr->visualizeAttachedObject(expansion_pose, 250/NUM_SMHA_HEUR*q_id);
         // m_cspace_mgr->visualizeCollisionModel(expansion_pose);
-        usleep(5000);
+        //usleep(5000);
     }
     //srand(time(NULL));
     //std::vector<int> mPrimID(7);
@@ -425,16 +425,17 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
     for (auto mprim : m_mprims.getMotionPrims()) {
         //Keep separate list of snap mprims for each heuristic so that we don't
         //keep collision checking once an activation center has been expanded.
-        if(mprim->motion_type() == MPrim_Types::FULLBODY_SNAP &&
-                std::find(m_heuristic_fbs_mprimid[q_id].begin(),
-                    m_heuristic_fbs_mprimid[q_id].end(), mprim->getID()) ==
-                m_heuristic_fbs_mprimid[q_id].end())
-            continue;
-        if(mprim->motion_type() == MPrim_Types::BASE_SNAP &&
-                std::find(m_heuristic_base_mprimid[q_id].begin(),
-                    m_heuristic_base_mprimid[q_id].end(), mprim->getID()) ==
-                m_heuristic_base_mprimid[q_id].end())
-            continue;
+
+        //if(mprim->motion_type() == MPrim_Types::FULLBODY_SNAP &&
+        //        std::find(m_heuristic_fbs_mprimid[q_id].begin(),
+        //            m_heuristic_fbs_mprimid[q_id].end(), mprim->getID()) ==
+        //        m_heuristic_fbs_mprimid[q_id].end())
+        //    continue;
+        //if(mprim->motion_type() == MPrim_Types::BASE_SNAP &&
+        //        std::find(m_heuristic_base_mprimid[q_id].begin(),
+        //            m_heuristic_base_mprimid[q_id].end(), mprim->getID()) ==
+        //        m_heuristic_base_mprimid[q_id].end())
+        //    continue;
 
         ROS_DEBUG_NAMED(SEARCH_LOG, "Applying motion:");
         // mprim->printEndCoord();
@@ -513,14 +514,14 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
             ROS_DEBUG_NAMED(SEARCH_LOG, "successor failed collision checking");
         }
     }
-    //for(auto idPair : fbsDeleteMprims){
-    //    m_mprims.deleteMPrim(idPair.first, idPair.second);
-    //    ROS_ERROR("Mprim id= %d, type= %d deleted", idPair.first, idPair.second);
-    //}
-    //for(auto idPair : baseDeleteMprims){
-    //    m_mprims.deleteMPrim(idPair.first, idPair.second);
-    //    ROS_ERROR("Mprim id= %d, type= %d deleted", idPair.first, idPair.second);
-    //}
+    for(auto idPair : fbsDeleteMprims){
+        m_mprims.deleteMPrim(idPair.first, idPair.second);
+        ROS_ERROR("Mprim id= %d, type= %d deleted", idPair.first, idPair.second);
+    }
+    for(auto idPair : baseDeleteMprims){
+        m_mprims.deleteMPrim(idPair.first, idPair.second);
+        ROS_ERROR("Mprim id= %d, type= %d deleted", idPair.first, idPair.second);
+    }
 }
 
 void Environment::GetLazySuccs(int sourceStateID, vector<int>* succIDs,
@@ -827,10 +828,10 @@ void Environment::configureMotionPrimitives(SearchRequestPtr search_request) {
 
     m_heuristic_fbs_mprimid.clear();
     m_heuristic_base_mprimid.clear();
-    m_heuristic_fbs_mprimid.resize(10);
-    m_heuristic_base_mprimid.resize(10);
+    m_heuristic_fbs_mprimid.resize(20);
+    m_heuristic_base_mprimid.resize(20);
 
-    for(int i=0;i<10;i++) {
+    for(int i=0;i<20;i++) {
         for(auto mprim : m_mprims.getMotionPrims()) {
             if(mprim->motion_type() == MPrim_Types::FULLBODY_SNAP) {
                 m_heuristic_fbs_mprimid[i].push_back(mprim->getID());
@@ -1129,8 +1130,8 @@ void Environment::getIslandStates(std::vector<RobotState> &islandStates, std::ve
         //startGoalDistances.push_back(objectStateMetric(goalObj, m_startGoalPairs[i].second));
         //ROS_INFO("(%f, %f), (%f, %f), %f", m_startGoalPairs[i].second.x(), m_startGoalPairs[i].second.y(), goalObj.x(), goalObj.y(), startGoalDistances[i]);
     }
-    int numClosestPairs = 4;
-    int numIslandsPerPair = 6; 
+    int numClosestPairs = 3;
+    int numIslandsPerPair = 15; 
     //Index-distance.
     std::vector<std::pair<int, double> > closestPairIndices;
 

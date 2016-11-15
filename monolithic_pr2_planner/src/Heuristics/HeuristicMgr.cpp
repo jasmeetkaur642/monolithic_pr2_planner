@@ -579,17 +579,21 @@ void HeuristicMgr::initializeMHAHeuristics(const int cost_multiplier){
     // two points out of that. If not, just discard the whole IK thing and select
     // from the original circle itself.
 
-    // std::vector<Point> selected_points;
-    // if (static_cast<int>(ik_circle_x.size()) < m_num_mha_heuristics) {
-    //     selected_points = sample_points(discrete_radius,
-    //             center_x, center_y, circle_x, circle_y, m_num_mha_heuristics);
-    // } else {
-    //     selected_points = sample_points(discrete_radius,
-    //             center_x, center_y, ik_circle_x, ik_circle_y, m_num_mha_heuristics);
-    // }
+     //std::vector<Point> selected_points;
+     //if (static_cast<int>(ik_circle_x.size()) < m_num_mha_heuristics) {
+     //    selected_points = sample_points(discrete_radius,
+     //            center_x, center_y, circle_x, circle_y, m_num_mha_heuristics);
+     //} else {
+     //    selected_points = sample_points(discrete_radius,
+     //            center_x, center_y, ik_circle_x, ik_circle_y, m_num_mha_heuristics);
+     //}
 
     // Select only the point that is directly behind the goal. This is given by
     // the get_approach_point function
+    // XXX What to do if no valid point found on circle?
+    if(circle_x.size() == 0)
+        throw std::invalid_argument("No valid point found on circle for bfs_with_rot");
+
     std::vector<Point> selected_points;
     Point selected_point = get_approach_point(center_x, center_y, circle_x,
         circle_y, m_goal.getObjectState().getContObjectState().yaw());
