@@ -105,6 +105,13 @@ namespace monolithic_pr2_planner {
             std::vector<int> countSnapMprimsApplied;
             std::vector<int> countSnapMprimsSucceeded;
 
+            std::vector<int> countFbsMprimTried;
+            std::vector<int> skipFbsMprimMod;
+
+            std::vector<int> countBaseMprimTried;
+            std::vector<int> skipBaseMprimMod;
+            int m_numSnapMprims;
+
             std::map<Edge, MotionPrimitivePtr> m_edges;
 
             //Caches whether snapping is feasible from a graphstate to a snap island.
