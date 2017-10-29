@@ -471,10 +471,20 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
             ROS_DEBUG_NAMED(MPRIM_LOG, "couldn't apply mprim");
             continue;
         }
-        if(mprim->motion_type() == MPrim_Types::BASE_SNAP)
+        if(mprim->motion_type() == MPrim_Types::BASE_SNAP) {
+            //countBaseMprimTried[mprim->getID()] ++;
+            //if(countBaseMprimTried[mprim->getID()] % skipBaseMprimMod[mprim->getID()])
+            //    continue;
+            //ROS_INFO("Appling fbs mprim tried: %d, mod: %d", countBaseMprimTried[mprim->getID()], skipBaseMprimMod[mprim->getID()]);
             countSnapMprimsApplied[0] ++;
-        if(mprim->motion_type() == MPrim_Types::FULLBODY_SNAP)
+        }
+        else if (mprim->motion_type() == MPrim_Types::FULLBODY_SNAP) {
+            //countFbsMprimTried[mprim->getID()] ++;
+            //if(countFbsMprimTried[mprim->getID()] % skipFbsMprimMod[mprim->getID()])
+            //    continue;
+            //ROS_INFO("Appling fbs mprim tried: %d, mod: %d", countFbsMprimTried[mprim->getID()], skipFbsMprimMod[mprim->getID()]);
             countSnapMprimsApplied[1] ++;
+        }
 
         if (m_cspace_mgr->isValidSuccessor(*successor,t_data) &&
             m_cspace_mgr->isValidTransitionStates(t_data)){
@@ -513,6 +523,14 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs,
                 ROS_ERROR("Queue: %d, Arm SNAP succeeded", q_id);
             }
         } else {
+            //if(mprim->motion_type() == MPrim_Types::FULLBODY_SNAP) {
+            //    countFbsMprimTried[mprim->getID()] = 0;
+            //    skipFbsMprimMod[mprim->getID()] *= 2;
+            //}
+            //if(mprim->motion_type() == MPrim_Types::BASE_SNAP) {
+            //    countBaseMprimTried[mprim->getID()] = 0;
+            //    skipBaseMprimMod[mprim->getID()] *= 2;
+            //}
             ROS_DEBUG_NAMED(SEARCH_LOG, "successor failed collision checking");
         }
     }
@@ -866,6 +884,16 @@ void Environment::configureMotionPrimitives(SearchRequestPtr search_request) {
     //        }
     //    }
     //}
+
+    countFbsMprimTried.clear();
+    skipFbsMprimMod.clear();
+    countBaseMprimTried.clear();
+    skipBaseMprimMod.clear();
+
+    countFbsMprimTried.resize(m_numSnapMprims, 0);
+    skipFbsMprimMod.resize(m_numSnapMprims, 1);
+    countBaseMprimTried.resize(m_numSnapMprims, 0);
+    skipBaseMprimMod.resize(m_numSnapMprims, 1);
 }
 
 /*! \brief Given the solution path containing state IDs, reconstruct the
@@ -1153,8 +1181,9 @@ void Environment::getIslandStates(std::vector<RobotState> &islandStates, std::ve
         //startGoalDistances.push_back(objectStateMetric(goalObj, m_startGoalPairs[i].second));
         //ROS_INFO("(%f, %f), (%f, %f), %f", m_startGoalPairs[i].second.x(), m_startGoalPairs[i].second.y(), goalObj.x(), goalObj.y(), startGoalDistances[i]);
     }
-    int numClosestPairs = 3;
-    int numIslandsPerPair = 15; 
+    int numClosestPairs = 2; //4
+    int numIslandsPerPair = 10;  //20
+    m_numSnapMprims = numClosestPairs * numIslandsPerPair;
     //Index-distance.
     std::vector<std::pair<int, double> > closestPairIndices;
 

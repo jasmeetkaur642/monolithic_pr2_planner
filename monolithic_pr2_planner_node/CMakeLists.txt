@@ -59,39 +59,41 @@ add_executable(node src/node.cpp src/EnvInterfaces.cpp #(Not required for simula
                              src/ompl_pr2_planner.cpp
                              src/ompl_collision_checker.cpp
                         )
-
+add_dependencies(node node_gen_cpp)
 target_link_libraries(node ${catkin_LIBRARIES} ${ompl_LIBRARIES} ${orocos_kdl_LIBRARIES})
 
 add_executable(testPlanningRequest src/testPlanningRequest.cpp)
 target_link_libraries(testPlanningRequest ${catkin_LIBRARIES})
 
 add_executable(interactFullBodyPlanner src/interactFullBodyPlanner.cpp)
-add_dependencies(interactFullBodyPlanner interactFullBodyPlanner_gen_cpp)
 target_link_libraries(interactFullBodyPlanner
     ${catkin_LIBRARIES} ${ompl_LIBRARIES})
 
 add_executable(testExecute src/testExecute.cpp)
-add_dependencies(testExecute ${catkin_EXPORTED_TARGETS})
+add_dependencies(testExecute testExecute_gen_cpp)
 target_link_libraries(testExecute ${catkin_LIBRARIES})
 
 add_executable(stlToOctomap src/publishSTLToOctomap.cpp)
 target_link_libraries(stlToOctomap ${catkin_LIBRARIES})
 
 add_executable(run_simulation src/run_simulations.cpp)
+add_dependencies(run_simulation run_simulation_gen_cpp)
 target_link_libraries(run_simulation ${catkin_LIBRARIES})
 
 add_executable(run_sim_file src/runSimulationFromFile.cpp)
 target_link_libraries(run_sim_file ${catkin_LIBRARIES})
 
 add_executable(run_demo src/run_demo.cpp)
+add_dependencies(run_demo run_demo_gen_cpp)
 target_link_libraries(run_demo ${catkin_LIBRARIES})
 
 add_executable(runTests src/run_tests.cpp)
+add_dependencies(runTests runTests_gen_cpp)
 target_link_libraries(runTests ${catkin_LIBRARIES})
 
 add_executable(generateExperimentsNode src/generateExperimentsNode.cpp)
-add_dependencies(generateExperimentsNode ${catkin_EXPORTED_TARGETS})
+add_dependencies(generateExperimentsNode generateExperimentsNode_gen_cpp)
 target_link_libraries(generateExperimentsNode ${catkin_LIBRARIES})
 
-add_executable(saveProjectedMap src/saveProjectedMap.cpp)
-target_link_libraries(saveProjectedMap ${catkin_LIBRARIES} ${OpenCV_LIBS})
+#add_executable(saveProjectedMap src/saveProjectedMap.cpp)
+#target_link_libraries(saveProjectedMap ${catkin_LIBRARIES} ${OpenCV_LIBS})

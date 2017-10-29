@@ -4,19 +4,20 @@ cmake_minimum_required(VERSION 2.8.3)
 project(monolithic_pr2_planner)
 # Load catkin and all dependencies required for this package
 # TODO: remove all from COMPONENTS that are not catkin packages.
-find_package(catkin REQUIRED COMPONENTS pr2_collision_checker angles pviz bfs3d ikfast_pr2 nav_msgs moveit_msgs costmap_2d sbpl_mha rostest)
+find_package(catkin REQUIRED COMPONENTS pr2_collision_checker ikfast_pr2 sbpl_mha bfs3d angles pviz   nav_msgs moveit_msgs costmap_2d  rostest)
 #find_package(sbpl)
 # CATKIN_MIGRATION: removed during catkin migration
 
 # catkin_package parameters: http://ros.org/doc/groovy/api/catkin/html/dev_guide/generated_cmake_api.html#catkin-package
 # TODO: fill in what other packages will need to use this package
 catkin_package(
-    DEPENDS pr2_collision_checker angles pviz bfs3d ikfast_pr2 nav_msgs moveit_msgs costmap_2d rostest
-    CATKIN_DEPENDS sbpl_mha # TODO
-    INCLUDE_DIRS include ${catkin_INCLUDE_DIRS} ${sbpl_mha}#${sbpl_INCLUDE_DIRS}# TODO include
-    LIBRARIES ${catkin_LIBRARIES}# TODO
+    DEPENDS  moveit_msgs  
+    CATKIN_DEPENDS pr2_collision_checker sbpl_mha angles nav_msgs ikfast_pr2 bfs3d pviz costmap_2d rostest # TODO
+    INCLUDE_DIRS include 
+    LIBRARIES ${PROJECT_NAME}
 )
 
+#MESSAGE(FATAL_ERROR "${catkin_LIBRARIES}")
 #find_package(PkgConfig REQUIRED)
 #pkg_check_modules(sbpl REQUIRED sbpl)
 #include_directories(${SBPL_INCLUDE_DIRS})
@@ -58,9 +59,9 @@ add_definitions(-DUSE_KDL_SOLVER)
 #link_directories(${SBPL_LIBRARY_DIRS})
 
 #set the default path for built executables to the "bin" directory
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+#set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 #set the default path for built libraries to the "lib" directory
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+#set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 include_directories(include ${catkin_INCLUDE_DIRS})# ${sbpl_INCLUDE_DIRS})
 #common commands for building c++ executables and libraries
