@@ -106,6 +106,7 @@ namespace monolithic_pr2_planner_node {
 
 
             std::unique_ptr<StartGoalGenerator> m_generator;
+            std::unique_ptr<OMPLPR2Planner> m_planner;
             std::unique_ptr<OMPLPR2Planner> m_rrt;
             std::unique_ptr<OMPLPR2Planner> m_prm;
             std::unique_ptr<OMPLPR2Planner> m_rrtstar;

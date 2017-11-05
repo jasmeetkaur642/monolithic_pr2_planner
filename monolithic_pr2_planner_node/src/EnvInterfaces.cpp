@@ -348,41 +348,47 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
   total_planning_time = clock();
   ROS_INFO("configuring request");
 
-  if (!m_env->configureRequest(search_request, start_id, goal_id)) {
-    ROS_ERROR("Unable to configure request for %s! Trial ID: %d",
-              planner_prefix.c_str(), counter);
+  //if (!m_env->configureRequest(search_request, start_id, goal_id)) {
+  //  ROS_ERROR("Unable to configure request for %s! Trial ID: %d",
+  //            planner_prefix.c_str(), counter);
 
-    total_planning_time = -1;
-    int soln_cost = -1;
-    packageMHAStats(stat_names, stats, soln_cost, 0, total_planning_time);
+  //  total_planning_time = -1;
+  //  int soln_cost = -1;
+  //  packageMHAStats(stat_names, stats, soln_cost, 0, total_planning_time);
 
-    for (unsigned int i = 0; i < stats.size(); i++) {
-      stats[i] = -1;
-    }
+  //  for (unsigned int i = 0; i < stats.size(); i++) {
+  //    stats[i] = -1;
+  //  }
 
-    m_stats_writer.writeSBPL(stats, states, counter, planner_prefix);
-    res.stats_field_names = stat_names;
-    res.stats = stats;
-    return true;
-  }
+  //  m_stats_writer.writeSBPL(stats, states, counter, planner_prefix);
+  //  res.stats_field_names = stat_names;
+  //  res.stats = stats;
+  //  return true;
+  //}
 
   if (req.use_ompl) {
-    ROS_INFO("rrt init");
     RobotState::setPlanningMode(PlanningModes::RIGHT_ARM_MOBILE);
-    m_rrt.reset(new OMPLPR2Planner(m_env->getCollisionSpace(), RRT));
-    ROS_INFO("rrt check request");
 
-    if (!m_rrt->checkRequest(*search_request)) {
-      ROS_WARN("bad start goal for ompl");
+    if(req.ompl_type == 1){
+        ROS_INFO("rrt init");
+        m_planner.reset(new OMPLPR2Planner(m_env->getCollisionSpace(), RRT));
+    }
+    else if(req.ompl_type == 2) {
+        ROS_INFO("PRM init");
+        if(!m_planner)
+            m_planner.reset(new OMPLPR2Planner(m_env->getCollisionSpace(), PRM_STAR));
     }
 
-    ROS_INFO("rrt plan");
-    m_rrt->setPlanningTime(req.allocated_planning_time);
+    if (!m_planner->checkRequest(*search_request)) {
+        ROS_WARN("bad start goal for ompl");
+    }
+    m_planner->setPlanningTime(req.allocated_planning_time);
+    ROS_INFO("planner plan");
     double t0 = ros::Time::now().toSec();
-    bool found_path = m_rrt->planPathCallback(*search_request, counter,
-                                              m_stats_writer);
+    bool found_path = m_planner->planPathCallback(*search_request, counter,
+                                            m_stats_writer);
     double t1 = ros::Time::now().toSec();
-    ROS_INFO("rrt done planning");
+    ROS_INFO("planner done planning");
 
     res.stats_field_names.clear();
     res.stats_field_names.push_back("total_plan_time");

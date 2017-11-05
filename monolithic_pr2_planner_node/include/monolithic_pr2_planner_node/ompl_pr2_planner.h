@@ -10,6 +10,7 @@
 #include <ompl/base/objectives/PathLengthOptimizationObjective.h>
 #include <ompl/geometric/planners/rrt/RRTConnect.h>
 #include <ompl/geometric/planners/prm/PRM.h>
+#include <ompl/geometric/planners/prm/PRMstar.h>
 #include <ompl/geometric/planners/rrt/RRTstar.h>
 #include <ompl/base/goals/GoalState.h>
 #include <monolithic_pr2_planner_node/ompl_collision_checker.h>
@@ -26,9 +27,10 @@ typedef ompl::base::ScopedState<ompl::base::CompoundStateSpace> FullState;
 typedef monolithic_pr2_planner_node::GetMobileArmPlan::Request NodeRequest;
 
 #define RRT 1
-#define PRM_P 2
-#define RRTSTAR 3
-#define RRTSTARFIRSTSOL 4
+#define PRM_STAR 2
+#define PRM_P 3
+#define RRTSTAR 4
+#define RRTSTARFIRSTSOL 5
 class OMPLPR2Planner{
     public:
         OMPLPR2Planner(const monolithic_pr2_planner::CSpaceMgrPtr& cspace, int planner_id);

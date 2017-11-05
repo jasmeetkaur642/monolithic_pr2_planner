@@ -26,7 +26,7 @@ StatsWriter::StatsWriter(int planner_id):m_planner_id(planner_id){
     }
 }
 
-void StatsWriter::write(int trial_id, RRTData data){
+void StatsWriter::write(int trial_id, PRMData data){
     //if (m_planner_id == PRM_P)
     //    ROS_INFO("writing PRM stats");
     //if (m_planner_id == RRT)
@@ -36,6 +36,8 @@ void StatsWriter::write(int trial_id, RRTData data){
     stringstream ss;
     if (m_planner_id == PRM_P)
         ss << m_current_path.str().c_str() << "prm_" << std::setfill('0') << std::setw(2) << trial_id << ".stats";
+    if (m_planner_id == PRM_STAR)
+        ss << m_current_path.str().c_str() << "prm_star_" << std::setfill('0') << std::setw(2) << trial_id << ".stats";
     if (m_planner_id == RRT)
         ss << m_current_path.str().c_str() << "rrt_" << std::setfill('0') << std::setw(2) << trial_id << ".stats";
     if (m_planner_id == RRTSTAR)
@@ -45,10 +47,13 @@ void StatsWriter::write(int trial_id, RRTData data){
     ROS_DEBUG_NAMED(HEUR_LOG, "Opening file : %s", ss.str().c_str());
     FILE* stats = fopen(ss.str().c_str(), "w");
     if (data.planned){
-        fprintf(stats, "%f %f %lu\n", data.plan_time, data.shortcut_time, data.path_length);
+        fprintf(stats, "plan_time shortcut_time path_length roadmap_vertices roadmap_edges\n");
+        fprintf(stats, "%f %f %lu %lu %lu\n", data.plan_time, data.shortcut_time, data.path_length, data.roadmap_vertices, data.roadmap_edges);
         stringstream ss2;
         if (m_planner_id == PRM_P)
             ss2 << m_current_path.str().c_str() << "prm_" << std::setfill('0') << std::setw(2) << trial_id << ".path";
+        if (m_planner_id == PRM_STAR)
+            ss2 << m_current_path.str().c_str() << "prm_star_" << std::setfill('0') << std::setw(2) << trial_id << ".path";
         if (m_planner_id == RRT)
             ss2 << m_current_path.str().c_str() << "rrt_" << std::setfill('0') << std::setw(2) << trial_id << ".path";
         if (m_planner_id == RRTSTAR)

@@ -38,6 +38,7 @@ int8 planner_type
 int8 meta_search_type
 int8 mha_type
 bool use_ompl
+int8 ompl_type
 
 ---
 

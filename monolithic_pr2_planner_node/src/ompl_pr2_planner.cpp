@@ -98,6 +98,8 @@ OMPLPR2Planner::OMPLPR2Planner(const CSpaceMgrPtr& cspace, int planner_id):
 
     if (planner_id == RRT)
         planner = new ompl::geometric::RRTConnect(si);
+    else if(planner_id == PRM_STAR)
+        planner = new ompl::geometric::PRMstar(si);
     else if (planner_id == PRM_P)
         planner = new ompl::geometric::PRM(si);
     else if (planner_id == RRTSTAR || planner_id == RRTSTARFIRSTSOL)
@@ -105,11 +107,11 @@ OMPLPR2Planner::OMPLPR2Planner(const CSpaceMgrPtr& cspace, int planner_id):
     else
         ROS_ERROR("invalid planner id!");
 
+    planner->setProblemDefinition(ompl::base::ProblemDefinitionPtr(pdef));
     planner->setup();
     if (planner_id == RRTSTAR || planner_id == RRTSTARFIRSTSOL){
         pdef->setOptimizationObjective(getThresholdPathLengthObj(si, planner_id));
     }
-    planner->setProblemDefinition(ompl::base::ProblemDefinitionPtr(pdef));
     pathSimplifier = new ompl::geometric::PathSimplifier(si);
     ROS_INFO("finished initializing OMPL planner");
 }
@@ -201,9 +203,9 @@ bool OMPLPR2Planner::convertFullState(ompl::base::State* state, RobotState& robo
 }
 
 bool OMPLPR2Planner::checkRequest(SearchRequestParams& search_request){
-    planner->clear();
+    //planner->clear();
     planner->getProblemDefinition()->clearSolutionPaths();
-    if (m_planner_id == PRM_P)
+    if (m_planner_id == PRM_P or m_planner_id == PRM_STAR)
         planner->as<ompl::geometric::PRM>()->clearQuery();
     search_request.left_arm_start.getAngles(&m_collision_checker->l_arm_init);
     FullState ompl_start(fullBodySpace);
@@ -215,11 +217,13 @@ bool OMPLPR2Planner::planPathCallback(SearchRequestParams& search_request, int t
     StatsWriter& m_stats_writer){
     if (m_planner_id == PRM_P)
         ROS_INFO("running PRM planner!");
+    if (m_planner_id == PRM_STAR)
+        ROS_INFO("running PRM star planner!");
     if (m_planner_id == RRT)
         ROS_INFO("running RRT planner!");
     if (m_planner_id == RRTSTAR)
         ROS_INFO("running RRTStar planner!");
-    planner->clear();
+    //planner->clear();
     planner->getProblemDefinition()->clearSolutionPaths();
     planner->as<ompl::geometric::PRM>()->clearQuery();
     search_request.left_arm_start.getAngles(&m_collision_checker->l_arm_init);
@@ -246,7 +250,7 @@ bool OMPLPR2Planner::planPathCallback(SearchRequestParams& search_request, int t
     double t1 = ros::Time::now().toSec();
     double planning_time = t1-t0;
     ompl::base::PathPtr path = planner->getProblemDefinition()->getSolutionPath();
-    RRTData data;
+    PRMData data;
     if (path){
         ROS_INFO("OMPL found a solution!");
         data.planned = true;
@@ -280,9 +284,14 @@ bool OMPLPR2Planner::planPathCallback(SearchRequestParams& search_request, int t
             robot_state.left_arm().getAngles(&l_arm);
             BodyPose bp = base.body_pose();
             
-            // Visualizer::pviz->visualizeRobot(r_arm, l_arm, bp, 150, "robot", 0);
-            // usleep(5000);
+             //Visualizer::pviz->visualizeRobot(r_arm, l_arm, bp, 150, "robot", 0);
+             //usleep(5000);
         }
+        // Get size of the roadmap.
+        ompl::base::PlannerData plannerData(planner->getSpaceInformation());
+        planner->getPlannerData( plannerData );
+        data.roadmap_vertices = plannerData.numVertices();
+        data.roadmap_edges = plannerData.numEdges();
         data.robot_state = robot_states;
         data.base = base_states;
         data.path_length = geo_path.getStateCount();

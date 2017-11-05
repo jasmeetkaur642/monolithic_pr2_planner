@@ -96,7 +96,13 @@ int main(int argc, char** argv){
     }
     else if(strcmp(argv[i],"rrt")==0){
       req.use_ompl = true;
+      req.ompl_type = 1;
       gotMetaType = true;
+    }
+    else if(strcmp(argv[i], "prm")==0){
+        req.use_ompl = true;
+        req.ompl_type = 2;
+        gotMetaType = true;
     }
     else{
       filename = argv[i];

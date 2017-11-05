@@ -9,14 +9,26 @@
 #include <sstream>
 
 #define RRT 1
-#define PRM_P 2
-#define RRTSTAR 3
-#define RRTSTARFIRSTSOL 4
+#define PRM_STAR 2
+#define PRM_P 3
+#define RRTSTAR 4
+#define RRTSTARFIRSTSOL 5
 
 struct RRTData {
     bool planned;
     double plan_time;
     double shortcut_time;
+    size_t path_length;
+    std::vector<monolithic_pr2_planner::RobotState> robot_state; 
+    std::vector<monolithic_pr2_planner::ContBaseState> base; 
+};
+
+struct PRMData{
+    bool planned;
+    double plan_time;
+    double shortcut_time;
+    size_t roadmap_vertices;
+    size_t roadmap_edges;
     size_t path_length;
     std::vector<monolithic_pr2_planner::RobotState> robot_state; 
     std::vector<monolithic_pr2_planner::ContBaseState> base; 
@@ -32,7 +44,7 @@ class StatsWriter {
         void writeARA(std::vector<double> &stats, 
                       std::vector<monolithic_pr2_planner::FullBodyState> &states, 
                       int trial_id);
-        void write(int trial_id, RRTData data);
+        void write(int trial_id, PRMData data);
         void writeStartGoal(int trial_id, std::pair<monolithic_pr2_planner::RobotState, monolithic_pr2_planner::RobotState>
           start_goal, int seed);
         inline void setPlannerId(int planner_id){ m_planner_id = planner_id; };
