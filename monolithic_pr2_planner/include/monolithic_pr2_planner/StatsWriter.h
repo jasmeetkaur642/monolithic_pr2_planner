@@ -10,9 +10,10 @@
 
 #define RRT 1
 #define PRM_STAR 2
-#define PRM_P 3
-#define RRTSTAR 4
-#define RRTSTARFIRSTSOL 5
+#define LAZY_PRM_STAR 3
+#define PRM_P 4
+#define RRTSTAR 5
+#define RRTSTARFIRSTSOL 6
 
 struct RRTData {
     bool planned;

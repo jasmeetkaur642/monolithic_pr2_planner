@@ -45,7 +45,7 @@ for experiment_num in 1;do
     # The training and test experiments are bundled in the same file. Look at
     # the results of the 2nd half of experiments for comparison with A*.
     mkdir -p "stats_collection/prm_star/experiment${experiment_num}/test_training/paths_${statsFileName}"
-    mv /tmp/planning_stats/* "stats_collection/prm_star/experiment${experiment_num}/test/paths_${statsFileName}"
+    mv /tmp/planning_stats/* "stats_collection/prm_star/experiment${experiment_num}/test_training/paths_${statsFileName}"
 
     mkdir -p "stats_collection/prm_star/experiment${experiment_num}/test_training"
     cp mha_stats.csv "stats_collection/prm_star/experiment${experiment_num}/test_training/${statsFileName}"

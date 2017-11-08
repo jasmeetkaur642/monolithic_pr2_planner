@@ -7,6 +7,7 @@
 #include <kdl/frames.hpp>
 #include <monolithic_pr2_planner/LoggerNames.h>
 #include <angles/angles.h>
+#include <ompl/base/PlannerTerminationCondition.h>
 
 using namespace monolithic_pr2_planner;
 using namespace monolithic_pr2_planner_node;
@@ -27,7 +28,7 @@ ompl::base::OptimizationObjectivePtr getThresholdPathLengthObj(const ompl::base:
 }
 
 OMPLPR2Planner::OMPLPR2Planner(const CSpaceMgrPtr& cspace, int planner_id):
-    m_planner_id(planner_id){
+    m_planner_id(planner_id), num_vertices(0){
     //create the StateSpace (defines the dimensions and their bounds)
     ROS_INFO("initializing OMPL");
     ompl::base::SE2StateSpace* se2 = new ompl::base::SE2StateSpace();
@@ -100,6 +101,8 @@ OMPLPR2Planner::OMPLPR2Planner(const CSpaceMgrPtr& cspace, int planner_id):
         planner = new ompl::geometric::RRTConnect(si);
     else if(planner_id == PRM_STAR)
         planner = new ompl::geometric::PRMstar(si);
+    else if(planner_id == LAZY_PRM_STAR)
+        planner = new ompl::geometric::LazyPRMstar(si);
     else if (planner_id == PRM_P)
         planner = new ompl::geometric::PRM(si);
     else if (planner_id == RRTSTAR || planner_id == RRTSTARFIRSTSOL)
@@ -112,8 +115,27 @@ OMPLPR2Planner::OMPLPR2Planner(const CSpaceMgrPtr& cspace, int planner_id):
     if (planner_id == RRTSTAR || planner_id == RRTSTARFIRSTSOL){
         pdef->setOptimizationObjective(getThresholdPathLengthObj(si, planner_id));
     }
+    if(planner_id == LAZY_PRM_STAR)
+        planner->as<ompl::geometric::LazyPRMstar>()->setRange(.2);
     pathSimplifier = new ompl::geometric::PathSimplifier(si);
     ROS_INFO("finished initializing OMPL planner");
+}
+
+bool OMPLPR2Planner::growRoadmap(int min_vertices) {
+    ompl::base::PlannerTerminationConditionFn conditionFn = [this, &min_vertices](){
+        ompl::base::PlannerData data(planner->getSpaceInformation());
+        planner->getPlannerData(data);
+        num_vertices = data.numVertices();
+        if(num_vertices % 200 == 0)
+            ROS_INFO("Num vertices: %d", num_vertices);
+        if(data.numVertices() > min_vertices)
+            return true;
+        else
+            return false;
+    };
+    ompl::base::PlannerTerminationCondition terCondition(conditionFn);
+    planner->as<ompl::geometric::PRM>()->constructRoadmap(terCondition);
+
 }
 
 // given the start and goal from the request, create a start and goal that
@@ -205,8 +227,10 @@ bool OMPLPR2Planner::convertFullState(ompl::base::State* state, RobotState& robo
 bool OMPLPR2Planner::checkRequest(SearchRequestParams& search_request){
     //planner->clear();
     planner->getProblemDefinition()->clearSolutionPaths();
-    if (m_planner_id == PRM_P or m_planner_id == PRM_STAR)
+    if (m_planner_id == PRM_P or m_planner_id == PRM_STAR or m_planner_id == LAZY_PRM_STAR) {
         planner->as<ompl::geometric::PRM>()->clearQuery();
+    }
+
     search_request.left_arm_start.getAngles(&m_collision_checker->l_arm_init);
     FullState ompl_start(fullBodySpace);
     FullState ompl_goal(fullBodySpace);

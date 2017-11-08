@@ -102,6 +102,13 @@ int main(int argc, char** argv){
     else if(strcmp(argv[i], "prm")==0){
         req.use_ompl = true;
         req.ompl_type = 2;
+        req.min_vertices = 10000;
+        gotMetaType = true;
+    }
+    else if(strcmp(argv[i], "lazy_prm_star")==0) {
+        req.use_ompl = true;
+        req.ompl_type = 3;
+        req.min_vertices = 2;
         gotMetaType = true;
     }
     else{
@@ -144,7 +151,7 @@ int main(int argc, char** argv){
   req.roll_tolerance = .1;
   req.pitch_tolerance = .1;
   req.yaw_tolerance = .1;
-  req.allocated_planning_time = 300;
+  req.allocated_planning_time = 150;
   req.planning_mode = monolithic_pr2_planner::PlanningModes::RIGHT_ARM_MOBILE;
 
   req.body_start.resize(4);

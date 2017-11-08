@@ -378,10 +378,23 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
         if(!m_planner)
             m_planner.reset(new OMPLPR2Planner(m_env->getCollisionSpace(), PRM_STAR));
     }
+    else if(req.ompl_type == 3) {
+        ROS_INFO("Lazy PRM init");
+        if(!m_planner) {
+            m_planner.reset( new OMPLPR2Planner(m_env->getCollisionSpace(), LAZY_PRM_STAR) );
+        }
+    }
 
     if (!m_planner->checkRequest(*search_request)) {
         ROS_WARN("bad start goal for ompl");
     }
+    if (req.ompl_type == 2 || req.ompl_type == 3) {
+        // Grow the roadmap 
+        ROS_INFO("Growing the roadmap to %d vertices", req.min_vertices);
+        m_planner->growRoadmap(req.min_vertices);
+        ROS_INFO("Roadmap grown.");
+    }
+
     m_planner->setPlanningTime(req.allocated_planning_time);
     ROS_INFO("planner plan");
     double t0 = ros::Time::now().toSec();

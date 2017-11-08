@@ -11,6 +11,7 @@
 #include <ompl/geometric/planners/rrt/RRTConnect.h>
 #include <ompl/geometric/planners/prm/PRM.h>
 #include <ompl/geometric/planners/prm/PRMstar.h>
+#include <ompl/geometric/planners/prm/LazyPRMstar.h>
 #include <ompl/geometric/planners/rrt/RRTstar.h>
 #include <ompl/base/goals/GoalState.h>
 #include <monolithic_pr2_planner_node/ompl_collision_checker.h>
@@ -28,9 +29,10 @@ typedef monolithic_pr2_planner_node::GetMobileArmPlan::Request NodeRequest;
 
 #define RRT 1
 #define PRM_STAR 2
-#define PRM_P 3
-#define RRTSTAR 4
-#define RRTSTARFIRSTSOL 5
+#define LAZY_PRM_STAR 3
+#define PRM_P 4
+#define RRTSTAR 5
+#define RRTSTARFIRSTSOL 6
 class OMPLPR2Planner{
     public:
         OMPLPR2Planner(const monolithic_pr2_planner::CSpaceMgrPtr& cspace, int planner_id);
@@ -39,6 +41,7 @@ class OMPLPR2Planner{
         bool checkRequest(monolithic_pr2_planner::SearchRequestParams& search_request);
         bool createStartGoal(FullState& start, FullState& goal, monolithic_pr2_planner::SearchRequestParams& req);
         void setPlanningTime(double t){m_allocated_planning_time = t;};
+        bool growRoadmap(int num_vertices);
     private:
         bool convertFullState(ompl::base::State* state,
                               monolithic_pr2_planner::RobotState& robot_state,
@@ -51,4 +54,5 @@ class OMPLPR2Planner{
         // StatsWriter m_stats_writer;
         int m_planner_id;
         double m_allocated_planning_time;
+        int num_vertices;
 };
