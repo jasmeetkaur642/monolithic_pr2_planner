@@ -1,1 +1,7 @@
 !experiments/*
+comparison/*
+experiments_old/*
+maps/*
+*.csv
+*.txt
+
