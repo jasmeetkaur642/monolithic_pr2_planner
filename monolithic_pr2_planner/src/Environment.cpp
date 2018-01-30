@@ -795,8 +795,6 @@ void Environment::configurePlanningDomain(){
     LeftContArmState l_arm;
     RightContArmState r_arm;
 
-    //std::vector<RobotState> islandStates, activationCenters;
-    //getIslandStates(islandStates, activationCenters);
     readIslands();
 
     //Currently passing dummy island and activation center values. They get update later.

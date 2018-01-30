@@ -91,6 +91,10 @@ add_executable(runTests src/run_tests.cpp)
 add_dependencies(runTests runTests_gen_cpp)
 target_link_libraries(runTests ${catkin_LIBRARIES})
 
+add_executable(runProblem src/run_problem.cpp)
+add_dependencies(runProblem runProblem_gen_cpp)
+target_link_libraries(runProblem ${catkin_LIBRARIES})
+
 add_executable(generateExperimentsNode src/generateExperimentsNode.cpp)
 add_dependencies(generateExperimentsNode generateExperimentsNode_gen_cpp)
 target_link_libraries(generateExperimentsNode ${catkin_LIBRARIES})

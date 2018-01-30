@@ -1,4 +1,5 @@
 <launch>
+  <arg name="env" />
   <node name="octomap_server" pkg="octomap_server" type="octomap_server_node">
     <param name="resolution" value="0.02" />
     <param name="sensor_model/range" value="4.0" />
@@ -26,7 +27,7 @@
   <node pkg="monolithic_pr2_planner_node" type="stlToOctomap" name="stlToOctomap" args="package://monolithic_pr2_planner_node/maps/max_kitchen.dae">
     <param name="addTableObstacles" value="true"/>
     <param name="randomizeTableObstacles" value="false"/>
-    <param name="pathToTableObstacleParamFile" value="$(find monolithic_pr2_planner_node)/experiments/tableObstacles.yaml"/>
+    <param name="pathToTableObstacleParamFile" value="$(find monolithic_pr2_planner_node)/experiments/$(arg env)/tableObstacles.yaml"/>
   </node>
 
 </launch>
