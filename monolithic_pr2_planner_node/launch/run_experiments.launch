@@ -2,7 +2,7 @@
   <param name="robot_description" command="$(find xacro)/xacro.py '$(find pr2_description)/robots/pr2.urdf.xacro'" />
   
   <node pkg="monolithic_pr2_planner_node" type="node" name="monolithic_pr2_planner_node" output="screen" launch-prefix="gdb -ex run --args">
-      <!-- <param name="heuristic_set_type" value="2" /> -->
+      <!-- <param name="heuristic_set_type" value="2" type="int"/> -->
       <param name="planner/island" value="$(find monolithic_pr2_planner_node)/experiments_old/bottlenecks.points" />
       <param name="planner/baseSnap" value="0" type="int" />
       <param name="planner/fullBodySnap" value="0" type="int" />

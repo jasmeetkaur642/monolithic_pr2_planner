@@ -85,7 +85,6 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
     //m_param_catalog.fetch(m_nodehandle);
     //m_mprims.updateParams(m_param_catalog.m_motion_primitive_params);
 
-
     GraphStatePtr successor = m_hash_mgr->getGraphState(stateID);
     if(m_goal->isSatisfiedBy(successor) || stateID == GOAL_STATE){
         return 0;
@@ -98,66 +97,65 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
         ROS_DEBUG_NAMED(HEUR_LOG, "%s : %d", heur.first.c_str(), heur.second);
     }
 
-
+    //XXX This is VERY brittle.
+    //If you add another set type, make sure to set the appropriate number of
+    //planner_queues in Envinterfaces.
     if(m_heuristic_set_type == 0){
-      switch (heuristic_id) {
-        case 0:  // Anchor
-          return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
-        case 1:  // ARA Heur
-          return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
-        case 2:  // Base1, Base2 heur
-          return static_cast<int>(0.5f*(*values).at("base_with_rot_0") + 0.5f*(*values).at("endeff_rot_goal"));
-        case 3:
-          return static_cast<int>(0.5f*(*values).at("base_with_rot_door") + 0.5f*(*values).at("endeff_rot_vert"));
-      }
-    }
-    else if(m_heuristic_set_type == 1){
-      double w_bfsRot = 0.2;
-      double w_armFold = 0.2;
-      int ad_base = (*values).at("admissible_base");
-      int ad_endeff = (*values).at("admissible_endeff");
-      int anchor_h = std::max(ad_base, ad_endeff);
-      int endeff_rot_goal = (*values).at("endeff_rot_goal");
-
-      int inad_arm_heur = static_cast<int>(0.1*(*values).at("endeff_rot_goal") + 0.1*ad_endeff);
-      if (ad_base > 1000) //TODO: check multiplier
-      {
-        inad_arm_heur = (*values).at("arm_angles_folded");
-      }
-      
-      switch (heuristic_id) {
-        case 0:  // Anchor
-          return anchor_h;
-        case 1:  // Anchor
-          return int(0.1*ad_base) + int(0.1*ad_endeff) + int(0.2*endeff_rot_goal);
-          //return anchor_h;
-        case 2:  // Base1, Base2 heur
-          return static_cast<int>(0.1*(*values).at("base_with_rot_0") + 0.1*(*values).at("endeff_rot_goal"));
-        case 3:  // Base1, Base2 heur
-          //return static_cast<int>(1.0*(*values).at("base_with_rot_0") + 0.0*(*values).at("endeff_rot_goal"));
-          return static_cast<int>(0.1*(*values).at("base_with_rot_0") + 0.1*(*values).at("arm_angles_folded"));
-        case 4:
-          //return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot0") + w_armFold*inad_arm_heur);
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot2") + w_armFold*inad_arm_heur);
-        case 5:
-          //return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot1") + w_armFold*inad_arm_heur);
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot5") + w_armFold*inad_arm_heur);
-        case 6:
-          //return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot2") + w_armFold*inad_arm_heur);
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot8") + w_armFold*inad_arm_heur);
-        case 7:
-          //return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot3") + w_armFold*inad_arm_heur);
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot11") + w_armFold*inad_arm_heur);
-        case 8:
-          //return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot4") + w_armFold*inad_arm_heur);
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot14") + w_armFold*inad_arm_heur);
-        case 9:
-          //return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot5") + w_armFold*inad_arm_heur);
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*inad_arm_heur);
+        switch (heuristic_id) {
+            case 0:  // Anchor
+            return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
+            case 1:  // ARA Heur
+            return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
+            case 2:  // Base1, Base2 heur
+            return static_cast<int>(0.5f*(*values).at("base_with_rot_0") + 0.5f*(*values).at("endeff_rot_goal"));
+            case 3:
+            return static_cast<int>(0.5f*(*values).at("base_with_rot_door") + 0.5f*(*values).at("endeff_rot_vert"));
         }
     }
+    else if(m_heuristic_set_type == 1){
+        double w_bfsRot = 0.2;
+        double w_armFold = 0.2;
+        int ad_base = (*values).at("admissible_base");
+        int ad_endeff = (*values).at("admissible_endeff");
+        int anchor_h = std::max(ad_base, ad_endeff);
+        int endeff_rot_goal = (*values).at("endeff_rot_goal");
 
-      else {
+        int inad_arm_heur = static_cast<int>(0.1*(*values).at("endeff_rot_goal") + 0.1*ad_endeff);
+        if (ad_base > 1000) {  //TODO: check multiplier
+            inad_arm_heur = (*values).at("arm_angles_folded");
+        }
+        switch (heuristic_id) {
+        case 0:  // Anchor
+            return anchor_h;
+        case 1:  // Anchor
+            return int(0.1*ad_base) + int(0.1*ad_endeff) + int(0.2*endeff_rot_goal);
+            //return anchor_h;
+        case 2:  // Base1, Base2 heur
+            return static_cast<int>(0.1*(*values).at("base_with_rot_0") + 0.1*(*values).at("endeff_rot_goal"));
+        case 3:  // Base1, Base2 heur
+            //return static_cast<int>(1.0*(*values).at("base_with_rot_0") + 0.0*(*values).at("endeff_rot_goal"));
+            return static_cast<int>(0.1*(*values).at("base_with_rot_0") + 0.1*(*values).at("arm_angles_folded"));
+        case 4:
+            //return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot0") + w_armFold*inad_arm_heur);
+            return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot2") + w_armFold*inad_arm_heur);
+        case 5:
+            //return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot1") + w_armFold*inad_arm_heur);
+            return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot5") + w_armFold*inad_arm_heur);
+        case 6:
+            //return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot2") + w_armFold*inad_arm_heur);
+            return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot8") + w_armFold*inad_arm_heur);
+        case 7:
+            //return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot3") + w_armFold*inad_arm_heur);
+            return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot11") + w_armFold*inad_arm_heur);
+        case 8:
+            //return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot4") + w_armFold*inad_arm_heur);
+            return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot14") + w_armFold*inad_arm_heur);
+        case 9:
+            //return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot5") + w_armFold*inad_arm_heur);
+            return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*inad_arm_heur);
+        }
+    }
+    else if(m_heuristic_set_type == 2) {
         double w_bfsRot = 0.2;
         double w_armFold = 0.2;
         int ad_base = (*values).at("admissible_base");
@@ -211,170 +209,30 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
             case 19:
             return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*inad_arm_heur);
         }
+    }
+    else if(m_heuristic_set_type == 3){
+        double w_bfsRot = 0.2;
+        double w_armFold = 0.2;
+        int ad_base = (*values).at("admissible_base");
+        int ad_endeff = (*values).at("admissible_endeff");
+        int endeff_rot_goal = (*values).at("endeff_rot_goal");
+
+        int inad_arm_heur = static_cast<int>(0.1*(*values).at("endeff_rot_goal") + 0.1*ad_endeff);
+      switch (heuristic_id) {
+        case 0:  // Anchor
+            return (*values).at("admissible_base");
+        case 1:  // ARA Heur
+            return inad_arm_heur;
+        case 2:
+            return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot0") + w_armFold*inad_arm_heur);
+        //case 2:  // Base1, Base2 heur
+          //return static_cast<int>(0.5f*(*values).at("base_with_rot_0") + 0.5f*(*values).at("endeff_rot_goal"));
+        //case 3:
+          //return static_cast<int>(0.5f*(*values).at("base_with_rot_door") + 0.5f*(*values).at("endeff_rot_vert"));
       }
-
-
-      // switch (heuristic_id) {
-      //   case 0:  // Anchor
-      //     return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
-      //   case 1:  // Anchor
-      //     return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
-      //   //case 1:  // ARA Heur
-      //     //return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
-      //   case 2:  // Base1, Base2 heur
-      //     return static_cast<int>(0.5*(*values).at("base_with_rot_0") + 0.5*(*values).at("endeff_rot_goal"));
-      //   case 3:  // Base1, Base2 heur
-      //     //return static_cast<int>(1.0*(*values).at("base_with_rot_0") + 0.0*(*values).at("endeff_rot_goal"));
-      //     return static_cast<int>(0.5*(*values).at("base_with_rot_0") + 0.5*(*values).at("arm_angles_folded"));
-      //   case 4:
-      //     if((*values).at("bfsRotFoot0")==0)
-      //       return 0;
-      //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot0") + w_armFold*(*values).at("arm_angles_folded"));
-      //   case 5:
-      //     if((*values).at("bfsRotFoot1")==0)
-      //       return 0;
-      //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot1") + w_armFold*(*values).at("arm_angles_folded"));
-      //   case 6:
-      //     if((*values).at("bfsRotFoot2")==0)
-      //       return 0;
-      //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot2") + w_armFold*(*values).at("arm_angles_folded"));
-      //   case 7:
-      //     if((*values).at("bfsRotFoot3")==0)
-      //       return 0;
-      //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot3") + w_armFold*(*values).at("arm_angles_folded"));
-      //   case 8:
-      //     if((*values).at("bfsRotFoot4")==0)
-      //       return 0;
-      //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot4") + w_armFold*(*values).at("arm_angles_folded"));
-      //   case 9:
-      //     if((*values).at("bfsRotFoot5")==0)
-      //       return 0;
-      //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot5") + w_armFold*(*values).at("arm_angles_folded"));
-      //   case 10:
-      //     if((*values).at("bfsRotFoot6")==0)
-      //       return 0;
-      //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot6") + w_armFold*(*values).at("arm_angles_folded"));
-      //   case 11:
-      //     if((*values).at("bfsRotFoot7")==0)
-      //       return 0;
-      //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot7") + w_armFold*(*values).at("arm_angles_folded"));
-      //   case 12:
-      //     if((*values).at("bfsRotFoot8")==0)
-      //       return 0;
-      //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot8") + w_armFold*(*values).at("arm_angles_folded"));
-      //   case 13:
-      //     if((*values).at("bfsRotFoot9")==0)
-      //       return 0;
-      //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot9") + w_armFold*(*values).at("arm_angles_folded"));
-      //   case 14:
-      //     if((*values).at("bfsRotFoot10")==0)
-      //       return 0;
-      //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot10") + w_armFold*(*values).at("arm_angles_folded"));
-      //   case 15:
-      //     if((*values).at("bfsRotFoot11")==0)
-      //       return 0;
-      //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot11") + w_armFold*(*values).at("arm_angles_folded"));
-      //   case 16:
-      //     if((*values).at("bfsRotFoot12")==0)
-      //       return 0;
-      //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot12") + w_armFold*(*values).at("arm_angles_folded"));
-      //   case 17:
-      //     if((*values).at("bfsRotFoot13")==0)
-      //       return 0;
-      //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot13") + w_armFold*(*values).at("arm_angles_folded"));
-      //   case 18:
-      //     if((*values).at("bfsRotFoot14")==0)
-      //       return 0;
-      //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot14") + w_armFold*(*values).at("arm_angles_folded"));
-      //   case 19:
-      //     if((*values).at("bfsRotFoot15")==0)
-      //       return 0;
-      //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*(*values).at("arm_angles_folded"));
-      // }
-
-
-    /*
-    switch (heuristic_id) {
-      case 0:  // Anchor
-        return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
-      case 1:  // ARA Heur
-        return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
-      case 2:  // Base1, Base2 heur
-        return static_cast<int>(0.5f*(*values).at("base_with_rot_0") + 0.5f*(*values).at("endeff_rot_goal"));
-      case 3:
-        return static_cast<int>(0.5f*(*values).at("base_with_rot_door") + 0.5f*(*values).at("endeff_rot_vert"));
     }
-    */
-
-    /*
-    switch (m_planner_type) {
-        case T_SMHA:
-        case T_MHG_REEX:
-        case T_MHG_NO_REEX:
-        case T_ARA:
-            switch (heuristic_id) {
-                case 0:  // Anchor
-                    return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
-                case 1:  // ARA Heur
-                    return EPS2*std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
-                // case 2:
-                //     return EPS2*(*values).at("admissible_endeff");
-                case 2:  // Base1, Base2 heur
-                    return static_cast<int>(0.5f*(*values).at("base_with_rot_0") +
-                        0.5f*(*values).at("endeff_rot_goal"));
-                case 3:
-                    return static_cast<int>(0.5f*(*values).at("base_with_rot_door") +
-                        0.5f*(*values).at("endeff_rot_goal"));
-            }
-            break;
-        case T_IMHA:
-            switch (heuristic_id) {
-                case 0:  // Anchor
-                    return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
-                case 1:  // ARA Heur
-                    return EPS2*std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
-                case 2:  // Base1, Base2 heur
-                    return static_cast<int>(0.5f*(*values).at("base_with_rot_0") + 0.5f*(*values).at("endeff_rot_goal"));
-                case 3:
-                    return static_cast<int>(0.5f*(*values).at("base_with_rot_door") + 0.5f*(*values).at("endeff_rot_goal"));
-            }
-            break;
-        case T_MPWA:
-            return (heuristic_id+1)*(EPS1*EPS2/NUM_SMHA_HEUR)*std::max(
-                (*values).at("admissible_endeff"), (*values).at("admissible_base"));
-            break;
-        case T_EES:
-            switch (heuristic_id) {
-                case 0:  // Anchor
-                    return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
-                case 1:  // Inadmissible
-                    return (*values).at("base_with_rot_0") + (*values).at("admissible_endeff");
-                    // return static_cast<int>(0.5f*(*values)[4] + 0.5f*(*values).at("admissible_endeff"));
-                case 2:  // Distance function
-                    // return (*values)[2];
-                    // ROS_DEBUG_NAMED(HEUR_LOG, "Arm : %d, Base : %d", (*values)[2],
-                    //     (*values)[3]);
-                    return (*values)["uniform_2d"] + (*values)["uniform_3d"];
-            }
-            break;
-    }
-    */
-
-    // Post-paper
-    // switch(heuristic_id){
-    //     case 0: //Anchor
-    //         return std::max(values.at("admissible_endeff"), values.at("admissible_base"));
-    //     case 1: // base
-    //         return values[2];
-    //     case 2: // Base + arm
-    //         return static_cast<int>(0.5f*values[2] +
-    //             0.5f*values[0]);
-    // }
-
-
-    // ROS_DEBUG_NAMED(HEUR_LOG, "2: %d,\t 3: %d", values[2],
-    //     values[3]);
-    // EES
+    else
+        ROS_ERROR("Incorrect heuristic set type supplied.");
 
     return std::max((*values).at("admissible_base"), (*values).at("admissible_endeff"));
 }
@@ -934,7 +792,7 @@ void Environment::save_state_time(vector<int> soln_path) {
     ROS_INFO("Saving times to state.time.csv");
 
     ofstream file;
-    file.open("state_time.csv", std::fstream::app);
+    file.open("./state_time.csv", std::fstream::app);
 
     for(int i=0;i<soln_path.size();i++) {
         int state_id = soln_path[i];
@@ -956,6 +814,7 @@ void Environment::save_state_time(vector<int> soln_path) {
             file<<"\t"<<state->base_theta()<<"\t"<<state->base_x()<<"\t"<<state->base_y()<<"\t"<<state->base_z()<<"\t"<<m_state_time_map[state_id].second - m_state_time_map[soln_path[i-1]].second<<"\t"<<m_state_time_map[state_id].first<<"\n";
         }
     }
+    file<<"$\n";
     file.close();
 
     ROS_INFO("File saved");

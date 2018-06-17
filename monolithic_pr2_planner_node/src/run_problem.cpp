@@ -5,12 +5,18 @@
 #include <sbpl/planners/mha_planner.h>
 
 void printUsage(){
-  printf("usage: runTests [imha | smha] [rr | ma | dts] path_to_problem\n");
+  printf("usage: runTests [imha | smha] [rr | ma | dts] path_to_problem start_goal_num\n");
   printf("usage: runTests [rrt | prm | rrtstar] path_to_problem\n");
 }
 
+bool isNumber(const std::string s) {
+    std::string::const_iterator it = s.begin();
+    while (it != s.end() && std::isdigit(*it)) ++it;
+    return !s.empty() && it == s.end();
+}
+
 int main(int argc, char** argv){
-  if(argc != 4 && argc != 3){
+  if(argc != 5 && argc != 4){
     printUsage();
     return 1;
   }
@@ -25,6 +31,7 @@ int main(int argc, char** argv){
   bool gotMetaType = false;
   req.use_ompl = false;
   char filename[100];
+  std::string folder;
   // Defaults
   req.mha_type = mha_planner::MHAType::ORIGINAL;
   req.planner_type = mha_planner::PlannerType::SMHA;
@@ -98,10 +105,18 @@ int main(int argc, char** argv){
       req.use_ompl = true;
       gotMetaType = true;
     }
+    else if(isNumber(argv[i])){
+        std::cout<<argv[i]<<"\n";
+        std::string relative_filename = "experiments/" + folder + "/start_goal" + argv[i] + ".yaml";
+        //std::cout<<relative_filename<<"\n";
+        strcpy(filename, relative_filename.c_str());
+        std::cout<<filename<<"\n";
+    }
     else{
-      std::string folder = argv[i];
+      std::cout<<argv[i];
+      folder = argv[i];
       std::string relative_filename = "experiments/" + folder + "/start_goal.yaml";
-      std::cout<<relative_filename<<"\n";
+      //std::cout<<relative_filename<<"\n";
       strcpy(filename, relative_filename.c_str());
       gotFilename = true;
     }
@@ -113,7 +128,7 @@ int main(int argc, char** argv){
   }
 
   //planner parameters
-  float eps = 20;
+  float eps = 50;
   if(nh.getParam("/monolithic_experiment/eps", eps))
       ROS_INFO("Got param inflation factor = %f", eps);
   else
@@ -142,7 +157,9 @@ int main(int argc, char** argv){
   req.roll_tolerance = .1;
   req.pitch_tolerance = .1;
   req.yaw_tolerance = .1;
-  req.allocated_planning_time = 100;
+  req.allocated_planning_time = 400;
+  if (req.planner_type == mha_planner::PlannerType::IMHA)
+      req.allocated_planning_time = req.allocated_planning_time *4;
   req.planning_mode = monolithic_pr2_planner::PlanningModes::RIGHT_ARM_MOBILE;
 
   req.body_start.resize(4);
@@ -159,7 +176,7 @@ int main(int argc, char** argv){
 
   FILE* fin = fopen(filename,"r");
   if(!fin){
-    printf("file %s does not exist\n", argv[1]);
+    printf("file %s does not exist\n", filename);
     return 1;
   }
   fscanf(fin,"experiments:\n\n");

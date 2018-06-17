@@ -333,9 +333,15 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
     planner_queues = 10;
     //m_env->m_heuristic_state_time_map.resize(10);
   }
-  else {
+  else if(heuristic_set_type == 2) {
     planner_queues = 20;
     //m_env->m_heuristic_state_time_map.resize(20);
+  }
+  else if(heuristic_set_type == 3) {
+      planner_queues = 3;
+  }
+  else{
+      ROS_ERROR("Set appropriate number of queues.");
   }
 
   printf("\n");
@@ -447,6 +453,9 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
       m_stats_writer.writeSBPL(stats, states, counter, planner_prefix);
       res.stats_field_names = stat_names;
       res.stats = stats;
+
+      // Save heuristic cost file.
+      m_mha_planner->save_heuristic_costs();
     } else {
       packageMHAStats(stat_names, stats, soln_cost, states.size(),
                       total_planning_time);
