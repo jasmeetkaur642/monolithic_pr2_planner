@@ -760,6 +760,7 @@ void Environment::configureMotionPrimitives(SearchRequestPtr search_request) {
 vector<FullBodyState> Environment::reconstructPath(vector<int> soln_path){
     //Save state time stats.
     save_state_time(soln_path);
+    save_statecoords_heuristics();
 
     //save_heuristic_state_time(soln_path);
 
@@ -818,6 +819,42 @@ void Environment::save_state_time(vector<int> soln_path) {
     file.close();
 
     ROS_INFO("File saved");
+}
+
+// Assumes that the planner has already saved the states in
+// 'state_heuristics.csv'. This function replaces the state id in the file with
+// the full body coordinates.
+void Environment::save_statecoords_heuristics() {
+    ROS_INFO("Saving heuristics to statecoords_heuristics.csv");
+
+    ifstream file;
+    file.open("./state_heuristics.csv");
+    ofstream outFile;
+    outFile.open("./statecoords_heuristics.csv");
+
+    std::string line;
+    // Read header.
+    std::getline(file, line);
+    int heurId, stateId, heurCost;
+    while(file >> heurId >> stateId >> heurCost) {
+        outFile<<heurId;
+
+        GraphStatePtr state = m_hash_mgr->getGraphState(stateId);
+        std::vector<double> right_arm;
+        state->robot_pose().right_arm().getAngles(&right_arm);
+
+        for(int j=0;j<right_arm.size();j++)
+            outFile<<"\t"<<right_arm[j];
+        outFile<<"\t"<<state->base_theta()<<"\t"<<state->base_x()<<"\t"<<state->base_y()<<"\t"<<state->base_z()<<"\t";
+
+        outFile<<heurCost<<"\n";
+
+    }
+    outFile<<"$\n";
+    outFile.close();
+    file.close();
+
+    ROS_INFO("statecoords_heuristics File saved");
 }
 
 void Environment::normalize_heuristic_times() {

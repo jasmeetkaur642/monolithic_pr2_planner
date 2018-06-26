@@ -316,13 +316,14 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
   ros::NodeHandle ph("~");
   int heuristic_set_type;
   bool got;
-  got = ph.getParam("/heuristic_set_type", heuristic_set_type);
+  got = ph.getParam("planner/heuristic_set_type", heuristic_set_type);
   if(got)
       ROS_INFO("Heuristic set type receiver %d", heuristic_set_type);
   else {
       ROS_ERROR("Heuristic set type not received.");
       heuristic_set_type = 2;
   }
+
 
   int planner_queues;
 
