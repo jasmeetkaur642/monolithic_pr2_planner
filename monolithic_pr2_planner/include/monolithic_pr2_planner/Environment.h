@@ -97,7 +97,7 @@ namespace monolithic_pr2_planner {
 
             void normalize_heuristic_times();
             void save_state_time(vector<int> soln_path);
-            void save_statecoords_heuristics();
+            void saveStateHeuristics(std::vector<std::vector<std::pair<int, int>>>);
             void save_heuristic_state_time(vector<int> soln_path);
 
             //Read island states and activation centers corresponding to each

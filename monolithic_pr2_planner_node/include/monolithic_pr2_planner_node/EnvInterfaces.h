@@ -79,6 +79,7 @@ namespace monolithic_pr2_planner_node {
             double getJointAngle(std::string name, sensor_msgs::JointStateConstPtr
               msg);
             void runTrajectory(std::vector<monolithic_pr2_planner::FullBodyState>& states);
+            void saveStateHeuristics();
 
             ros::NodeHandle m_nodehandle;
             InterfaceParams m_params;

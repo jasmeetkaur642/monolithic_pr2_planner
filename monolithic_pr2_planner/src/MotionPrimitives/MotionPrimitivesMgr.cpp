@@ -54,6 +54,7 @@ bool MotionPrimitivesMgr::loadMPrims(const MotionPrimitiveParams& params){
 
     // Base snap mprims.
     MPrimList base_snap_mprims;
+    ROS_ERROR("Initializing base snap.");
     if(baseSnap) {
         for(int i=0;i<m_islandStates.size();i++) {
             BaseSnapMotionPrimitivePtr temp = make_shared<BaseSnapMotionPrimitive>(m_islandStates[i]);
@@ -61,25 +62,27 @@ bool MotionPrimitivesMgr::loadMPrims(const MotionPrimitiveParams& params){
             ContBaseState islandBase, activationBase;
             islandBase = m_islandStates[i].getContBaseState();
             activationBase = m_activationCenters[i].getContBaseState();
-            ContBaseState baseActivationRadius(abs(islandBase.x() - activationBase.x()), abs(islandBase.y() - activationBase.y()), abs(islandBase.z() - activationBase.z()), abs(islandBase.theta() - activationBase.theta()));
+            //ContBaseState baseActivationRadius(abs(islandBase.x() - activationBase.x()), abs(islandBase.y() - activationBase.y()), abs(islandBase.z() - activationBase.z()), abs(islandBase.theta() - activationBase.theta()));
+            ContBaseState baseActivationRadius(0.1, 0.1, 0.1, 2);
 
             std::vector<double> armActivationRadius, islandArm, activationCenterArm;
-            m_islandStates[i].right_arm().getAngles(&islandArm);
-            m_activationCenters[i].right_arm().getAngles(&activationCenterArm);
+            //m_islandStates[i].right_arm().getAngles(&islandArm);
+            //m_activationCenters[i].right_arm().getAngles(&activationCenterArm);
 
-            for(int j=0;j<7;j++) {
-                armActivationRadius.push_back(abs(angles::shortest_angular_distance(islandArm[j], activationCenterArm[j])));
-            }
+            //for(int j=0;j<7;j++) {
+                //armActivationRadius.push_back(abs(angles::shortest_angular_distance(islandArm[j], activationCenterArm[j])));
+            //}
 
             std::vector<double> l_arm = {0.038946, 1.214670, 1.396356, -1.197227, -4.616317, -0.988727, 1.175568};
 
-            RobotState activationRadius(baseActivationRadius, RightContArmState(armActivationRadius), LeftContArmState(l_arm));
+            RobotState activationRadius(baseActivationRadius, RightContArmState(l_arm), LeftContArmState(l_arm));
             temp->m_activationRadius = activationRadius;
             basesnap_mprim.push_back(temp);
             base_snap_mprims.push_back(temp);
         }
     }
 
+    ROS_ERROR("Base snap initialized.");
     MPrimList full_body_snap_mprims;
     if(fullBodySnap) {
         for(int i=0;i<m_islandStates.size();i++) {
@@ -90,14 +93,16 @@ bool MotionPrimitivesMgr::loadMPrims(const MotionPrimitiveParams& params){
             islandBase = m_islandStates[i].getContBaseState();
             activationBase = m_activationCenters[i].getContBaseState();
             //ROS_ERROR("Base(island, activation): (%f, %f)", islandBase.x(), activationBase.x());
-            ContBaseState baseActivationRadius(abs(islandBase.x() - activationBase.x()), abs(islandBase.y() - activationBase.y()), abs(islandBase.z() - activationBase.z()), abs(angles::shortest_angular_distance(islandBase.theta(), activationBase.theta())));
+            //ContBaseState baseActivationRadius(abs(islandBase.x() - activationBase.x()), abs(islandBase.y() - activationBase.y()), abs(islandBase.z() - activationBase.z()), abs(angles::shortest_angular_distance(islandBase.theta(), activationBase.theta())));
+            ContBaseState baseActivationRadius(0.1, 0.1, 0.1, 2);
 
             std::vector<double> armActivationRadius, islandArm, activationCenterArm;
             m_islandStates[i].right_arm().getAngles(&islandArm);
             m_activationCenters[i].right_arm().getAngles(&activationCenterArm);
 
             for(int j=0;j<7;j++) {
-                armActivationRadius.push_back(abs(angles::shortest_angular_distance(islandArm[j], activationCenterArm[j])));
+                //armActivationRadius.push_back(abs(angles::shortest_angular_distance(islandArm[j], activationCenterArm[j])));
+                armActivationRadius.push_back(2);
             }
 
             std::vector<double> l_arm = {0.038946, 1.214670, 1.396356, -1.197227, -4.616317, -0.988727, 1.175568};

@@ -110,7 +110,7 @@ int main(int argc, char** argv){
   }
 
   //planner parameters
-  float eps = 20;
+  float eps = 50;
   if(nh.getParam("/monolithic_experiment/eps", eps))
       ROS_INFO("Got param inflation factor = %f", eps);
   else

@@ -11,6 +11,7 @@ bool BaseSnapMotionPrimitive::apply(const GraphState& source_state,
                            GraphStatePtr& successor,
                            TransitionData& t_data){
     //computeCost();
+    ROS_ERROR("Calculating base snap.");
 
     // not sure why there's a .005 here. ask ben
     ContObjectState c_tol(m_tolerances[Tolerances::XYZ]-.005,
@@ -61,8 +62,8 @@ bool BaseSnapMotionPrimitive::apply(const GraphState& source_state,
     int xDistance = abs(m_activationCenter.base_state().x() - base.x());
     int yDistance =  abs(m_activationCenter.base_state().y() - base.y());
 
-    bool within_basexy_tol = (xDistance < 15*baseActivationRadius.x() &&
-                              yDistance < 15*baseActivationRadius.y());// &&
+    bool within_basexy_tol = (xDistance < 50*baseActivationRadius.x() &&
+                              yDistance < 50*baseActivationRadius.y());// &&
                               //abs(angles::shortest_angular_distance(m_activationCenter.getContBaseState().theta(), robot_pose.getContBaseState().theta())) < max(15*c_tol.yaw(), m_activationRadius.getContBaseState().theta()));
 
     bool near_end = false;
@@ -76,7 +77,7 @@ bool BaseSnapMotionPrimitive::apply(const GraphState& source_state,
     //}
 
 
-    //
+    ROS_ERROR("Applying base snap.");
     if(within_basexy_tol && !near_end && within_arm_tol)
     {
       //ROS_INFO("Trying base snap");

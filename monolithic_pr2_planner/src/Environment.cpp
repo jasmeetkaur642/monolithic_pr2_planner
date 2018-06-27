@@ -701,13 +701,20 @@ void Environment::configureMotionPrimitives(SearchRequestPtr search_request) {
 
     //XXX Moved here from configurePlanningDomain
     std::vector<RobotState> islandStates, activationCenters;
-    getIslandStates(islandStates, activationCenters);
+    islandStates.assign(m_islandStates[0].begin(), m_islandStates[0].begin() + 110);
+    activationCenters.assign(m_activationCenters[0].begin(), m_activationCenters[0].begin() + 110);
+    ROS_ERROR("Size of islands list: %d", islandStates.size());
+
+    ROS_WARN("Using simplified island selection.");
+    //XXX The following function is the default one.
+    //getIslandStates(islandStates, activationCenters);
     m_mprims = MotionPrimitivesMgr(m_goal, islandStates, activationCenters);
     chooseSnapMprims();
     //m_mprims.getUpdatedIslands(islandStates, activationCenters);
 
     // load up motion primitives
     m_mprims.loadMPrims(m_param_catalog.m_motion_primitive_params);
+    ROS_ERROR("Mprims loaded.");
 
     m_mprims.getUpdatedGoalandTolerances(m_goal,
             search_request->m_params->xyz_tolerance,
@@ -723,6 +730,7 @@ void Environment::configureMotionPrimitives(SearchRequestPtr search_request) {
         m_mprims_inadmissible.push_back(mprim);
         m_mprims_anchor.push_back(mprim);
     }
+    ROS_ERROR("Mprims bull");
 
     // This simulates giving each heuristic its own separate mprim list.
     //m_heuristic_fbs_mprimid.clear();
@@ -746,10 +754,12 @@ void Environment::configureMotionPrimitives(SearchRequestPtr search_request) {
     countBaseMprimTried.clear();
     skipBaseMprimMod.clear();
 
-    countFbsMprimTried.resize(m_numSnapMprims, 0);
-    skipFbsMprimMod.resize(m_numSnapMprims, 1);
-    countBaseMprimTried.resize(m_numSnapMprims, 0);
-    skipBaseMprimMod.resize(m_numSnapMprims, 1);
+    //countFbsMprimTried.resize(m_numSnapMprims, 0);
+    //skipFbsMprimMod.resize(m_numSnapMprims, 1);
+    //countBaseMprimTried.resize(m_numSnapMprims, 0);
+    //skipBaseMprimMod.resize(m_numSnapMprims, 1);
+
+    ROS_ERROR("Motion prims configured.");
 }
 
 /*! \brief Given the solution path containing state IDs, reconstruct the
@@ -760,7 +770,6 @@ void Environment::configureMotionPrimitives(SearchRequestPtr search_request) {
 vector<FullBodyState> Environment::reconstructPath(vector<int> soln_path){
     //Save state time stats.
     save_state_time(soln_path);
-    save_statecoords_heuristics();
 
     //save_heuristic_state_time(soln_path);
 
@@ -821,40 +830,32 @@ void Environment::save_state_time(vector<int> soln_path) {
     ROS_INFO("File saved");
 }
 
-// Assumes that the planner has already saved the states in
-// 'state_heuristics.csv'. This function replaces the state id in the file with
-// the full body coordinates.
-void Environment::save_statecoords_heuristics() {
-    ROS_INFO("Saving heuristics to statecoords_heuristics.csv");
+void Environment::saveStateHeuristics(std::vector<std::vector<std::pair<int, int>>> heurQueues) {
+    std::ofstream outFile;
+    outFile.open("./state_heuristics.csv", std::fstream::app);
 
-    ifstream file;
-    file.open("./state_heuristics.csv");
-    ofstream outFile;
-    outFile.open("./statecoords_heuristics.csv");
+    outFile<<"heuristic_queue\tcoords\theuristic_cost\n";
+    for (int i=0; i<heurQueues.size(); i++) {
+        auto queue = heurQueues[i];
+        for (int j=0; j<queue.size(); j++) {
+            int stateId = queue[j].first;
+            int heurCost = queue[j].second;
+            GraphStatePtr state = m_hash_mgr->getGraphState(stateId);
+            std::vector<double> right_arm;
+            state->robot_pose().right_arm().getAngles(&right_arm);
 
-    std::string line;
-    // Read header.
-    std::getline(file, line);
-    int heurId, stateId, heurCost;
-    while(file >> heurId >> stateId >> heurCost) {
-        outFile<<heurId;
+            outFile<<i;
+            for(int j=0;j<right_arm.size();j++)
+                outFile<<"\t"<<right_arm[j];
+            outFile<<"\t"<<state->base_theta()<<"\t"<<state->base_x()<<"\t"<<state->base_y()<<"\t"<<state->base_z()<<"\t";
 
-        GraphStatePtr state = m_hash_mgr->getGraphState(stateId);
-        std::vector<double> right_arm;
-        state->robot_pose().right_arm().getAngles(&right_arm);
-
-        for(int j=0;j<right_arm.size();j++)
-            outFile<<"\t"<<right_arm[j];
-        outFile<<"\t"<<state->base_theta()<<"\t"<<state->base_x()<<"\t"<<state->base_y()<<"\t"<<state->base_z()<<"\t";
-
-        outFile<<heurCost<<"\n";
-
+            outFile<<heurCost<<"\n";
+        }
     }
     outFile<<"$\n";
     outFile.close();
-    file.close();
 
-    ROS_INFO("statecoords_heuristics File saved");
+    ROS_INFO("State heuristics File saved");
 }
 
 void Environment::normalize_heuristic_times() {
@@ -945,26 +946,25 @@ void Environment::readIslands() {
 
     std::getline(island_file, line);
     while(std::getline(island_file, line)) {
+        //std::istringstream ss(line);
+        //ss >> x >> y >> z >> q_w >> q_x >> q_y >> q_z;
+        //startOrien = KDL::Rotation::Quaternion(q_w, q_x, q_y, q_z);
+        //startOrien.GetRPY(roll, pitch, yaw);
+        //ContObjectState start(x, y, z, roll, pitch, yaw);
 
-        std::istringstream ss(line);
-        ss >> x >> y >> z >> q_w >> q_x >> q_y >> q_z;
-        startOrien = KDL::Rotation::Quaternion(q_w, q_x, q_y, q_z);
-        startOrien.GetRPY(roll, pitch, yaw);
-        ContObjectState start(x, y, z, roll, pitch, yaw);
+        //std::getline(island_file, line);
+        //std::istringstream ss1(line);
+        //ss1 >> x >> y >> z >> q_w >> q_x >> q_y >> q_z;
+        //goalOrien = KDL::Rotation::Quaternion(q_w, q_x, q_y, q_z);
+        //goalOrien.GetRPY(roll, pitch, yaw);
+        //ContObjectState goal(x, y, z, roll, pitch, yaw);
 
-        std::getline(island_file, line);
-        std::istringstream ss1(line);
-        ss1 >> x >> y >> z >> q_w >> q_x >> q_y >> q_z;
-        goalOrien = KDL::Rotation::Quaternion(q_w, q_x, q_y, q_z);
-        goalOrien.GetRPY(roll, pitch, yaw);
-        ContObjectState goal(x, y, z, roll, pitch, yaw);
+        //m_startGoalPairs.push_back(std::make_pair(start, goal));
 
-        m_startGoalPairs.push_back(std::make_pair(start, goal));
-
-        std::getline(island_file, line);
-        ROS_INFO("%s", line.c_str());
-        std::istringstream ss2(line);
-        ss2 >> word;
+        //std::getline(island_file, line);
+        //ROS_INFO("%s", line.c_str());
+        //std::istringstream ss2(line);
+        //ss2 >> word;
 
         std::vector<RobotState> islandStates, activationCenters;
 
@@ -972,7 +972,7 @@ void Environment::readIslands() {
         while(word[0] != 'I') {
             std::istringstream ssData(line);
 
-            for(int i=0;i<2;i++) {
+            //for(int i=0;i<2;i++) {
 
                 for(int j=0;j<7;j++) {
                     ssData >> rarm[j];
@@ -985,6 +985,10 @@ void Environment::readIslands() {
                 const ContBaseState base(x, y, z, yaw);
                 RightContArmState r_arm(rarm);
 
+                RobotState islandState(base, r_arm, l_arm);
+                islandStates.push_back(islandState);
+                activationCenters.push_back(islandState);
+                /*
                 if(i==0) {
                     RobotState islandState(base, r_arm, l_arm);
                     islandStates.push_back(islandState);
@@ -993,7 +997,8 @@ void Environment::readIslands() {
                     RobotState activationCenter(base, r_arm, l_arm);
                     activationCenters.push_back(activationCenter);
                 }
-            }
+                */
+            //}
             if(!std::getline(island_file, line))
                 break;
             //ROS_INFO("%s", line.c_str());
@@ -1075,7 +1080,8 @@ void Environment::getIslandStates(std::vector<RobotState> &islandStates, std::ve
         //startGoalDistances.push_back(objectStateMetric(goalObj, m_startGoalPairs[i].second));
         //ROS_INFO("(%f, %f), (%f, %f), %f", m_startGoalPairs[i].second.x(), m_startGoalPairs[i].second.y(), goalObj.x(), goalObj.y(), startGoalDistances[i]);
     }
-    int numClosestPairs = 2; //4
+
+    int numClosestPairs = 1; //4
     int numIslandsPerPair = 10;  //20
     m_numSnapMprims = numClosestPairs * numIslandsPerPair;
     //Index-distance.
@@ -1092,6 +1098,7 @@ void Environment::getIslandStates(std::vector<RobotState> &islandStates, std::ve
             closestPairIndices[maxIndex] = make_pair(i, startGoalDistances[i]);
         }
     }
+
     std::vector<RobotState> pairIslandStates;
     std::vector<RobotState> pairActivationCenters;
     //ROS_ERROR("Closest islands");

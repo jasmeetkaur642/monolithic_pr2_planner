@@ -3,10 +3,11 @@
   
   <node pkg="monolithic_pr2_planner_node" type="node" name="monolithic_pr2_planner_node" output="screen">
       <!-- <param name="heuristic_set_type" value="1" /> -->
-      <param name="planner/island" value="$(find monolithic_pr2_planner_node)/experiments/bottlenecks.points" />
+      <param name="planner/island" value="$(find
+monolithic_pr2_planner_node)/experiments/single_table/plateaus_sg4.points" />
       <param name="planner/baseSnap" value="1" type="int" />
       <param name="planner/fullBodySnap" value="1" type="int" />
-      <param name="planner/armSnap" value="1" type="int" />
+      <param name="planner/armSnap" value="0" type="int" />
       <param name="planner/visualizeIslands" value="true" type="bool" />
 
       <rosparam command="load" file="$(find monolithic_pr2_planner_node)/config/logging_levels.yaml" />

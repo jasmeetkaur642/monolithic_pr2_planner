@@ -446,6 +446,8 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
                planner_prefix.c_str());
 
       //m_mha_planner->save_state_time();
+      //Save heuristic cost file.
+      saveStateHeuristics();
 
       states =  m_env->reconstructPath(soln);
       total_planning_time = clock() - total_planning_time;
@@ -455,8 +457,6 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
       res.stats_field_names = stat_names;
       res.stats = stats;
 
-      // Save heuristic cost file.
-      m_mha_planner->save_heuristic_costs();
     } else {
       packageMHAStats(stat_names, stats, soln_cost, states.size(),
                       total_planning_time);
@@ -922,6 +922,11 @@ double EnvInterfaces::getJointAngle(std::string name,
 
   ROS_ERROR("joint doesn't exist! (exit)\n");
   exit(1);
+}
+
+void EnvInterfaces::saveStateHeuristics() {
+    auto heurQueues = m_mha_planner->get_queue_heurs();
+    m_env->saveStateHeuristics(heurQueues);
 }
 
 /**
