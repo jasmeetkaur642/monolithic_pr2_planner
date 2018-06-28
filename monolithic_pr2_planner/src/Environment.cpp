@@ -703,8 +703,22 @@ void Environment::configureMotionPrimitives(SearchRequestPtr search_request) {
     std::vector<RobotState> islandStates, activationCenters;
     islandStates.assign(m_islandStates[0].begin(), m_islandStates[0].begin() + 110);
     activationCenters.assign(m_activationCenters[0].begin(), m_activationCenters[0].begin() + 110);
-    ROS_ERROR("Size of islands list: %d", islandStates.size());
+    //if(m_visualizeIslands) {
+        ROS_INFO("Visualizing islands.");
+        PViz pviz;
+        for(int j=0;j<islandStates.size();j++) {
+                RobotState state = islandStates[j];
+                std::vector<double> base({state.getContBaseState().x(), state.getContBaseState().y(), state.getContBaseState().theta()});
+                std::vector<double> rarm, larm;
+                state.right_arm().getAngles(&rarm);
+                state.left_arm().getAngles(&larm);
+                string ns = "wee" + string("%d", j);
 
+                pviz.visualizeRobot(rarm, larm, base, 0.1, 140, ns, 0, false);
+                //visualizeCircle(std::make_pair(base[0], base[1]), 0.7, ns);
+        }
+    //}
+    ROS_ERROR("Size of islands list: %d", islandStates.size());
     ROS_WARN("Using simplified island selection.");
     //XXX The following function is the default one.
     //getIslandStates(islandStates, activationCenters);
@@ -810,18 +824,20 @@ void Environment::save_state_time(vector<int> soln_path) {
         std::vector<double> right_arm;
         state->robot_pose().right_arm().getAngles(&right_arm);
 
+        auto base = state->getContCoords();
         if(i==0) {
             file<<state_id;
             for(int j=0;j<right_arm.size();j++)
                 file<<"\t"<<right_arm[j];
-            file<<"\t"<<state->base_theta()<<"\t"<<state->base_x()<<"\t"<<state->base_y()<<"\t"<<state->base_z()<<"\t"<<0;
-            file<<"\n";
+
+                file<<"\t"<<base[GraphStateElement::BASE_THETA]<<"\t"<<base[GraphStateElement::BASE_X]<<"\t"<<base[GraphStateElement::BASE_Y]<<"\t"<<base[GraphStateElement::BASE_Z]<<"\t"<<0;
+                file<<"\n";
         }
         else{
             file<<state_id;
             for(int j=0;j<right_arm.size();j++)
                 file<<"\t"<<right_arm[j];
-            file<<"\t"<<state->base_theta()<<"\t"<<state->base_x()<<"\t"<<state->base_y()<<"\t"<<state->base_z()<<"\t"<<m_state_time_map[state_id].second - m_state_time_map[soln_path[i-1]].second<<"\t"<<m_state_time_map[state_id].first<<"\n";
+            file<<"\t"<<base[GraphStateElement::BASE_THETA]<<"\t"<<base[GraphStateElement::BASE_X]<<"\t"<<base[GraphStateElement::BASE_Y]<<"\t"<<base[GraphStateElement::BASE_Z]<<"\t"<<m_state_time_map[state_id].second - m_state_time_map[soln_path[i-1]].second<<"\t"<<m_state_time_map[state_id].first<<"\n";
         }
     }
     file<<"$\n";
@@ -843,12 +859,12 @@ void Environment::saveStateHeuristics(std::vector<std::vector<std::pair<int, int
             GraphStatePtr state = m_hash_mgr->getGraphState(stateId);
             std::vector<double> right_arm;
             state->robot_pose().right_arm().getAngles(&right_arm);
+            auto base = state->getContCoords();
 
             outFile<<i;
             for(int j=0;j<right_arm.size();j++)
                 outFile<<"\t"<<right_arm[j];
-            outFile<<"\t"<<state->base_theta()<<"\t"<<state->base_x()<<"\t"<<state->base_y()<<"\t"<<state->base_z()<<"\t";
-
+            outFile<<"\t"<<base[GraphStateElement::BASE_THETA]<<"\t"<<base[GraphStateElement::BASE_X]<<"\t"<<base[GraphStateElement::BASE_Y]<<"\t"<<base[GraphStateElement::BASE_Z]<<"\t";
             outFile<<heurCost<<"\n";
         }
     }

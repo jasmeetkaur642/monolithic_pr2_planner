@@ -62,8 +62,8 @@ bool BaseSnapMotionPrimitive::apply(const GraphState& source_state,
     int xDistance = abs(m_activationCenter.base_state().x() - base.x());
     int yDistance =  abs(m_activationCenter.base_state().y() - base.y());
 
-    bool within_basexy_tol = (xDistance < 50*baseActivationRadius.x() &&
-                              yDistance < 50*baseActivationRadius.y());// &&
+    bool within_basexy_tol = (xDistance < 5*baseActivationRadius.x() &&
+                              yDistance < 5*baseActivationRadius.y());// &&
                               //abs(angles::shortest_angular_distance(m_activationCenter.getContBaseState().theta(), robot_pose.getContBaseState().theta())) < max(15*c_tol.yaw(), m_activationRadius.getContBaseState().theta()));
 
     bool near_end = false;
